@@ -44,6 +44,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { seedIfEmpty } from "@/lib/init";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
+import { podeAcessar } from "@/lib/permissions";
+import { toast } from "sonner";
 
 const NAV = [
   { to: "/dashboard", label: "Central de Operações", icon: LayoutDashboard },
@@ -80,7 +82,18 @@ export function AppLayout() {
     if (!perfil) navigate({ to: "/login" });
   }, [perfil, navigate]);
 
+  // Bloqueia acesso direto por URL a rotas fora do perfil atual (não basta
+  // esconder do menu — também vale para links digitados ou trocar de perfil
+  // estando numa tela restrita).
+  useEffect(() => {
+    if (perfil && !podeAcessar(perfil, pathname)) {
+      toast.error("Este perfil não tem acesso a essa tela.");
+      navigate({ to: "/dashboard" });
+    }
+  }, [perfil, pathname, navigate]);
+
   const user = perfil ? USUARIOS[perfil] : USUARIOS.admin;
+  const navVisivel = NAV.filter((item) => podeAcessar(perfil, item.to));
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -101,7 +114,7 @@ export function AppLayout() {
             {collapsed ? <BrandMark /> : <BrandWordmark />}
           </div>
           <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-            {NAV.map((item) => {
+            {navVisivel.map((item) => {
               const active =
                 pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
               const Icon = item.icon;
