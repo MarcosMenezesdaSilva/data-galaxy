@@ -20,6 +20,7 @@ import {
   Search,
   ChevronsLeft,
   ChevronsRight,
+  Menu,
   LogOut,
   User as UserIcon,
   ClipboardCheck,
@@ -68,6 +69,7 @@ const NAV = [
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [seeded, setSeeded] = useState(false);
   const { theme, toggleTheme, perfil, setPerfil, modo } = useApp();
   const navigate = useNavigate();
@@ -92,27 +94,56 @@ export function AppLayout() {
     }
   }, [perfil, pathname, navigate]);
 
+  // Fecha o menu mobile ao navegar para outra tela.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const user = perfil ? USUARIOS[perfil] : USUARIOS.admin;
   const navVisivel = NAV.filter((item) => podeAcessar(perfil, item.to));
+
+  function voltarParaSelecaoDePerfil() {
+    setPerfil(null);
+    navigate({ to: "/login" });
+  }
 
   return (
     <TooltipProvider delayDuration={200}>
       <div className="flex min-h-screen w-full bg-background">
-        {/* Sidebar */}
+        {/* Backdrop do menu mobile */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Sidebar — vira gaveta (drawer) em telas pequenas, fixa a partir de md (tablets/notebooks) */}
         <aside
           className={cn(
-            "sticky top-0 h-screen shrink-0 border-r border-sidebar-border bg-sidebar flex flex-col transition-[width] duration-200",
-            collapsed ? "w-[68px]" : "w-[248px]",
+            "fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200",
+            mobileOpen ? "translate-x-0" : "-translate-x-full",
+            "md:sticky md:top-0 md:h-screen md:translate-x-0 md:shrink-0 md:transition-[width]",
+            collapsed ? "md:w-[68px]" : "md:w-[248px]",
           )}
         >
-          <div
-            className={cn(
-              "flex items-center h-16 px-3 border-b border-sidebar-border",
-              collapsed && "justify-center px-0",
-            )}
-          >
-            {collapsed ? <BrandMark /> : <BrandWordmark />}
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={voltarParaSelecaoDePerfil}
+                aria-label="Voltar para seleção de perfil"
+                className={cn(
+                  "flex items-center h-16 px-3 border-b border-sidebar-border w-full cursor-pointer hover:bg-sidebar-accent transition-colors",
+                  collapsed && "justify-center px-0",
+                )}
+              >
+                {collapsed ? <BrandMark /> : <BrandWordmark />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Voltar para seleção de perfil</TooltipContent>
+          </Tooltip>
           <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
             {navVisivel.map((item) => {
               const active =
@@ -146,7 +177,7 @@ export function AppLayout() {
               );
             })}
           </nav>
-          <div className="p-2 border-t border-sidebar-border">
+          <div className="hidden md:block p-2 border-t border-sidebar-border">
             <Button
               variant="ghost"
               size="sm"
@@ -167,7 +198,16 @@ export function AppLayout() {
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Topbar */}
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 backdrop-blur px-4 md:px-6">
-            <div className="relative w-full max-w-md">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="-ml-1 shrink-0 md:hidden"
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="relative hidden w-full max-w-md sm:block">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar incidente, produto, grupo..." className="pl-9 h-9" />
             </div>
@@ -216,12 +256,7 @@ export function AppLayout() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setPerfil(null);
-                      navigate({ to: "/login" });
-                    }}
-                  >
+                  <DropdownMenuItem onClick={voltarParaSelecaoDePerfil}>
                     <LogOut className="h-4 w-4 mr-2" /> Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>

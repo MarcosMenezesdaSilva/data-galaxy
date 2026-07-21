@@ -189,7 +189,7 @@ function DashboardPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Select value={produto} onValueChange={setProduto}>
-              <SelectTrigger className="w-[180px] h-9">
+              <SelectTrigger className="w-full sm:w-[180px] h-9">
                 <SelectValue placeholder="Produto" />
               </SelectTrigger>
               <SelectContent>
@@ -202,7 +202,7 @@ function DashboardPage() {
               </SelectContent>
             </Select>
             <Select value={prio} onValueChange={setPrio}>
-              <SelectTrigger className="w-[140px] h-9">
+              <SelectTrigger className="w-full sm:w-[176px] h-9">
                 <SelectValue placeholder="Prioridade" />
               </SelectTrigger>
               <SelectContent>
@@ -215,7 +215,7 @@ function DashboardPage() {
               </SelectContent>
             </Select>
             <Select value={grupo} onValueChange={setGrupo}>
-              <SelectTrigger className="w-[180px] h-9">
+              <SelectTrigger className="w-full sm:w-[180px] h-9">
                 <SelectValue placeholder="Grupo" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +261,7 @@ function DashboardPage() {
       </Card>
 
       {/* KPIs */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
           label="Incidentes hoje"
           value={fmtNumber(incHoje)}
