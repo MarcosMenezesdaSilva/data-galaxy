@@ -15,6 +15,11 @@ export default defineConfig({
     tailwindcss(),
     tanstackStart({
       server: { entry: "server" },
+      // App é 100% client-side (IndexedDB/Zustand, sem dados de servidor real),
+      // então gera um index.html estático + shell prerenderizado — deployável
+      // em qualquer host estático gratuito (Netlify, Cloudflare Pages etc.),
+      // sem precisar de função serverless.
+      spa: { enabled: true },
     }),
     viteReact(),
   ],
