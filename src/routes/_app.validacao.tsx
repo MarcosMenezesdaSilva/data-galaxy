@@ -25,18 +25,18 @@ import {
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ReferenceLine,
   Legend,
 } from "recharts";
 import type { AcaoCorretiva } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { useValidacoes } from "@/lib/hooks";
 
 export const Route = createFileRoute("/_app/validacao")({
   head: () => ({ meta: [{ title: "Validação de Correções — Data Galaxy" }] }),
@@ -45,6 +45,7 @@ export const Route = createFileRoute("/_app/validacao")({
 
 function ValidacaoPage() {
   const acoes = useAcoes();
+  const validacoes = useValidacoes();
   const [sel, setSel] = useState<AcaoCorretiva | null>(acoes[0] ?? null);
   const atual = sel ?? acoes[0] ?? null;
 
@@ -58,25 +59,19 @@ function ValidacaoPage() {
     [acoes],
   );
 
+  // Pontos reais de validação (janelas de 7/15/30 dias) gerados para a ação
+  // selecionada — nada de série sintética interpolada por render.
   const serie = useMemo(() => {
     if (!atual) return [];
-    const base = atual.volume_previsto ?? 100;
-    const alvo = atual.volume_real ?? base;
-    return Array.from({ length: 30 }, (_, d) => {
-      const isBefore = d < 7;
-      const previsto = base + Math.sin(d / 3) * 8;
-      let real = base + Math.sin(d / 3) * 12;
-      if (!isBefore) {
-        const t = (d - 7) / 22;
-        real = base + (alvo - base) * Math.min(1, t * 1.4) + Math.sin(d / 2) * 6;
-      }
-      return {
-        dia: `D${d - 7 >= 0 ? "+" : ""}${d - 7}`,
-        previsto: Math.round(previsto),
-        real: Math.round(real),
-      };
-    });
-  }, [atual]);
+    return validacoes
+      .filter((v) => v.id_acao === atual.id_acao)
+      .sort((a, b) => a.janela_dias - b.janela_dias)
+      .map((v) => ({
+        dia: `D+${v.janela_dias}`,
+        previsto: v.volume_previsto,
+        real: v.volume_real,
+      }));
+  }, [atual, validacoes]);
 
   return (
     <div className="space-y-6">
@@ -127,50 +122,35 @@ function ValidacaoPage() {
             <div>
               <div className="text-sm font-semibold">Previsto vs. real após a correção</div>
               <div className="text-xs text-muted-foreground">
-                Janelas de 7, 15 e 30 dias · linha vertical marca o momento da ação
+                Pontos reais de validação por janela de observação (7, 15 e 30 dias após a ação)
               </div>
             </div>
           </div>
           <div className="h-80">
-            <ResponsiveContainer>
-              <LineChart data={serie}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="dia" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <ReferenceLine
-                  x="D+0"
-                  stroke="var(--primary)"
-                  strokeWidth={2}
-                  label={{ value: "Ação", position: "top", fill: "var(--primary)", fontSize: 11 }}
-                />
-                <ReferenceLine x="D+7" stroke="var(--border)" strokeDasharray="3 3" />
-                <ReferenceLine x="D+15" stroke="var(--border)" strokeDasharray="3 3" />
-                <Line
-                  dataKey="previsto"
-                  name="Previsto"
-                  stroke="var(--info)"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-                <Line
-                  dataKey="real"
-                  name="Real"
-                  stroke="var(--brand)"
-                  strokeWidth={2.5}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {serie.length > 0 ? (
+              <ResponsiveContainer>
+                <BarChart data={serie}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="dia" stroke="var(--muted-foreground)" fontSize={11} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="previsto" name="Previsto" fill="var(--info)" radius={4} />
+                  <Bar dataKey="real" name="Real" fill="var(--brand)" radius={4} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                Sem validações registradas para esta ação ainda.
+              </div>
+            )}
           </div>
 
           <div className="mt-6 overflow-x-auto">

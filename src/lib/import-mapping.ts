@@ -86,7 +86,20 @@ function toNumberOrUndefined(v: unknown): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
-const PRIORIDADES_VALIDAS: Prioridade[] = ["P1", "P2", "P3", "P4", "P5"];
+/**
+ * Converte o campo PRIORIDADE da base oficial (formato "X - nome", ex.:
+ * "1 - Crítica", "3 - Média") para o formato interno "P1".."P5". Também
+ * aceita o formato interno diretamente ("P1", "p2", ...) por robustez.
+ * Nunca lança erro — cai em "P4" apenas quando não há dígito 1-5 identificável.
+ */
+export function parsePrioridadeOficial(raw: unknown): Prioridade {
+  const s = vazioParaUndefined(raw)?.toUpperCase();
+  if (!s) return "P4";
+  if (/^P[1-5]$/.test(s)) return s as Prioridade;
+  const m = s.match(/[1-5]/);
+  if (m) return `P${m[0]}` as Prioridade;
+  return "P4";
+}
 
 export interface MapeamentoResultado {
   incidente: Partial<Incidente> | null;
@@ -107,12 +120,7 @@ export function mapearLinhaOficial(rowRaw: Record<string, unknown>): MapeamentoR
   const totalmenteVazia = valores.every((v) => v === "");
   if (totalmenteVazia) return { incidente: null, vazio: true };
 
-  const prioridadeRaw = vazioParaUndefined(row.PRIORIDADE)?.toUpperCase();
-  const prioridade = (
-    prioridadeRaw && PRIORIDADES_VALIDAS.includes(prioridadeRaw as Prioridade)
-      ? (prioridadeRaw as Prioridade)
-      : "P4"
-  ) as Prioridade;
+  const prioridade = parsePrioridadeOficial(row.PRIORIDADE);
 
   const duracaoSegundos = toNumberOrUndefined(row.DURACAO_SEGUNDOS) ?? 0;
   const statusIncidente = vazioParaUndefined(row.STATUS_INCIDENTE) ?? "Desconhecido";
