@@ -21,6 +21,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  LabelList,
 } from "recharts";
 
 export const Route = createFileRoute("/_app/mudancas")({
@@ -66,8 +67,12 @@ function MudancasPage() {
                 name="Antes"
                 fill="var(--muted-foreground)"
                 radius={[6, 6, 0, 0]}
-              />
-              <Bar dataKey="depois" name="Depois" fill="var(--brand)" radius={[6, 6, 0, 0]} />
+              >
+                <LabelList dataKey="antes" position="top" fontSize={10} fill="var(--foreground)" />
+              </Bar>
+              <Bar dataKey="depois" name="Depois" fill="var(--brand)" radius={[6, 6, 0, 0]}>
+                <LabelList dataKey="depois" position="top" fontSize={10} fill="var(--foreground)" />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

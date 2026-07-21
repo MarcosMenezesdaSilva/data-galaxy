@@ -18,6 +18,7 @@ import {
   ComposedChart,
   BarChart,
   Bar,
+  LabelList,
 } from "recharts";
 import { PRODUTOS } from "@/lib/demo-data";
 import { Info, Brain, Layers, TrendingUp } from "lucide-react";
@@ -231,7 +232,14 @@ function PrevisoesPage() {
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="volume" fill="var(--accent-orange)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="volume" fill="var(--accent-orange)" radius={[6, 6, 0, 0]}>
+                  <LabelList
+                    dataKey="volume"
+                    position="top"
+                    fontSize={11}
+                    fill="var(--foreground)"
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

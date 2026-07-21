@@ -46,6 +46,9 @@ import { seedIfEmpty } from "@/lib/init";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { podeAcessar } from "@/lib/permissions";
+import { useAlertas } from "@/lib/hooks";
+import { SeveridadeBadge } from "@/components/Badges";
+import { fmtDateTime } from "@/lib/format";
 import { toast } from "sonner";
 
 const NAV = [
@@ -75,6 +78,11 @@ export function AppLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const totalIncidentes = useLiveQuery(() => db.incidentes.count(), []);
+  const alertas = useAlertas();
+  const alertasRecentes = [...alertas]
+    .sort((a, b) => +new Date(b.data_criacao) - +new Date(a.data_criacao))
+    .slice(0, 6);
+  const alertasNovos = alertas.filter((a) => a.status === "Novo").length;
 
   useEffect(() => {
     seedIfEmpty().then(() => setSeeded(true));
@@ -222,15 +230,52 @@ export function AppLayout() {
               >
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Notificações"
-                className="relative rounded-full"
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Notificações"
+                    className="relative rounded-full"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {alertasNovos > 0 && (
+                      <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>
+                    Notificações{alertasNovos > 0 ? ` · ${alertasNovos} novas` : ""}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {alertasRecentes.length === 0 ? (
+                    <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+                      Nenhum alerta por aqui ainda.
+                    </div>
+                  ) : (
+                    alertasRecentes.map((a) => (
+                      <DropdownMenuItem
+                        key={a.id_alerta}
+                        className="flex flex-col items-start gap-1 py-2"
+                        onClick={() => navigate({ to: "/alertas" })}
+                      >
+                        <div className="flex w-full items-center justify-between gap-2">
+                          <span className="text-xs font-medium truncate">{a.titulo}</span>
+                          <SeveridadeBadge s={a.severidade} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {a.produto} · {fmtDateTime(a.data_criacao)}
+                        </span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate({ to: "/alertas" })}>
+                    Ver todos os alertas
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-9 gap-2 pl-1.5 pr-2">

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
@@ -56,6 +56,60 @@ function RiscosPage() {
   const carregando = riscosRaw === undefined;
   const [sel, setSel] = useState<RiscoOla | null>(null);
   const atual = sel ?? riscos[0] ?? null;
+  const navigate = useNavigate();
+
+  // Estado local só para refletir visualmente que a ação já foi disparada
+  // para o risco selecionado (evita reenviar a mesma ação sem feedback).
+  const [alertasCriados, setAlertasCriados] = useState<Set<string>>(new Set());
+  const [notificados, setNotificados] = useState<Set<string>>(new Set());
+  const [acoesCriadas, setAcoesCriadas] = useState<Set<string>>(new Set());
+
+  async function criarAlerta(r: RiscoOla) {
+    await db.alertas.add({
+      id_alerta: `ALT${Date.now()}`,
+      numero_incidente: r.numero_incidente,
+      titulo: `Risco de violação de OLA — ${r.produto}`,
+      descricao: `Probabilidade de violação de ${r.probabilidade_violacao}% (${r.faixa_risco}) para o incidente ${r.numero_incidente}, grupo ${r.grupo}.`,
+      severidade:
+        r.faixa_risco === "Crítico" ? "Crítico" : r.faixa_risco === "Alto" ? "Alto" : "Atenção",
+      produto: r.produto,
+      grupo_responsavel: r.grupo,
+      status: "Novo",
+      data_criacao: new Date().toISOString(),
+      canal_email: true,
+      canal_teams: true,
+      canal_sms: false,
+      canal_api: false,
+      origem_dado: "DEMONSTRACAO",
+      gerado_para_mvp: true,
+    });
+    setAlertasCriados((s) => new Set(s).add(r.id_risco));
+    toast.success("Alerta criado — visível na Central de Alertas.");
+  }
+
+  function notificar(r: RiscoOla) {
+    setNotificados((s) => new Set(s).add(r.id_risco));
+    toast.info(`Equipe ${r.grupo} notificada via Teams.`);
+  }
+
+  async function criarAcaoPreventiva(r: RiscoOla) {
+    await db.acoes.add({
+      id_acao: `ACT${Date.now()}`,
+      numero_incidente: r.numero_incidente,
+      responsavel: "A definir",
+      grupo_responsavel: r.grupo,
+      tipo_acao: "Ação preventiva",
+      descricao_acao: `Ação preventiva aberta a partir do risco de OLA de ${r.produto} (${r.probabilidade_violacao}% de probabilidade).`,
+      data_acao: new Date().toISOString(),
+      produto: r.produto,
+      status: "Planejada",
+      classificacao: "Pendente",
+      origem_dado: "DEMONSTRACAO",
+      gerado_para_mvp: true,
+    });
+    setAcoesCriadas((s) => new Set(s).add(r.id_risco));
+    toast.success("Ação preventiva criada — visível em Ações Corretivas.");
+  }
 
   if (carregando) {
     return (
@@ -234,24 +288,33 @@ function RiscosPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <Button size="sm" onClick={() => toast.success("Alerta preventivo criado")}>
-                <Bell className="h-4 w-4 mr-1.5" /> Criar alerta
+              <Button
+                size="sm"
+                disabled={alertasCriados.has(atual.id_risco)}
+                onClick={() => criarAlerta(atual)}
+              >
+                <Bell className="h-4 w-4 mr-1.5" />
+                {alertasCriados.has(atual.id_risco) ? "Alerta criado ✓" : "Criar alerta"}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => toast.info("Equipe notificada via Teams")}
+                disabled={notificados.has(atual.id_risco)}
+                onClick={() => notificar(atual)}
               >
-                <Users className="h-4 w-4 mr-1.5" /> Notificar
+                <Users className="h-4 w-4 mr-1.5" />
+                {notificados.has(atual.id_risco) ? "Notificado ✓" : "Notificar"}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => toast.success("Ação preventiva iniciada")}
+                disabled={acoesCriadas.has(atual.id_risco)}
+                onClick={() => criarAcaoPreventiva(atual)}
               >
-                <Wrench className="h-4 w-4 mr-1.5" /> Ação preventiva
+                <Wrench className="h-4 w-4 mr-1.5" />
+                {acoesCriadas.has(atual.id_risco) ? "Ação criada ✓" : "Ação preventiva"}
               </Button>
-              <Button size="sm" variant="ghost">
+              <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/incidentes" })}>
                 <ExternalLink className="h-4 w-4 mr-1.5" /> Similares
               </Button>
             </div>

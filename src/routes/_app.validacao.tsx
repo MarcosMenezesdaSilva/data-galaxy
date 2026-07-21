@@ -27,6 +27,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -142,8 +143,22 @@ function ValidacaoPage() {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="previsto" name="Previsto" fill="var(--info)" radius={4} />
-                  <Bar dataKey="real" name="Real" fill="var(--brand)" radius={4} />
+                  <Bar dataKey="previsto" name="Previsto" fill="var(--info)" radius={4}>
+                    <LabelList
+                      dataKey="previsto"
+                      position="top"
+                      fontSize={11}
+                      fill="var(--foreground)"
+                    />
+                  </Bar>
+                  <Bar dataKey="real" name="Real" fill="var(--brand)" radius={4}>
+                    <LabelList
+                      dataKey="real"
+                      position="top"
+                      fontSize={11}
+                      fill="var(--foreground)"
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (

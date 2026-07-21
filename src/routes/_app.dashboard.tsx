@@ -35,6 +35,7 @@ import {
   Tooltip,
   BarChart,
   Bar,
+  LabelList,
   PieChart,
   Pie,
   Cell,
@@ -413,7 +414,7 @@ function DashboardPage() {
           <div className="text-sm font-semibold mb-3">Incidentes por grupo responsável</div>
           <div className="h-72">
             <ResponsiveContainer>
-              <BarChart data={porGrupo} layout="vertical" margin={{ left: 20 }}>
+              <BarChart data={porGrupo} layout="vertical" margin={{ left: 20, right: 32 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
                 <YAxis
@@ -431,7 +432,14 @@ function DashboardPage() {
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="total" fill="var(--brand)" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="total" fill="var(--brand)" radius={[0, 6, 6, 0]}>
+                  <LabelList
+                    dataKey="total"
+                    position="right"
+                    fontSize={11}
+                    fill="var(--foreground)"
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -461,7 +469,14 @@ function DashboardPage() {
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="total" fill="var(--accent-orange)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="total" fill="var(--accent-orange)" radius={[6, 6, 0, 0]}>
+                  <LabelList
+                    dataKey="total"
+                    position="top"
+                    fontSize={11}
+                    fill="var(--foreground)"
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

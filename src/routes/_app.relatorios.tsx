@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -150,7 +151,14 @@ function RelatoriosPage() {
                       fontSize: 12,
                     }}
                   />
-                  <Bar dataKey="total" fill="var(--brand)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="total" fill="var(--brand)" radius={[6, 6, 0, 0]}>
+                    <LabelList
+                      dataKey="total"
+                      position="top"
+                      fontSize={11}
+                      fill="var(--foreground)"
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -170,7 +178,7 @@ function RelatoriosPage() {
               </div>
               <div className="h-72">
                 <ResponsiveContainer>
-                  <BarChart data={porProduto} layout="vertical" margin={{ left: 30 }}>
+                  <BarChart data={porProduto} layout="vertical" margin={{ left: 30, right: 32 }}>
                     <CartesianGrid
                       stroke="var(--border)"
                       strokeDasharray="3 3"
@@ -192,7 +200,14 @@ function RelatoriosPage() {
                         fontSize: 12,
                       }}
                     />
-                    <Bar dataKey="total" fill="var(--accent-orange)" radius={[0, 6, 6, 0]} />
+                    <Bar dataKey="total" fill="var(--accent-orange)" radius={[0, 6, 6, 0]}>
+                      <LabelList
+                        dataKey="total"
+                        position="right"
+                        fontSize={11}
+                        fill="var(--foreground)"
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
