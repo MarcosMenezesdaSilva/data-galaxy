@@ -21,16 +21,17 @@ export function seedIfEmpty(): Promise<void> {
     if (count > 0) return;
     const incidentes = gerarIncidentes(1000);
     const acoes = gerarAcoes(incidentes);
+    const produtosServicos = gerarProdutosServicos();
     await db.incidentes.bulkAdd(incidentes);
     await db.previsoes.bulkAdd(gerarPrevisoes());
-    await db.riscos.bulkAdd(gerarRiscos(incidentes));
+    await db.riscos.bulkAdd(gerarRiscos(incidentes, produtosServicos));
     await db.alertas.bulkAdd(gerarAlertas());
     await db.acoes.bulkAdd(acoes);
     await db.mudancas.bulkAdd(gerarMudancas());
     await db.artigos.bulkAdd(gerarArtigos());
     await db.regras.bulkAdd(gerarRegras());
     await db.validacoes.bulkAdd(gerarValidacoes(acoes));
-    await db.produtosServicos.bulkAdd(gerarProdutosServicos());
+    await db.produtosServicos.bulkAdd(produtosServicos);
   })();
   return seedPromise;
 }

@@ -293,13 +293,26 @@ export function gerarPrevisoes(): Previsao[] {
   return out;
 }
 
-export function gerarRiscos(incidentes: Incidente[]): RiscoOla[] {
+export function gerarRiscos(incidentes: Incidente[], produtos?: ProdutoServico[]): RiscoOla[] {
   const rng = mulberry32(11);
   const abertos = incidentes
     .filter((i) => i.status_incidente === "Em andamento" || i.status_incidente === "Reaberto")
     .slice(0, 40);
   const alvo =
     abertos.length >= 40 ? abertos : [...abertos, ...incidentes.slice(0, 40 - abertos.length)];
+
+  // Cross-reference real: criticidade do catálogo de produtos/serviços e
+  // proporção histórica de violações de SLA por produto (dados carregados),
+  // em vez de sortear esses dois fatores aleatoriamente.
+  const criticidadePorProduto = new Map((produtos ?? []).map((p) => [p.nome, p.criticidade]));
+  const violacaoPorProduto = new Map<string, number>();
+  const totalPorProduto = new Map<string, number>();
+  incidentes.forEach((i) => {
+    const p = i.produto ?? "Não informado";
+    totalPorProduto.set(p, (totalPorProduto.get(p) ?? 0) + 1);
+    if (!i.dentro_ola) violacaoPorProduto.set(p, (violacaoPorProduto.get(p) ?? 0) + 1);
+  });
+
   return alvo.map((inc, i) => {
     const prob = Math.round(rand(rng, 15, 98));
     const faixa: FaixaRisco =
@@ -313,10 +326,17 @@ export function gerarRiscos(incidentes: Incidente[]): RiscoOla[] {
     if (sobre) fatores.push("Grupo sobrecarregado");
     const tme = rng() < 0.4;
     if (tme) fatores.push("Tempo médio elevado");
-    const produtoCritico = rng() < 0.3;
+
+    const produtoNome = inc.produto ?? "Não informado";
+    const criticidade = criticidadePorProduto.get(produtoNome);
+    const produtoCritico = criticidade === "Alta" || criticidade === "Crítica";
     if (produtoCritico) fatores.push("Produto crítico");
-    const historicoViolacao = rng() < 0.3;
+
+    const totalProd = totalPorProduto.get(produtoNome) ?? 0;
+    const violProd = violacaoPorProduto.get(produtoNome) ?? 0;
+    const historicoViolacao = totalProd > 0 && violProd / totalProd > 0.15;
     if (historicoViolacao) fatores.push("Histórico de violação");
+
     if (inc.prioridade === "P1") fatores.push("Prioridade alta");
     if (fatores.length === 0) fatores.push("Padrão histórico");
     return {
