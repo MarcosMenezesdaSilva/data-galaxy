@@ -87,7 +87,19 @@ async function enviarTwilio(params: {
       } catch {
         // corpo de erro não era JSON — mantém detalhe genérico acima
       }
+      console.error(`[notify] Twilio rejeitou o envio para ${params.to}: ${detalhe}`);
       return { ok: false, motivo: "falha_envio", detalhe };
+    }
+    // A Twilio aceita (2xx) assim que a mensagem entra na fila — isso NÃO
+    // garante entrega. Logamos sid/status para conferir depois em Monitor →
+    // Logs → Messaging no console da Twilio, ou pelo Message SID direto.
+    try {
+      const okJson = (await resp.json()) as { sid?: string; status?: string };
+      console.log(
+        `[notify] Twilio aceitou o envio para ${params.to} — sid=${okJson.sid} status=${okJson.status}`,
+      );
+    } catch {
+      // corpo de sucesso não era JSON (não deveria acontecer) — ignora
     }
     return { ok: true };
   } catch (err) {
@@ -192,6 +204,8 @@ export default async (req: Request): Promise<Response> => {
   // WhatsApp interpreta *texto* como negrito — deixa o título em destaque.
   // SMS é texto puro; asteriscos apareceriam literalmente, então não usamos.
   const prefixo = canal === "whatsapp" ? `*${titulo}*` : titulo;
+
+  console.log(`[notify] Pedido recebido: canal=${canal} destino=***${to.slice(-4)} from=${from}`);
 
   const resultado = await enviarTwilio({
     accountSid,
