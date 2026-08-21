@@ -260,6 +260,16 @@ function ConfigPage() {
                 <Send className="h-3.5 w-3.5 mr-1.5" /> Enviar teste
               </Button>
             </div>
+            {statusCanais?.whatsapp && (
+              <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground sm:col-span-2">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+                <span>
+                  Quem vai receber precisa mandar uma mensagem primeiro para o número do sandbox do
+                  Twilio (código de entrada em Twilio Console → Messaging → Try it out → WhatsApp) —
+                  sem esse passo, o envio é aceito mas nunca chega.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* SMS */}

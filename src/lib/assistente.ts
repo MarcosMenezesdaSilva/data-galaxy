@@ -5,7 +5,10 @@
 // resolve contra os dados reais, exatamente para poder afirmar "baseado nos
 // nossos dados" sem margem de invenção.
 import type { AcaoCorretiva, Alerta, Incidente, Previsao, RiscoOla } from "./types";
+import type { Perfil } from "./store";
 import { fmtNumber, pct } from "./format";
+import { TELAS, type Tela } from "./telas";
+import { podeAcessar } from "./permissions";
 
 export type Intencao =
   | "resumo_hoje"
@@ -18,6 +21,7 @@ export type Intencao =
   | "alertas_pendentes"
   | "produto_risco"
   | "comparativo_impacto"
+  | "explicar_tela"
   | "fallback"
   | "fora_escopo";
 
@@ -53,7 +57,40 @@ function extrairEntidade(
   return { grupo, produto };
 }
 
+// Acha a tela citada na pergunta comparando contra nome/apelidos do
+// catálogo — pega o apelido mais longo que casar, pra evitar que um apelido
+// curto e genérico (ex.: "alertas") ganhe de um mais específico por engano.
+function extrairTela(pergunta: string): Tela | undefined {
+  const t = normalizar(pergunta);
+  let melhor: { tela: Tela; tamanho: number } | undefined;
+  for (const tela of TELAS) {
+    for (const apelido of tela.apelidos) {
+      if (t.includes(normalizar(apelido)) && (!melhor || apelido.length > melhor.tamanho)) {
+        melhor = { tela, tamanho: apelido.length };
+      }
+    }
+  }
+  return melhor?.tela;
+}
+
 export function classificarIntencao(pergunta: string): Intencao {
+  if (
+    algumaPalavra(pergunta, [
+      "o que tem a tela",
+      "o que tem na tela",
+      "o que mostra a tela",
+      "o que essa tela",
+      "o que aquela tela",
+      "pra que serve a tela",
+      "para que serve a tela",
+      "como funciona a tela",
+      "explica a tela",
+      "que informacao tem",
+      "que informacoes tem",
+    ])
+  )
+    return "explicar_tela";
+
   if (
     algumaPalavra(pergunta, [
       "reativo",
@@ -172,7 +209,11 @@ export interface DadosAssistente {
   previsoes: Previsao[];
 }
 
-export function responder(pergunta: string, dados: DadosAssistente): Resposta {
+export function responder(
+  pergunta: string,
+  dados: DadosAssistente,
+  perfil: Perfil | null = null,
+): Resposta {
   const { incidentes, riscos, alertas, acoes, previsoes } = dados;
   const intencao = classificarIntencao(pergunta);
 
@@ -182,6 +223,30 @@ export function responder(pergunta: string, dados: DadosAssistente): Resposta {
 
   const riscosAtivos = riscos.filter((r) => r.status === "Ativo");
   const riscosCriticos = riscosAtivos.filter((r) => r.faixa_risco === "Crítico");
+
+  if (intencao === "explicar_tela") {
+    const tela = extrairTela(pergunta);
+    if (!tela) {
+      const disponiveis = TELAS.filter((t) => podeAcessar(perfil, t.rota));
+      return {
+        intencao,
+        foraEscopo: true,
+        resumo: "Não identifiquei qual tela você quer que eu explique.",
+        detalhe: `As telas do seu menu são: ${disponiveis.map((t) => t.nome).join(", ")}.`,
+        recomendacao: 'Exemplo: "O que tem na tela de Riscos de OLA?"',
+        numeros: [],
+      };
+    }
+    const noMenu = podeAcessar(perfil, tela.rota);
+    return {
+      intencao,
+      resumo: `${tela.nome}: ${tela.descricao}`,
+      detalhe: noMenu
+        ? "Essa tela está no seu menu."
+        : "Essa tela não aparece no seu menu atual — está disponível para outros perfis.",
+      numeros: [],
+    };
+  }
 
   if (intencao === "fora_escopo") {
     return {

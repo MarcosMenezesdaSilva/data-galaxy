@@ -529,6 +529,18 @@ function RiscosPage() {
                   </p>
                 </div>
               )}
+
+              {canalEscolhido === "whatsapp" && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50/40 p-3 text-xs text-muted-foreground dark:bg-amber-950/10">
+                  <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                  <span>
+                    Antes do primeiro envio, quem vai receber precisa mandar uma mensagem para o
+                    número do sandbox do Twilio (o código de entrada fica em Twilio Console →
+                    Messaging → Try it out → WhatsApp). Sem esse passo único, a Twilio aceita o
+                    envio mas a mensagem nunca chega no WhatsApp da pessoa.
+                  </span>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
