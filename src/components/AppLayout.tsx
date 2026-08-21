@@ -26,6 +26,7 @@ import {
   User as UserIcon,
   ClipboardCheck,
   Waypoints,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp, USUARIOS } from "@/lib/store";
@@ -54,6 +55,7 @@ import { toast } from "sonner";
 
 const NAV = [
   { to: "/dashboard", label: "Central de Operações", icon: LayoutDashboard },
+  { to: "/assistente", label: "Assistente", icon: Bot },
   { to: "/impacto", label: "Impacto", icon: Scale },
   { to: "/incidentes", label: "Incidentes", icon: AlertTriangle },
   { to: "/previsoes", label: "Previsões", icon: TrendingUp },

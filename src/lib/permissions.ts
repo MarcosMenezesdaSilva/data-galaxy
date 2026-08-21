@@ -15,8 +15,24 @@ import type { Perfil } from "./store";
  */
 export const ROTAS_POR_PERFIL: Record<Perfil, string[] | "todas"> = {
   admin: "todas",
-  gestor: ["/dashboard", "/previsoes", "/riscos-ola", "/alertas", "/relatorios", "/impacto"],
-  tecnico: ["/dashboard", "/incidentes", "/riscos-ola", "/alertas", "/correcoes", "/dados"],
+  gestor: [
+    "/dashboard",
+    "/assistente",
+    "/previsoes",
+    "/riscos-ola",
+    "/alertas",
+    "/relatorios",
+    "/impacto",
+  ],
+  tecnico: [
+    "/dashboard",
+    "/assistente",
+    "/incidentes",
+    "/riscos-ola",
+    "/alertas",
+    "/correcoes",
+    "/dados",
+  ],
 };
 
 export function podeAcessar(perfil: Perfil | null, path: string): boolean {

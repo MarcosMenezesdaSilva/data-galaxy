@@ -27,6 +27,7 @@ import { Route as AppDadosRouteImport } from './routes/_app.dados'
 import { Route as AppCorrecoesRouteImport } from './routes/_app.correcoes'
 import { Route as AppConhecimentoRouteImport } from './routes/_app.conhecimento'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
+import { Route as AppAssistenteRouteImport } from './routes/_app.assistente'
 import { Route as AppArquiteturaRouteImport } from './routes/_app.arquitetura'
 import { Route as AppAlertasRouteImport } from './routes/_app.alertas'
 
@@ -119,6 +120,11 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAssistenteRoute = AppAssistenteRouteImport.update({
+  id: '/assistente',
+  path: '/assistente',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppArquiteturaRoute = AppArquiteturaRouteImport.update({
   id: '/arquitetura',
   path: '/arquitetura',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/alertas': typeof AppAlertasRoute
   '/arquitetura': typeof AppArquiteturaRoute
+  '/assistente': typeof AppAssistenteRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/conhecimento': typeof AppConhecimentoRoute
   '/correcoes': typeof AppCorrecoesRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/alertas': typeof AppAlertasRoute
   '/arquitetura': typeof AppArquiteturaRoute
+  '/assistente': typeof AppAssistenteRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/conhecimento': typeof AppConhecimentoRoute
   '/correcoes': typeof AppCorrecoesRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/alertas': typeof AppAlertasRoute
   '/_app/arquitetura': typeof AppArquiteturaRoute
+  '/_app/assistente': typeof AppAssistenteRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/conhecimento': typeof AppConhecimentoRoute
   '/_app/correcoes': typeof AppCorrecoesRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/alertas'
     | '/arquitetura'
+    | '/assistente'
     | '/configuracoes'
     | '/conhecimento'
     | '/correcoes'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/alertas'
     | '/arquitetura'
+    | '/assistente'
     | '/configuracoes'
     | '/conhecimento'
     | '/correcoes'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/alertas'
     | '/_app/arquitetura'
+    | '/_app/assistente'
     | '/_app/configuracoes'
     | '/_app/conhecimento'
     | '/_app/correcoes'
@@ -396,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/assistente': {
+      id: '/_app/assistente'
+      path: '/assistente'
+      fullPath: '/assistente'
+      preLoaderRoute: typeof AppAssistenteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/arquitetura': {
       id: '/_app/arquitetura'
       path: '/arquitetura'
@@ -416,6 +435,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAlertasRoute: typeof AppAlertasRoute
   AppArquiteturaRoute: typeof AppArquiteturaRoute
+  AppAssistenteRoute: typeof AppAssistenteRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppConhecimentoRoute: typeof AppConhecimentoRoute
   AppCorrecoesRoute: typeof AppCorrecoesRoute
@@ -436,6 +456,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAlertasRoute: AppAlertasRoute,
   AppArquiteturaRoute: AppArquiteturaRoute,
+  AppAssistenteRoute: AppAssistenteRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppConhecimentoRoute: AppConhecimentoRoute,
   AppCorrecoesRoute: AppCorrecoesRoute,
