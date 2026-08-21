@@ -15,12 +15,34 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { RiskGauge } from "@/components/RiskGauge";
-import { Bell, Wrench, Users, ExternalLink, Clock, Info, ShieldOff } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Bell,
+  Wrench,
+  Users,
+  ExternalLink,
+  Clock,
+  Info,
+  ShieldOff,
+  MessageCircle,
+  Send,
+  Loader2,
+} from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { RiscoOla } from "@/lib/types";
 import { toast } from "sonner";
-import { enviarNotificacao } from "@/lib/notify";
+import { enviarNotificacao, type Canal } from "@/lib/notify";
 
 export const Route = createFileRoute("/_app/riscos-ola")({
   head: () => ({ meta: [{ title: "Riscos de OLA — Data Galaxy" }] }),
@@ -65,6 +87,15 @@ function RiscosPage() {
   const [notificados, setNotificados] = useState<Set<string>>(new Set());
   const [acoesCriadas, setAcoesCriadas] = useState<Set<string>>(new Set());
 
+  // Diálogo de notificação: canal e destino digitados na hora, em vez de um
+  // número fixo em variável de ambiente — pensado para demonstração ao vivo
+  // (ex.: digitar o WhatsApp de alguém da banca durante o pitch e mandar na
+  // hora).
+  const [dialogNotificarAberto, setDialogNotificarAberto] = useState(false);
+  const [canalEscolhido, setCanalEscolhido] = useState<Canal>("whatsapp");
+  const [destino, setDestino] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
   async function criarAlerta(r: RiscoOla) {
     await db.alertas.add({
       id_alerta: `ALT${Date.now()}`,
@@ -88,26 +119,51 @@ function RiscosPage() {
     toast.success("Alerta criado — visível na Central de Alertas.");
   }
 
-  async function notificar(r: RiscoOla) {
+  const NOME_CANAL: Record<Canal, string> = {
+    teams: "Teams",
+    whatsapp: "WhatsApp",
+    sms: "SMS",
+  };
+
+  function abrirDialogNotificar() {
+    setCanalEscolhido("whatsapp");
+    setDestino("");
+    setDialogNotificarAberto(true);
+  }
+
+  async function confirmarNotificacao(r: RiscoOla) {
+    if (canalEscolhido !== "teams" && destino.trim().length < 8) {
+      toast.error("Digite um número de destino válido (com DDI, ex: +5511999999999).");
+      return;
+    }
+
+    setEnviando(true);
+    const resultado = await enviarNotificacao({
+      canal: canalEscolhido,
+      destinatario: canalEscolhido === "teams" ? undefined : destino.trim(),
+      titulo: `Risco de violação de OLA — ${r.produto}`,
+      mensagem: `Probabilidade de violação de ${r.probabilidade_violacao}% (${r.faixa_risco}) para o incidente ${r.numero_incidente}. Grupo responsável: ${r.grupo}. Tempo restante: ${r.tempo_restante_minutos} min.`,
+    });
+    setEnviando(false);
+
     // Marca o estado local independentemente do resultado, para manter o
     // feedback visual do botão consistente mesmo quando o canal ainda não
     // está configurado (o clique já foi "processado" do ponto de vista da UI).
     setNotificados((s) => new Set(s).add(r.id_risco));
 
-    const resultado = await enviarNotificacao({
-      canal: "teams",
-      titulo: `Risco de violação de OLA — ${r.produto}`,
-      mensagem: `Probabilidade de violação de ${r.probabilidade_violacao}% (${r.faixa_risco}) para o incidente ${r.numero_incidente}. Grupo responsável: ${r.grupo}. Tempo restante: ${r.tempo_restante_minutos} min.`,
-    });
-
     if (resultado.ok) {
-      toast.success(`Equipe ${r.grupo} notificada via Teams.`);
+      toast.success(
+        canalEscolhido === "teams"
+          ? `Equipe ${r.grupo} notificada via Teams.`
+          : `Mensagem enviada por ${NOME_CANAL[canalEscolhido]} para ${destino.trim()}.`,
+      );
+      setDialogNotificarAberto(false);
     } else if (resultado.motivo === "nao_configurado") {
       toast.warning(
-        "Canal Teams ainda não configurado. Configure em Configurações → Notificações.",
+        `Canal ${NOME_CANAL[canalEscolhido]} ainda não configurado. Configure em Configurações → Notificações.`,
       );
     } else {
-      toast.error("Não foi possível notificar a equipe agora.");
+      toast.error(`Não foi possível enviar por ${NOME_CANAL[canalEscolhido]} agora.`);
     }
   }
 
@@ -319,7 +375,7 @@ function RiscosPage() {
                 size="sm"
                 variant="outline"
                 disabled={notificados.has(atual.id_risco)}
-                onClick={() => notificar(atual)}
+                onClick={abrirDialogNotificar}
               >
                 <Users className="h-4 w-4 mr-1.5" />
                 {notificados.has(atual.id_risco) ? "Notificado ✓" : "Notificar"}
@@ -340,6 +396,84 @@ function RiscosPage() {
           </Card>
         )}
       </div>
+
+      {atual && (
+        <Dialog open={dialogNotificarAberto} onOpenChange={setDialogNotificarAberto}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Notificar grupo {atual.grupo}</DialogTitle>
+              <DialogDescription>
+                Escolha o canal. Para WhatsApp ou SMS, digite o número de destino (com DDI) — útil
+                para demonstrar o envio ao vivo.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <RadioGroup
+                value={canalEscolhido}
+                onValueChange={(v) => setCanalEscolhido(v as Canal)}
+                className="grid grid-cols-3 gap-2"
+              >
+                <Label
+                  htmlFor="canal-whatsapp"
+                  className={`flex flex-col items-center gap-1.5 rounded-md border p-3 text-xs cursor-pointer transition-colors ${canalEscolhido === "whatsapp" ? "border-primary bg-primary/5" : "border-border hover:bg-accent/40"}`}
+                >
+                  <RadioGroupItem value="whatsapp" id="canal-whatsapp" className="sr-only" />
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
+                </Label>
+                <Label
+                  htmlFor="canal-sms"
+                  className={`flex flex-col items-center gap-1.5 rounded-md border p-3 text-xs cursor-pointer transition-colors ${canalEscolhido === "sms" ? "border-primary bg-primary/5" : "border-border hover:bg-accent/40"}`}
+                >
+                  <RadioGroupItem value="sms" id="canal-sms" className="sr-only" />
+                  <Send className="h-4 w-4" />
+                  SMS
+                </Label>
+                <Label
+                  htmlFor="canal-teams"
+                  className={`flex flex-col items-center gap-1.5 rounded-md border p-3 text-xs cursor-pointer transition-colors ${canalEscolhido === "teams" ? "border-primary bg-primary/5" : "border-border hover:bg-accent/40"}`}
+                >
+                  <RadioGroupItem value="teams" id="canal-teams" className="sr-only" />
+                  <Users className="h-4 w-4" />
+                  Teams
+                </Label>
+              </RadioGroup>
+
+              {canalEscolhido !== "teams" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="destino-notificacao">Número de destino</Label>
+                  <Input
+                    id="destino-notificacao"
+                    placeholder="+5511999999999"
+                    value={destino}
+                    onChange={(e) => setDestino(e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Formato internacional, com DDI. Em conta Twilio trial, o número precisa estar
+                    verificado (SMS) ou ter entrado no sandbox (WhatsApp).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                onClick={() => confirmarNotificacao(atual)}
+                disabled={enviando}
+                className="w-full sm:w-auto"
+              >
+                {enviando ? (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-1.5" />
+                )}
+                {enviando ? "Enviando..." : `Enviar por ${NOME_CANAL[canalEscolhido]}`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
