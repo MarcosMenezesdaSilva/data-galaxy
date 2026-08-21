@@ -18,11 +18,18 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type Status = "Implementado" | "Simulado no MVP" | "Planejado" | "Integração futura";
+type Status =
+  | "Implementado"
+  | "Implementado (aguardando credenciais)"
+  | "Simulado no MVP"
+  | "Planejado"
+  | "Integração futura";
 
 const statusColor: Record<Status, string> = {
   Implementado:
     "bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/30",
+  "Implementado (aguardando credenciais)":
+    "bg-[color:var(--info)]/10 text-[color:var(--info)] border-[color:var(--info)]/30",
   "Simulado no MVP":
     "bg-[color:var(--info)]/10 text-[color:var(--info)] border-[color:var(--info)]/30",
   Planejado:
@@ -104,10 +111,9 @@ const CAMADAS: Camada[] = [
     icon: MessageSquare,
     cor: "var(--accent-orange)",
     comps: [
-      { nome: "Twilio", status: "Integração futura" },
+      { nome: "Twilio (WhatsApp/SMS)", status: "Implementado (aguardando credenciais)" },
       { nome: "E-mail", status: "Simulado no MVP" },
-      { nome: "Microsoft Teams", status: "Simulado no MVP" },
-      { nome: "SMS", status: "Simulado no MVP" },
+      { nome: "Microsoft Teams (webhook)", status: "Implementado (aguardando credenciais)" },
       { nome: "API", status: "Simulado no MVP" },
     ],
   },
@@ -156,7 +162,7 @@ const ROADMAP = [
   },
   {
     sprint: "Escala",
-    titulo: "Streaming com Kafka/Flink + notificações Twilio + Power BI",
+    titulo: "Streaming com Kafka/Flink para eventos de alto volume + Power BI",
     icon: Cloud,
     cor: "var(--success)",
   },
@@ -210,6 +216,20 @@ function ArqPage() {
         ))}
       </div>
 
+      <Card className="p-5 bg-muted/30">
+        <div className="text-sm font-semibold mb-2">Nota sobre o disparo real de notificações</div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          WhatsApp/SMS (via Twilio) e Microsoft Teams (via webhook) agora são disparados de verdade
+          a partir de uma Netlify Function simples — sem fila de eventos: é uma chamada direta
+          request/response entre o navegador e a function, que por sua vez chama a API do provedor.
+          Isso é uma simplificação deliberada do MVP em relação ao desenho original com Kafka/Flink
+          (pensado para volume alto e desacoplamento entre produtores/consumidores); para o volume
+          atual do projeto, a chamada direta é suficiente e muito mais simples de operar. As
+          credenciais reais ainda não foram configuradas pelo time — até lá, os canais respondem
+          "não configurado" de forma controlada, sem quebrar a aplicação.
+        </p>
+      </Card>
+
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-4">
           <Rocket className="h-4 w-4 text-primary" />
@@ -233,16 +253,22 @@ function ArqPage() {
       <Card className="p-5 bg-muted/40">
         <div className="text-sm font-semibold mb-2">Legenda de status</div>
         <div className="flex flex-wrap gap-2">
-          {(["Implementado", "Simulado no MVP", "Planejado", "Integração futura"] as Status[]).map(
-            (s) => (
-              <div
-                key={s}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs ${statusColor[s]}`}
-              >
-                {s}
-              </div>
-            ),
-          )}
+          {(
+            [
+              "Implementado",
+              "Implementado (aguardando credenciais)",
+              "Simulado no MVP",
+              "Planejado",
+              "Integração futura",
+            ] as Status[]
+          ).map((s) => (
+            <div
+              key={s}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs ${statusColor[s]}`}
+            >
+              {s}
+            </div>
+          ))}
         </div>
       </Card>
     </div>

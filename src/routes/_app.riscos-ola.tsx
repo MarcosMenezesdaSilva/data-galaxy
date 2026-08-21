@@ -20,6 +20,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { RiscoOla } from "@/lib/types";
 import { toast } from "sonner";
+import { enviarNotificacao } from "@/lib/notify";
 
 export const Route = createFileRoute("/_app/riscos-ola")({
   head: () => ({ meta: [{ title: "Riscos de OLA — Data Galaxy" }] }),
@@ -87,9 +88,27 @@ function RiscosPage() {
     toast.success("Alerta criado — visível na Central de Alertas.");
   }
 
-  function notificar(r: RiscoOla) {
+  async function notificar(r: RiscoOla) {
+    // Marca o estado local independentemente do resultado, para manter o
+    // feedback visual do botão consistente mesmo quando o canal ainda não
+    // está configurado (o clique já foi "processado" do ponto de vista da UI).
     setNotificados((s) => new Set(s).add(r.id_risco));
-    toast.info(`Equipe ${r.grupo} notificada via Teams.`);
+
+    const resultado = await enviarNotificacao({
+      canal: "teams",
+      titulo: `Risco de violação de OLA — ${r.produto}`,
+      mensagem: `Probabilidade de violação de ${r.probabilidade_violacao}% (${r.faixa_risco}) para o incidente ${r.numero_incidente}. Grupo responsável: ${r.grupo}. Tempo restante: ${r.tempo_restante_minutos} min.`,
+    });
+
+    if (resultado.ok) {
+      toast.success(`Equipe ${r.grupo} notificada via Teams.`);
+    } else if (resultado.motivo === "nao_configurado") {
+      toast.warning(
+        "Canal Teams ainda não configurado. Configure em Configurações → Notificações.",
+      );
+    } else {
+      toast.error("Não foi possível notificar a equipe agora.");
+    }
   }
 
   async function criarAcaoPreventiva(r: RiscoOla) {

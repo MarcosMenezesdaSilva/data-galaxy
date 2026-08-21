@@ -36,5 +36,14 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // Netlify Functions rodam em Node (não no navegador) — precisam de
+    // globals como `process` e `Buffer`, além dos globals de fetch/Request/
+    // Response já cobertos por `globals.browser`.
+    files: ["netlify/functions/**/*.ts"],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
   eslintPluginPrettier,
 );
