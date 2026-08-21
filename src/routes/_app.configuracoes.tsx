@@ -242,7 +242,7 @@ function ConfigPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Input
-                placeholder="+5511999999999"
+                placeholder="11999999999"
                 value={destinoWhatsapp}
                 onChange={(e) => setDestinoWhatsapp(e.target.value)}
                 className="h-8 w-44"
@@ -283,7 +283,7 @@ function ConfigPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Input
-                placeholder="+5511999999999"
+                placeholder="11999999999"
                 value={destinoSms}
                 onChange={(e) => setDestinoSms(e.target.value)}
                 className="h-8 w-44"

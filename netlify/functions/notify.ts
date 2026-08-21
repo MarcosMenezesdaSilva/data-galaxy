@@ -27,6 +27,17 @@ function isCanalValido(v: unknown): v is Canal {
   return v === "whatsapp" || v === "sms" || v === "teams";
 }
 
+// Números digitados sem DDI são assumidos como Brasil (+55) — a maioria dos
+// usuários do MVP é daqui, e esquecer o "+55" era a causa mais comum de
+// "canal não configurado" (na real, o número é que estava inválido para a
+// Twilio). Se já vier com "+", respeita como está (permite outros países).
+function normalizarNumero(numero: string): string {
+  const bruto = numero.trim();
+  if (bruto.startsWith("+")) return bruto;
+  const digitos = bruto.replace(/\D/g, "");
+  return `+55${digitos}`;
+}
+
 async function enviarTwilio(params: {
   accountSid: string;
   authToken: string;
@@ -147,19 +158,26 @@ export default async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, motivo: "nao_configurado" });
   }
 
+  const destinoNormalizado = destinoBruto.startsWith("whatsapp:")
+    ? destinoBruto
+    : normalizarNumero(destinoBruto);
   const to =
     canal === "whatsapp"
-      ? destinoBruto.startsWith("whatsapp:")
-        ? destinoBruto
-        : `whatsapp:${destinoBruto}`
-      : destinoBruto;
+      ? destinoNormalizado.startsWith("whatsapp:")
+        ? destinoNormalizado
+        : `whatsapp:${destinoNormalizado}`
+      : destinoNormalizado;
+
+  // WhatsApp interpreta *texto* como negrito — deixa o título em destaque.
+  // SMS é texto puro; asteriscos apareceriam literalmente, então não usamos.
+  const prefixo = canal === "whatsapp" ? `*${titulo}*` : titulo;
 
   const resultado = await enviarTwilio({
     accountSid,
     authToken,
     from,
     to,
-    corpo: `${titulo}\n\n${mensagem}`,
+    corpo: `${prefixo}\n\n${mensagem}`,
   });
 
   return jsonResponse(resultado);
