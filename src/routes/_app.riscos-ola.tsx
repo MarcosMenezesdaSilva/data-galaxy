@@ -131,10 +131,11 @@ function RiscosPage() {
     setDialogNotificarAberto(true);
   }
 
-  // Corpo da mensagem por canal — WhatsApp usa *negrito* e emoji (a Twilio
-  // renderiza esse markdown de verdade no app), SMS fica em texto puro
-  // (asterisco apareceria literal), Teams continua no formato de card já
-  // existente (título e texto separados pelo MessageCard).
+  // Corpo da mensagem por canal — mesmo padrão visual (emoji + seções) nos
+  // três, cada um com a sintaxe de negrito que o canal realmente renderiza:
+  // WhatsApp usa *negrito* (Twilio), Teams usa **negrito** (Markdown do
+  // MessageCard, com \n\n entre seções para garantir quebra de linha), SMS
+  // fica em texto puro (asterisco apareceria literal).
   function montarNotificacao(r: RiscoOla): { titulo: string; mensagem: string } {
     const minutosAcao = Math.max(15, Math.round(r.tempo_restante_minutos * 0.3));
     const link = "https://data-galaxy-nexusops.netlify.app";
@@ -176,9 +177,30 @@ function RiscosPage() {
       };
     }
 
+    // Teams
     return {
-      titulo: `Risco de violação de OLA — ${r.produto}`,
-      mensagem: `Probabilidade de violação de ${r.probabilidade_violacao}% (${r.faixa_risco}) para o incidente ${r.numero_incidente}. Grupo responsável: ${r.grupo}. Tempo restante: ${r.tempo_restante_minutos} min.`,
+      titulo: `🚨 Data Galaxy — Risco ${r.faixa_risco}`,
+      mensagem: [
+        `📋 Incidente: ${r.numero_incidente}`,
+        "",
+        `🏷️ Produto: ${r.produto}`,
+        "",
+        `👥 Grupo: ${r.grupo}`,
+        "",
+        `📊 Probabilidade de violação: **${r.probabilidade_violacao}%**`,
+        "",
+        `⏱️ Tempo restante: ${r.tempo_restante_minutos} min`,
+        "",
+        `⚠️ Fatores: ${r.fatores_risco.join(", ")}`,
+        "",
+        `✅ **Recomendação:**`,
+        "",
+        `Acionar o grupo ${r.grupo} nos próximos ${minutosAcao} minutos.`,
+        "",
+        `🔗 [${link}](${link})`,
+        "",
+        `_Data Galaxy • Challenge Locaweb 2026 • FIAP_`,
+      ].join("\n\n"),
     };
   }
 

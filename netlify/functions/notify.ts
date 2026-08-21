@@ -89,7 +89,10 @@ async function enviarTeams(
   try {
     const resp = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // Charset explícito — sem isso, o fluxo do Power Automate/Teams estava
+      // interpretando emoji e acentos (JSON em UTF-8) com outro encoding e
+      // trocando tudo por "?".
+      headers: { "content-type": "application/json; charset=utf-8" },
       body: JSON.stringify({
         "@type": "MessageCard",
         "@context": "http://schema.org/extensions",
