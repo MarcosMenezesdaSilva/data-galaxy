@@ -32,9 +32,11 @@ import { toast } from "sonner";
 import {
   enviarNotificacao,
   statusCanaisNotificacao,
+  linkOptInWhatsapp,
   type Canal,
   type StatusCanais,
 } from "@/lib/notify";
+import { QRCodeSVG } from "qrcode.react";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Data Galaxy" }] }),
@@ -57,6 +59,7 @@ function ConfigPage() {
   useEffect(() => {
     statusCanaisNotificacao().then(setStatusCanais);
   }, []);
+  const linkOptIn = statusCanais ? linkOptInWhatsapp(statusCanais) : null;
 
   async function testarCanal(canal: Canal, destinatario?: string) {
     setEnviandoTeste(canal);
@@ -261,13 +264,33 @@ function ConfigPage() {
               </Button>
             </div>
             {statusCanais?.whatsapp && (
-              <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground sm:col-span-2">
-                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
-                <span>
-                  Quem vai receber precisa mandar uma mensagem primeiro para o número do sandbox do
-                  Twilio (código de entrada em Twilio Console → Messaging → Try it out → WhatsApp) —
-                  sem esse passo, o envio é aceito mas nunca chega.
-                </span>
+              <div className="flex flex-col gap-2 text-[11px] text-muted-foreground sm:col-span-2">
+                <div className="flex items-start gap-1.5">
+                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+                  <span>
+                    Quem vai receber precisa mandar uma mensagem primeiro para o número do sandbox
+                    do Twilio — sem esse passo, o envio é aceito mas nunca chega.
+                  </span>
+                </div>
+                {linkOptIn && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => window.open(linkOptIn, "_blank", "noopener,noreferrer")}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" /> Abrir WhatsApp e entrar no sandbox
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-md bg-white p-1.5">
+                        <QRCodeSVG value={linkOptIn} size={56} />
+                      </div>
+                      <span>Escaneie para entrar direto</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -74,22 +74,11 @@ function extrairTela(pergunta: string): Tela | undefined {
 }
 
 export function classificarIntencao(pergunta: string): Intencao {
-  if (
-    algumaPalavra(pergunta, [
-      "o que tem a tela",
-      "o que tem na tela",
-      "o que mostra a tela",
-      "o que essa tela",
-      "o que aquela tela",
-      "pra que serve a tela",
-      "para que serve a tela",
-      "como funciona a tela",
-      "explica a tela",
-      "que informacao tem",
-      "que informacoes tem",
-    ])
-  )
-    return "explicar_tela";
+  // Qualquer pergunta que mencione a palavra "tela"/"página" — em qualquer
+  // formato ("o que tem", "pra que serve", "o que significa", "como
+  // funciona"...) — é sobre uma tela do produto, não sobre os dados. Não dá
+  // pra prever toda variação de frase, então o gatilho é a palavra em si.
+  if (algumaPalavra(pergunta, ["tela", "pagina"])) return "explicar_tela";
 
   if (
     algumaPalavra(pergunta, [

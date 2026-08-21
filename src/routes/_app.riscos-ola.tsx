@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { PageHeader } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,12 +38,19 @@ import {
   MessageCircle,
   Send,
   Loader2,
+  QrCode,
 } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { RiscoOla } from "@/lib/types";
 import { toast } from "sonner";
-import { enviarNotificacao, type Canal } from "@/lib/notify";
+import {
+  enviarNotificacao,
+  statusCanaisNotificacao,
+  linkOptInWhatsapp,
+  type Canal,
+  type StatusCanais,
+} from "@/lib/notify";
 
 export const Route = createFileRoute("/_app/riscos-ola")({
   head: () => ({ meta: [{ title: "Riscos de OLA — Data Galaxy" }] }),
@@ -95,6 +103,11 @@ function RiscosPage() {
   const [canalEscolhido, setCanalEscolhido] = useState<Canal>("whatsapp");
   const [destino, setDestino] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [statusCanais, setStatusCanais] = useState<StatusCanais | null>(null);
+  useEffect(() => {
+    statusCanaisNotificacao().then(setStatusCanais);
+  }, []);
+  const linkOptIn = statusCanais ? linkOptInWhatsapp(statusCanais) : null;
 
   async function criarAlerta(r: RiscoOla) {
     await db.alertas.add({
@@ -531,14 +544,43 @@ function RiscosPage() {
               )}
 
               {canalEscolhido === "whatsapp" && (
-                <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50/40 p-3 text-xs text-muted-foreground dark:bg-amber-950/10">
-                  <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
-                  <span>
-                    Antes do primeiro envio, quem vai receber precisa mandar uma mensagem para o
-                    número do sandbox do Twilio (o código de entrada fica em Twilio Console →
-                    Messaging → Try it out → WhatsApp). Sem esse passo único, a Twilio aceita o
-                    envio mas a mensagem nunca chega no WhatsApp da pessoa.
-                  </span>
+                <div className="space-y-2 rounded-md border border-amber-400/40 bg-amber-50/40 p-3 text-xs text-muted-foreground dark:bg-amber-950/10">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                    <span>
+                      Antes do primeiro envio, quem vai receber precisa mandar uma mensagem para o
+                      número do sandbox do Twilio. Sem esse passo único, a Twilio aceita o envio mas
+                      a mensagem nunca chega no WhatsApp da pessoa.
+                    </span>
+                  </div>
+                  {linkOptIn ? (
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => window.open(linkOptIn, "_blank", "noopener,noreferrer")}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" /> Abrir WhatsApp e entrar no sandbox
+                      </Button>
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-md bg-white p-1.5">
+                          <QRCodeSVG value={linkOptIn} size={64} />
+                        </div>
+                        <span className="flex items-center gap-1 text-[11px]">
+                          <QrCode className="h-3 w-3" /> A banca escaneia com o celular e já entra
+                          no sandbox
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="block text-[11px]">
+                      Configure <code>TWILIO_WHATSAPP_FROM</code> (e, opcionalmente,{" "}
+                      <code>TWILIO_WHATSAPP_JOIN_CODE</code>) para liberar o botão e o QR code de
+                      entrada automática.
+                    </span>
+                  )}
                 </div>
               )}
             </div>

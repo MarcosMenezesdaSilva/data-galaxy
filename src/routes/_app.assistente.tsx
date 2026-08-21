@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useApp } from "@/lib/store";
+import { useApp, type Perfil } from "@/lib/store";
 import { useIncidentes, useRiscos, useAlertas, useAcoes, usePrevisoes } from "@/lib/hooks";
 import { responder, type Resposta } from "@/lib/assistente";
 import { Bot, Send, Sparkles, AlertTriangle } from "lucide-react";
@@ -48,16 +48,22 @@ const QUICK_QS_POR_PERFIL: Record<string, string[]> = {
 
 function AssistentePage() {
   const { perfil } = useApp();
+  // Cada perfil é uma pessoa diferente conversando. `key` força o React a
+  // desmontar e montar uma instância nova de AssistenteConversa a cada troca
+  // de perfil — isso zera TODO o estado local (mensagens, input, timers em
+  // andamento) de uma vez, sem depender de lembrar de resetar cada useState
+  // manualmente sempre que alguém mexer neste componente no futuro.
+  return <AssistenteConversa key={perfil ?? "sem-perfil"} perfil={perfil} />;
+}
+
+function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
   const incidentes = useIncidentes();
   const riscos = useRiscos();
   const alertas = useAlertas();
   const acoes = useAcoes();
   const previsoes = usePrevisoes();
 
-  const quickQs = useMemo(
-    () => QUICK_QS_POR_PERFIL[perfil ?? "admin"] ?? QUICK_QS_POR_PERFIL.admin,
-    [perfil],
-  );
+  const quickQs = QUICK_QS_POR_PERFIL[perfil ?? "admin"] ?? QUICK_QS_POR_PERFIL.admin;
 
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -67,18 +73,6 @@ function AssistentePage() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs.length, isThinking]);
 
-  // Cada perfil é uma pessoa diferente conversando — a troca de perfil não
-  // pode carregar o histórico de quem usou o assistente antes. Guardamos o
-  // perfil atual num ref porque a resposta "pensando" roda num setTimeout: se
-  // o perfil mudar nesse meio-tempo, o closure antigo não pode saber disso
-  // só olhando a variável capturada.
-  const perfilRef = useRef(perfil);
-  useEffect(() => {
-    perfilRef.current = perfil;
-    setMsgs([]);
-    setIsThinking(false);
-  }, [perfil]);
-
   function enviar(texto?: string) {
     const t = (texto ?? input).trim();
     if (!t || isThinking) return;
@@ -86,11 +80,7 @@ function AssistentePage() {
     setMsgs((m) => [...m, { role: "user", text: t, ts: Date.now() }]);
     setIsThinking(true);
     const delay = 900 + Math.random() * 700;
-    const perfilDaPergunta = perfil;
     setTimeout(() => {
-      // Se o perfil mudou enquanto a resposta "pensava", descarta — ela não
-      // pertence mais à conversa atual.
-      if (perfilRef.current !== perfilDaPergunta) return;
       const resposta = responder(t, { incidentes, riscos, alertas, acoes, previsoes }, perfil);
       setIsThinking(false);
       setMsgs((m) => [...m, { role: "assistant", resposta, isStreaming: true, ts: Date.now() }]);

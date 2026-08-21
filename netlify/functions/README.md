@@ -23,6 +23,7 @@ commitadas no repositório.
 | `TEAMS_WEBHOOK_URL`           | URL do webhook de entrada (Incoming Webhook) do canal no Teams   |
 | `NOTIFY_DEFAULT_WHATSAPP_TO`  | Destino padrão de WhatsApp para demonstração (opcional)          |
 | `NOTIFY_DEFAULT_SMS_TO`       | Destino padrão de SMS para demonstração (opcional)                |
+| `TWILIO_WHATSAPP_JOIN_CODE`   | Código de entrada do sandbox (ex.: `join example-word`), opcional — usado só para montar o botão/QR code de opt-in na UI |
 
 Sem essas variáveis, as functions respondem `{ ok: false, motivo: "nao_configurado" }`
 em vez de erro — é o comportamento esperado até a configuração real ser feita.
