@@ -27,6 +27,24 @@ function isCanalValido(v: unknown): v is Canal {
   return v === "whatsapp" || v === "sms" || v === "teams";
 }
 
+// Serializa em JSON escapando todo caractere fora da faixa ASCII básica como
+// sequência de escape. Usado só no payload para o Teams: o fluxo de Power
+// Automate (Workflows do Teams) estava corrompendo emoji/acentuação mesmo
+// com o corpo em UTF-8 e o charset declarado no header — provavelmente uma
+// etapa intermediária do fluxo decodificando com outro charset. A sequência
+// de escape é puro ASCII na esteira da requisição, então não tem como ser
+// mal-interpretada; qualquer parser JSON decodifica de volta pro caractere
+// certo do outro lado.
+function jsonEscapandoUnicode(valor: unknown): string {
+  const texto = JSON.stringify(valor);
+  let saida = "";
+  for (let i = 0; i < texto.length; i++) {
+    const codigo = texto.charCodeAt(i);
+    saida += codigo > 127 ? "\\u" + codigo.toString(16).padStart(4, "0") : texto[i];
+  }
+  return saida;
+}
+
 // Números digitados sem DDI são assumidos como Brasil (+55) — a maioria dos
 // usuários do MVP é daqui, e esquecer o "+55" era a causa mais comum de
 // "canal não configurado" (na real, o número é que estava inválido para a
@@ -89,11 +107,11 @@ async function enviarTeams(
   try {
     const resp = await fetch(webhookUrl, {
       method: "POST",
-      // Charset explícito — sem isso, o fluxo do Power Automate/Teams estava
-      // interpretando emoji e acentos (JSON em UTF-8) com outro encoding e
-      // trocando tudo por "?".
       headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({
+      // Corpo serializado escapando Unicode (ver jsonEscapandoUnicode) — o
+      // charset no header sozinho não bastou para o Power Automate preservar
+      // emoji/acentuação.
+      body: jsonEscapandoUnicode({
         "@type": "MessageCard",
         "@context": "http://schema.org/extensions",
         summary: titulo,
