@@ -57,21 +57,23 @@ function extrairEntidade(
   return { grupo, produto };
 }
 
-// Acha a tela citada na pergunta comparando contra nome/apelidos do
-// catálogo — pega o apelido mais longo que casar, pra evitar que um apelido
-// curto e genérico (ex.: "alertas") ganhe de um mais específico por engano.
-function extrairTela(pergunta: string): Tela | undefined {
+// Todas as telas citadas na pergunta — usado pra detectar
+// perguntas do tipo "o que tem Alertas e Relatórios?" que citam duas telas
+// pelo nome sem usar a palavra "tela".
+function extrairTelas(pergunta: string): Tela[] {
   const t = normalizar(pergunta);
-  let melhor: { tela: Tela; tamanho: number } | undefined;
-  for (const tela of TELAS) {
-    for (const apelido of tela.apelidos) {
-      if (t.includes(normalizar(apelido)) && (!melhor || apelido.length > melhor.tamanho)) {
-        melhor = { tela, tamanho: apelido.length };
-      }
-    }
-  }
-  return melhor?.tela;
+  return TELAS.filter((tela) => tela.apelidos.some((ap) => t.includes(normalizar(ap))));
 }
+
+const FRASES_DEFINICAO = [
+  "o que e",
+  "o que sao",
+  "possuem o que",
+  "tem o que",
+  "pra que serve",
+  "para que serve",
+  "o que significa",
+];
 
 export function classificarIntencao(pergunta: string): Intencao {
   // Qualquer pergunta que mencione a palavra "tela"/"página" — em qualquer
@@ -79,6 +81,16 @@ export function classificarIntencao(pergunta: string): Intencao {
   // funciona"...) — é sobre uma tela do produto, não sobre os dados. Não dá
   // pra prever toda variação de frase, então o gatilho é a palavra em si.
   if (algumaPalavra(pergunta, ["tela", "pagina"])) return "explicar_tela";
+
+  // Mesmo sem a palavra "tela", citar duas ou mais telas pelo nome ("Alertas
+  // e Relatórios possuem o que?") ou perguntar "o que é X" citando uma tela
+  // são fortes sinais de que a pergunta é sobre o produto, não sobre dados —
+  // uma única tela citada sem frase de definição fica ambíguo demais (ex.:
+  // "riscos" aparece em perguntas normais sobre dados) e não entra aqui.
+  const telasCitadas = extrairTelas(pergunta);
+  if (telasCitadas.length >= 2) return "explicar_tela";
+  if (telasCitadas.length === 1 && algumaPalavra(pergunta, FRASES_DEFINICAO))
+    return "explicar_tela";
 
   if (
     algumaPalavra(pergunta, [
@@ -214,8 +226,8 @@ export function responder(
   const riscosCriticos = riscosAtivos.filter((r) => r.faixa_risco === "Crítico");
 
   if (intencao === "explicar_tela") {
-    const tela = extrairTela(pergunta);
-    if (!tela) {
+    const telas = extrairTelas(pergunta);
+    if (telas.length === 0) {
       const disponiveis = TELAS.filter((t) => podeAcessar(perfil, t.rota));
       return {
         intencao,
@@ -226,13 +238,28 @@ export function responder(
         numeros: [],
       };
     }
-    const noMenu = podeAcessar(perfil, tela.rota);
+    if (telas.length === 1) {
+      const tela = telas[0];
+      const noMenu = podeAcessar(perfil, tela.rota);
+      return {
+        intencao,
+        resumo: `${tela.nome}: ${tela.descricao}`,
+        detalhe: noMenu
+          ? "Essa tela está no seu menu."
+          : "Essa tela não aparece no seu menu atual — está disponível para outros perfis.",
+        numeros: [],
+      };
+    }
+    // Mais de uma tela citada na mesma pergunta — responde cada uma em sua
+    // própria seção em vez de tentar espremer tudo numa frase só.
+    const [primeira, segunda, ...resto] = telas;
     return {
       intencao,
-      resumo: `${tela.nome}: ${tela.descricao}`,
-      detalhe: noMenu
-        ? "Essa tela está no seu menu."
-        : "Essa tela não aparece no seu menu atual — está disponível para outros perfis.",
+      resumo: `${primeira.nome}: ${primeira.descricao}`,
+      detalhe: `${segunda.nome}: ${segunda.descricao}`,
+      recomendacao: resto.length
+        ? resto.map((t) => `${t.nome}: ${t.descricao}`).join(" ")
+        : undefined,
       numeros: [],
     };
   }

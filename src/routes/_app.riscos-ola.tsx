@@ -176,17 +176,14 @@ function RiscosPage() {
     }
 
     if (canalEscolhido === "sms") {
+      // Contas trial da Twilio limitam SMS a um único segmento (~160
+      // caracteres GSM-7) — mensagem curta, sem emoji e sem acento (o
+      // servidor também remove acento por segurança, mas já mandamos limpo
+      // pra não depender só disso e manter previsível quantos caracteres
+      // sobram pro conteúdo).
       return {
-        titulo: `🚨 Data Galaxy - Risco ${r.faixa_risco}`,
-        mensagem: [
-          `Incidente ${r.numero_incidente} (${r.produto})`,
-          `Grupo: ${r.grupo}`,
-          `Probabilidade: ${r.probabilidade_violacao}% | Restante: ${r.tempo_restante_minutos} min`,
-          "",
-          `Recomendacao: acionar ${r.grupo} nos proximos ${minutosAcao} min.`,
-          "",
-          `Acesse: data-galaxy-nexusops.netlify.app`,
-        ].join("\n"),
+        titulo: `Data Galaxy - Risco ${r.faixa_risco.normalize("NFD").replace(/[̀-ͯ]/g, "")}`,
+        mensagem: `INC ${r.numero_incidente} (${r.produto}): ${r.probabilidade_violacao}% em ${r.tempo_restante_minutos}min. Acionar ${r.grupo}.`,
       };
     }
 

@@ -27,6 +27,22 @@ function isCanalValido(v: unknown): v is Canal {
   return v === "whatsapp" || v === "sms" || v === "teams";
 }
 
+// Remove acentos (á→a, ç→c, etc.) e qualquer caractere fora do alfabeto
+// GSM-7. Só usado para SMS: contas trial da Twilio limitam a mensagem a um
+// único segmento (erro 30044 "Trial Message Length Exceeded"), e um único
+// caractere fora do GSM-7 — um emoji, um "í", um "ção" — já derruba o limite
+// do segmento de 160 para 70 caracteres por forçar codificação UCS-2. Sem
+// acento nenhum, a mensagem inteira cabe tranquila em GSM-7.
+function removerAcentos(texto: string): string {
+  const semAcento = texto.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  let saida = "";
+  for (let i = 0; i < semAcento.length; i++) {
+    const codigo = semAcento.charCodeAt(i);
+    if (codigo <= 127) saida += semAcento[i];
+  }
+  return saida;
+}
+
 // Serializa em JSON escapando todo caractere fora da faixa ASCII básica como
 // sequência de escape. Usado só no payload para o Teams: o fluxo de Power
 // Automate (Workflows do Teams) estava corrompendo emoji/acentuação mesmo
@@ -204,6 +220,8 @@ export default async (req: Request): Promise<Response> => {
   // WhatsApp interpreta *texto* como negrito — deixa o título em destaque.
   // SMS é texto puro; asteriscos apareceriam literalmente, então não usamos.
   const prefixo = canal === "whatsapp" ? `*${titulo}*` : titulo;
+  const corpoBruto = `${prefixo}\n\n${mensagem}`;
+  const corpo = canal === "sms" ? removerAcentos(corpoBruto) : corpoBruto;
 
   console.log(`[notify] Pedido recebido: canal=${canal} destino=***${to.slice(-4)} from=${from}`);
 
@@ -212,7 +230,7 @@ export default async (req: Request): Promise<Response> => {
     authToken,
     from,
     to,
-    corpo: `${prefixo}\n\n${mensagem}`,
+    corpo,
   });
 
   return jsonResponse(resultado);
