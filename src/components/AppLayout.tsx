@@ -2,6 +2,7 @@ import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-route
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
+  Scale,
   AlertTriangle,
   TrendingUp,
   ShieldAlert,
@@ -53,6 +54,7 @@ import { toast } from "sonner";
 
 const NAV = [
   { to: "/dashboard", label: "Central de Operações", icon: LayoutDashboard },
+  { to: "/impacto", label: "Impacto", icon: Scale },
   { to: "/incidentes", label: "Incidentes", icon: AlertTriangle },
   { to: "/previsoes", label: "Previsões", icon: TrendingUp },
   { to: "/riscos-ola", label: "Riscos de OLA", icon: ShieldAlert },

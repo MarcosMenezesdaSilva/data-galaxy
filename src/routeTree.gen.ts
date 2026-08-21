@@ -21,6 +21,7 @@ import { Route as AppPrevisoesRouteImport } from './routes/_app.previsoes'
 import { Route as AppMudancasRouteImport } from './routes/_app.mudancas'
 import { Route as AppLinhagemDadosRouteImport } from './routes/_app.linhagem-dados'
 import { Route as AppIncidentesRouteImport } from './routes/_app.incidentes'
+import { Route as AppImpactoRouteImport } from './routes/_app.impacto'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDadosRouteImport } from './routes/_app.dados'
 import { Route as AppCorrecoesRouteImport } from './routes/_app.correcoes'
@@ -88,6 +89,11 @@ const AppIncidentesRoute = AppIncidentesRouteImport.update({
   path: '/incidentes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppImpactoRoute = AppImpactoRouteImport.update({
+  id: '/impacto',
+  path: '/impacto',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/correcoes': typeof AppCorrecoesRoute
   '/dados': typeof AppDadosRoute
   '/dashboard': typeof AppDashboardRoute
+  '/impacto': typeof AppImpactoRoute
   '/incidentes': typeof AppIncidentesRoute
   '/linhagem-dados': typeof AppLinhagemDadosRoute
   '/mudancas': typeof AppMudancasRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/correcoes': typeof AppCorrecoesRoute
   '/dados': typeof AppDadosRoute
   '/dashboard': typeof AppDashboardRoute
+  '/impacto': typeof AppImpactoRoute
   '/incidentes': typeof AppIncidentesRoute
   '/linhagem-dados': typeof AppLinhagemDadosRoute
   '/mudancas': typeof AppMudancasRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/_app/correcoes': typeof AppCorrecoesRoute
   '/_app/dados': typeof AppDadosRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/impacto': typeof AppImpactoRoute
   '/_app/incidentes': typeof AppIncidentesRoute
   '/_app/linhagem-dados': typeof AppLinhagemDadosRoute
   '/_app/mudancas': typeof AppMudancasRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/correcoes'
     | '/dados'
     | '/dashboard'
+    | '/impacto'
     | '/incidentes'
     | '/linhagem-dados'
     | '/mudancas'
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/correcoes'
     | '/dados'
     | '/dashboard'
+    | '/impacto'
     | '/incidentes'
     | '/linhagem-dados'
     | '/mudancas'
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/_app/correcoes'
     | '/_app/dados'
     | '/_app/dashboard'
+    | '/_app/impacto'
     | '/_app/incidentes'
     | '/_app/linhagem-dados'
     | '/_app/mudancas'
@@ -342,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIncidentesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/impacto': {
+      id: '/_app/impacto'
+      path: '/impacto'
+      fullPath: '/impacto'
+      preLoaderRoute: typeof AppImpactoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -402,6 +421,7 @@ interface AppRouteChildren {
   AppCorrecoesRoute: typeof AppCorrecoesRoute
   AppDadosRoute: typeof AppDadosRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppImpactoRoute: typeof AppImpactoRoute
   AppIncidentesRoute: typeof AppIncidentesRoute
   AppLinhagemDadosRoute: typeof AppLinhagemDadosRoute
   AppMudancasRoute: typeof AppMudancasRoute
@@ -421,6 +441,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCorrecoesRoute: AppCorrecoesRoute,
   AppDadosRoute: AppDadosRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppImpactoRoute: AppImpactoRoute,
   AppIncidentesRoute: AppIncidentesRoute,
   AppLinhagemDadosRoute: AppLinhagemDadosRoute,
   AppMudancasRoute: AppMudancasRoute,
