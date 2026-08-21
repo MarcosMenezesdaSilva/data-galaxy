@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useIncidentes, useAlertas, useRiscos, useAcoes } from "@/lib/hooks";
+import { useIncidentes, useAlertas, useRiscos, useAcoes, usePrevisoes } from "@/lib/hooks";
 import { useApp } from "@/lib/store";
 import { PRODUTOS, GRUPOS } from "@/lib/demo-data";
 import { DashboardExecutivo } from "@/components/DashboardExecutivo";
@@ -25,6 +25,7 @@ function DashboardPage() {
   const alertas = useAlertas();
   const riscos = useRiscos();
   const acoes = useAcoes();
+  const previsoes = usePrevisoes();
   const [produto, setProduto] = useState<string>("todos");
   const [prio, setPrio] = useState<string>("todas");
   const [grupo, setGrupo] = useState<string>("todos");
@@ -56,6 +57,14 @@ function DashboardPage() {
   const hoje = dataAncora.toDateString();
   const incHoje = filtrados.filter((i) => new Date(i.data_abertura).toDateString() === hoje).length;
   const criticos = riscos.filter((r) => r.faixa_risco === "Crítico" && r.status === "Ativo").length;
+  // Capacidade de antecipação D+1/D+7 — critério explícito de avaliação do
+  // desafio. Soma volume_previsto das previsões demonstrativas por horizonte.
+  const prev1 = previsoes
+    .filter((p) => p.horizonte === "D+1")
+    .reduce((s, p) => s + p.volume_previsto, 0);
+  const prev7 = previsoes
+    .filter((p) => p.horizonte === "D+7")
+    .reduce((s, p) => s + p.volume_previsto, 0);
   const ativos = alertas.filter((a) => a.status === "Novo" || a.status === "Em tratamento").length;
   const emVal = acoes.filter((a) => a.status === "Em validação").length;
   const efetivas = acoes.filter((a) => a.classificacao === "Efetiva").length;
@@ -259,6 +268,8 @@ function DashboardPage() {
         />
       ) : (
         <DashboardExecutivo
+          prev1={prev1}
+          prev7={prev7}
           cumprimentoOla={cumprimentoOla}
           tendenciaMensalPct={tendenciaMensalPct}
           efetividadeCorrecoes={efetividadeCorrecoes}

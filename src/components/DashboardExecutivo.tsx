@@ -18,6 +18,10 @@ import {
 } from "recharts";
 
 export interface DashboardExecutivoProps {
+  /** Volume total previsto para D+1, somado entre produtos/categorias (previsões demonstrativas). */
+  prev1: number;
+  /** Volume total previsto para D+7. */
+  prev7: number;
   /** % de incidentes elegíveis a KPI que ficaram dentro do OLA — null se não há elegíveis no filtro. */
   cumprimentoOla: number | null;
   /** Variação % do volume do mês corrente vs. o mês anterior — null se não há dois meses com dados. */
@@ -41,6 +45,8 @@ const PIE_COLORS = [
 ];
 
 export function DashboardExecutivo({
+  prev1,
+  prev7,
   cumprimentoOla,
   tendenciaMensalPct,
   efetividadeCorrecoes,
@@ -82,8 +88,23 @@ export function DashboardExecutivo({
         </div>
       </Card>
 
-      {/* KPIs de negócio */}
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPIs de negócio — previsão D+1/D+7 primeiro: é a capacidade de
+          antecipação exigida pelo edital do desafio. */}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <KPICard
+          label="Previsão D+1"
+          value={fmtNumber(prev1)}
+          icon={<TrendingUp className="h-4 w-4" />}
+          accent="orange"
+          hint="Volume esperado amanhã"
+        />
+        <KPICard
+          label="Previsão D+7"
+          value={fmtNumber(prev7)}
+          icon={<TrendingUp className="h-4 w-4" />}
+          accent="orange"
+          hint="Volume esperado em 7 dias"
+        />
         <KPICard
           label="Cumprimento de OLA"
           value={cumprimentoOla == null ? "—" : pct(cumprimentoOla)}
