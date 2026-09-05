@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useApp, USUARIOS, type FaixasRisco } from "@/lib/store";
+import { useApp, useDatabricksConfig, USUARIOS, type FaixasRisco } from "@/lib/store";
 import type { Perfil } from "@/lib/store";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -37,6 +38,12 @@ import {
   type StatusCanais,
 } from "@/lib/notify";
 import { QRCodeSVG } from "qrcode.react";
+import {
+  executarConsultaDatabricks,
+  configuracaoCompleta,
+  type ConsultaResultado,
+} from "@/lib/databricks";
+import { Database, Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Data Galaxy" }] }),
@@ -60,6 +67,68 @@ function ConfigPage() {
     statusCanaisNotificacao().then(setStatusCanais);
   }, []);
   const linkOptIn = statusCanais ? linkOptInWhatsapp(statusCanais) : null;
+
+  // Integração Databricks: host/warehouse/token entrados aqui pelo
+  // Administrador, salvos no navegador (decisão consciente — ver comentário
+  // na store). Nunca viram variável de ambiente no Netlify.
+  const dbCfgSalva = useDatabricksConfig();
+  const [dbHost, setDbHost] = useState(dbCfgSalva.host);
+  const [dbWarehouse, setDbWarehouse] = useState(dbCfgSalva.warehouseId);
+  const [dbToken, setDbToken] = useState(dbCfgSalva.token);
+  const [dbTestando, setDbTestando] = useState(false);
+  const [dbConexaoOk, setDbConexaoOk] = useState<boolean | null>(null);
+  const [dbQuery, setDbQuery] = useState("SHOW TABLES IN fiap_analytics.gold");
+  const [dbExecutando, setDbExecutando] = useState(false);
+  const [dbResultado, setDbResultado] = useState<ConsultaResultado | null>(null);
+
+  function salvarCredenciaisDatabricks() {
+    dbCfgSalva.setConfig({ host: dbHost, warehouseId: dbWarehouse, token: dbToken });
+    setDbConexaoOk(null);
+    toast.success("Credenciais do Databricks salvas neste navegador.");
+  }
+
+  function limparCredenciaisDatabricks() {
+    dbCfgSalva.limpar();
+    setDbHost("");
+    setDbWarehouse("");
+    setDbToken("");
+    setDbConexaoOk(null);
+    setDbResultado(null);
+    toast.info("Credenciais do Databricks removidas deste navegador.");
+  }
+
+  async function testarConexaoDatabricks() {
+    if (!configuracaoCompleta({ host: dbHost, warehouseId: dbWarehouse, token: dbToken })) {
+      toast.warning("Preencha host, warehouse ID e token antes de testar.");
+      return;
+    }
+    setDbTestando(true);
+    const resultado = await executarConsultaDatabricks(
+      { host: dbHost, warehouseId: dbWarehouse, token: dbToken },
+      "SELECT 1",
+    );
+    setDbTestando(false);
+    setDbConexaoOk(resultado.ok);
+    if (resultado.ok) toast.success("Conectado ao Databricks com sucesso.");
+    else toast.error(resultado.detalhe || "Não foi possível conectar ao Databricks.");
+  }
+
+  async function executarQueryDatabricks() {
+    if (!configuracaoCompleta({ host: dbHost, warehouseId: dbWarehouse, token: dbToken })) {
+      toast.warning("Preencha host, warehouse ID e token antes de consultar.");
+      return;
+    }
+    if (!dbQuery.trim()) return;
+    setDbExecutando(true);
+    setDbResultado(null);
+    const resultado = await executarConsultaDatabricks(
+      { host: dbHost, warehouseId: dbWarehouse, token: dbToken },
+      dbQuery,
+    );
+    setDbExecutando(false);
+    setDbResultado(resultado);
+    if (!resultado.ok) toast.error(resultado.detalhe || "A consulta falhou.");
+  }
 
   async function testarCanal(canal: Canal, destinatario?: string) {
     setEnviandoTeste(canal);
@@ -372,6 +441,150 @@ function ConfigPage() {
             ambiente no painel do Netlify (Site settings → Environment variables), nunca no
             código-fonte.
           </p>
+        </div>
+      </Card>
+
+      <Card className="p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Database className="h-4 w-4 text-primary" />
+          <div className="text-sm font-semibold">Integração Databricks</div>
+          {dbConexaoOk === true && (
+            <Badge className="border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]">
+              <CheckCircle2 className="h-3 w-3 mr-1" /> Conectado
+            </Badge>
+          )}
+          {dbConexaoOk === false && (
+            <Badge className="border-[color:var(--critical)]/30 bg-[color:var(--critical)]/10 text-[color:var(--critical)]">
+              <XCircle className="h-3 w-3 mr-1" /> Falha na conexão
+            </Badge>
+          )}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Host</Label>
+            <Input
+              placeholder="dbc-xxxxxxxx-xxxx.cloud.databricks.com"
+              value={dbHost}
+              onChange={(e) => setDbHost(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Warehouse ID</Label>
+            <Input
+              placeholder="862f1d757356a3a5"
+              value={dbWarehouse}
+              onChange={(e) => setDbWarehouse(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Token de acesso pessoal</Label>
+            <Input
+              type="password"
+              placeholder="dapi..."
+              value={dbToken}
+              onChange={(e) => setDbToken(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={salvarCredenciaisDatabricks}>
+            Salvar credenciais
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={testarConexaoDatabricks}
+            disabled={dbTestando}
+          >
+            {dbTestando ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Database className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            Testar conexão
+          </Button>
+          <Button size="sm" variant="ghost" onClick={limparCredenciaisDatabricks}>
+            Esquecer credenciais
+          </Button>
+        </div>
+
+        <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>
+            Host e Warehouse ID: SQL Warehouses → clique no warehouse → aba &ldquo;Connection
+            details&rdquo;. Token: ícone de usuário (canto superior direito) → Settings → Developer
+            → Access tokens → Generate new token. Salvo apenas neste navegador — nunca enviado a
+            nenhum outro lugar além da function que fala com o Databricks.
+          </span>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t border-border">
+          <Label className="text-xs">Consulta SQL (catálogo fiap_analytics)</Label>
+          <Textarea
+            value={dbQuery}
+            onChange={(e) => setDbQuery(e.target.value)}
+            className="font-mono text-xs h-20"
+            placeholder="SELECT * FROM fiap_analytics.gold.fato_incidentes LIMIT 20"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={executarQueryDatabricks}
+            disabled={dbExecutando}
+          >
+            {dbExecutando ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Database className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            Executar consulta
+          </Button>
+
+          {dbResultado && !dbResultado.ok && (
+            <div className="rounded-md border border-[color:var(--critical)]/30 bg-[color:var(--critical)]/5 p-3 text-xs text-[color:var(--critical)]">
+              {dbResultado.detalhe || dbResultado.motivo}
+            </div>
+          )}
+
+          {dbResultado?.ok && (
+            <div className="overflow-x-auto rounded-md border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {dbResultado.colunas.map((c) => (
+                      <TableHead key={c.nome} className="whitespace-nowrap text-xs">
+                        {c.nome}
+                        <span className="ml-1 text-[10px] text-muted-foreground">{c.tipo}</span>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dbResultado.linhas.map((linha, i) => (
+                    <TableRow key={i}>
+                      {linha.map((valor, j) => (
+                        <TableCell key={j} className="whitespace-nowrap text-xs">
+                          {valor === null ? (
+                            <span className="text-muted-foreground">null</span>
+                          ) : (
+                            String(valor)
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {dbResultado.linhas.length === 0 && (
+                <div className="p-3 text-xs text-muted-foreground">Consulta sem resultados.</div>
+              )}
+            </div>
+          )}
         </div>
       </Card>
 
