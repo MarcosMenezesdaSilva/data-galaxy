@@ -42,6 +42,7 @@ import {
   executarConsultaDatabricks,
   configuracaoCompleta,
   normalizarWarehouseId,
+  normalizarHost,
   type ConsultaResultado,
 } from "@/lib/databricks";
 import { Database, Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -84,9 +85,11 @@ function ConfigPage() {
   const [dbResultado, setDbResultado] = useState<ConsultaResultado | null>(null);
 
   function salvarCredenciaisDatabricks() {
+    const host = normalizarHost(dbHost);
     const warehouseId = normalizarWarehouseId(dbWarehouse);
+    setDbHost(host);
     setDbWarehouse(warehouseId);
-    dbCfgSalva.setConfig({ host: dbHost, warehouseId, token: dbToken.trim() });
+    dbCfgSalva.setConfig({ host, warehouseId, token: dbToken.trim() });
     setDbConexaoOk(null);
     setDbErro(null);
     toast.success("Credenciais do Databricks salvas neste navegador.");

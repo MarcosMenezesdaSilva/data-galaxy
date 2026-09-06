@@ -29,11 +29,18 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+// Aceita o valor colado de qualquer jeito — com "https://" na frente, com
+// caminho sobrando no final (ex.: ".../oidc" de alguma aba de login aberta),
+// com ou sem barra final — e devolve só o hostname puro. Usa a própria API
+// URL do navegador/runtime pra não reinventar parsing de URL na unha.
 function limparHost(hostBruto: string): string {
-  return hostBruto
-    .trim()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "");
+  const bruto = hostBruto.trim();
+  const comProtocolo = /^https?:\/\//.test(bruto) ? bruto : `https://${bruto}`;
+  try {
+    return new URL(comProtocolo).host;
+  } catch {
+    return bruto.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  }
 }
 
 interface StatementStatus {

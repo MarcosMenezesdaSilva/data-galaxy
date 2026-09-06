@@ -33,6 +33,20 @@ export function normalizarWarehouseId(valor: string): string {
   return match ? match[1] : limpo;
 }
 
+// Aceita o host colado de qualquer jeito — com "https://" na frente, com
+// caminho sobrando no final (ex.: uma aba de login que terminou em
+// ".../oidc") — e devolve só o hostname puro, sem nada a mais.
+export function normalizarHost(valor: string): string {
+  const bruto = valor.trim();
+  if (!bruto) return bruto;
+  const comProtocolo = /^https?:\/\//.test(bruto) ? bruto : `https://${bruto}`;
+  try {
+    return new URL(comProtocolo).host;
+  } catch {
+    return bruto.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  }
+}
+
 export async function executarConsultaDatabricks(
   cfg: DatabricksConfig,
   statement: string,
@@ -43,6 +57,7 @@ export async function executarConsultaDatabricks(
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         ...cfg,
+        host: normalizarHost(cfg.host),
         warehouseId: normalizarWarehouseId(cfg.warehouseId),
         token: cfg.token.trim().replace(/^Bearer\s+/i, ""),
         statement,
