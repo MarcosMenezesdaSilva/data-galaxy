@@ -41,6 +41,7 @@ import { QRCodeSVG } from "qrcode.react";
 import {
   executarConsultaDatabricks,
   configuracaoCompleta,
+  normalizarWarehouseId,
   type ConsultaResultado,
 } from "@/lib/databricks";
 import { Database, Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -77,13 +78,17 @@ function ConfigPage() {
   const [dbToken, setDbToken] = useState(dbCfgSalva.token);
   const [dbTestando, setDbTestando] = useState(false);
   const [dbConexaoOk, setDbConexaoOk] = useState<boolean | null>(null);
+  const [dbErro, setDbErro] = useState<string | null>(null);
   const [dbQuery, setDbQuery] = useState("SHOW TABLES IN fiap_analytics.gold");
   const [dbExecutando, setDbExecutando] = useState(false);
   const [dbResultado, setDbResultado] = useState<ConsultaResultado | null>(null);
 
   function salvarCredenciaisDatabricks() {
-    dbCfgSalva.setConfig({ host: dbHost, warehouseId: dbWarehouse, token: dbToken });
+    const warehouseId = normalizarWarehouseId(dbWarehouse);
+    setDbWarehouse(warehouseId);
+    dbCfgSalva.setConfig({ host: dbHost, warehouseId, token: dbToken.trim() });
     setDbConexaoOk(null);
+    setDbErro(null);
     toast.success("Credenciais do Databricks salvas neste navegador.");
   }
 
@@ -93,6 +98,7 @@ function ConfigPage() {
     setDbWarehouse("");
     setDbToken("");
     setDbConexaoOk(null);
+    setDbErro(null);
     setDbResultado(null);
     toast.info("Credenciais do Databricks removidas deste navegador.");
   }
@@ -103,14 +109,20 @@ function ConfigPage() {
       return;
     }
     setDbTestando(true);
+    setDbErro(null);
     const resultado = await executarConsultaDatabricks(
       { host: dbHost, warehouseId: dbWarehouse, token: dbToken },
       "SELECT 1",
     );
     setDbTestando(false);
     setDbConexaoOk(resultado.ok);
-    if (resultado.ok) toast.success("Conectado ao Databricks com sucesso.");
-    else toast.error(resultado.detalhe || "Não foi possível conectar ao Databricks.");
+    if (resultado.ok) {
+      toast.success("Conectado ao Databricks com sucesso.");
+    } else {
+      const detalhe = resultado.detalhe || "Não foi possível conectar ao Databricks.";
+      setDbErro(detalhe);
+      toast.error(detalhe);
+    }
   }
 
   async function executarQueryDatabricks() {
@@ -460,6 +472,12 @@ function ConfigPage() {
           )}
         </div>
 
+        {dbErro && (
+          <div className="rounded-md border border-[color:var(--critical)]/30 bg-[color:var(--critical)]/5 p-2.5 text-xs text-[color:var(--critical)]">
+            {dbErro}
+          </div>
+        )}
+
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Host</Label>
@@ -516,9 +534,12 @@ function ConfigPage() {
         <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           <span>
-            Host e Warehouse ID: SQL Warehouses → clique no warehouse → aba &ldquo;Connection
-            details&rdquo;. Token: ícone de usuário (canto superior direito) → Settings → Developer
-            → Access tokens → Generate new token. Salvo apenas neste navegador — nunca enviado a
+            SQL Warehouses → clique no warehouse → aba &ldquo;Connection details&rdquo;: o Host é o
+            campo &ldquo;Server hostname&rdquo;. Não existe um campo &ldquo;Warehouse ID&rdquo;
+            separado — ele é só a parte final do &ldquo;HTTP Path&rdquo; (depois de
+            &ldquo;/warehouses/&rdquo;); pode colar o HTTP Path inteiro aqui que o app extrai o ID
+            sozinho. Token: ícone de usuário (canto superior direito) → Settings → Developer →
+            Access tokens → Generate new token. Salvo apenas neste navegador — nunca enviado a
             nenhum outro lugar além da function que fala com o Databricks.
           </span>
         </div>

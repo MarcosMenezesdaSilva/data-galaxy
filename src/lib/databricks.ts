@@ -22,6 +22,17 @@ export function configuracaoCompleta(cfg: Partial<DatabricksConfig>): cfg is Dat
   return Boolean(cfg.host?.trim() && cfg.warehouseId?.trim() && cfg.token?.trim());
 }
 
+// A aba "Connection details" do Databricks não tem um campo chamado
+// "Warehouse ID" — só mostra "HTTP Path" (algo como
+// "/sql/1.0/warehouses/862f1d757356a3a5"), e o ID é o trecho final. É fácil
+// colar o path inteiro sem perceber, então aceitamos os dois formatos aqui
+// em vez de exigir que o admin edite a mão.
+export function normalizarWarehouseId(valor: string): string {
+  const limpo = valor.trim();
+  const match = limpo.match(/warehouses\/([a-zA-Z0-9]+)/);
+  return match ? match[1] : limpo;
+}
+
 export async function executarConsultaDatabricks(
   cfg: DatabricksConfig,
   statement: string,
@@ -30,7 +41,12 @@ export async function executarConsultaDatabricks(
     const resp = await fetch("/api/databricks-query", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...cfg, statement }),
+      body: JSON.stringify({
+        ...cfg,
+        warehouseId: normalizarWarehouseId(cfg.warehouseId),
+        token: cfg.token.trim().replace(/^Bearer\s+/i, ""),
+        statement,
+      }),
     });
     return (await resp.json()) as ConsultaResultado;
   } catch {
