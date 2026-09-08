@@ -21,7 +21,7 @@ function paraBooleano(valor: unknown): boolean {
 
 // ── Incidentes (gold.fato_incidentes + dimensões) ──────────────────────────
 
-const QUERY_INCIDENTES = `
+export const QUERY_INCIDENTES = `
 SELECT
   f.numero,
   dpr.cod_prioridade,
@@ -56,7 +56,7 @@ ORDER BY f.dt_aberto DESC
 LIMIT 3000
 `.trim();
 
-function mapearIncidente(row: Record<string, unknown>): Incidente {
+export function mapearIncidente(row: Record<string, unknown>): Incidente {
   // dim_prioridade.cod_prioridade é 1-5; quando a origem não tem prioridade
   // identificada (sk -1), cai em P5 — não existe "prioridade desconhecida"
   // no nosso tipo, então usamos a mais baixa como fallback declarado aqui.
@@ -101,14 +101,14 @@ function mapearIncidente(row: Record<string, unknown>): Incidente {
 
 // ── Previsões (ml.previsao_futuro) ──────────────────────────────────────────
 
-const QUERY_PREVISOES = `
+export const QUERY_PREVISOES = `
 SELECT data, horizonte, previsto, baseline, dt_geracao
 FROM fiap_analytics.ml.previsao_futuro
 WHERE unique_id = 'total' AND horizonte IN (1, 7)
 ORDER BY data
 `.trim();
 
-function mapearPrevisao(row: Record<string, unknown>): Previsao {
+export function mapearPrevisao(row: Record<string, unknown>): Previsao {
   const horizonteNum = Number(row.horizonte);
   const horizonte = horizonteNum === 1 ? "D+1" : "D+7";
   const previsto = Number(row.previsto ?? 0);
@@ -137,7 +137,7 @@ function mapearPrevisao(row: Record<string, unknown>): Previsao {
 
 // ── Riscos de OLA (ml.risco_violacao + fato_incidentes) ────────────────────
 
-const QUERY_RISCOS = `
+export const QUERY_RISCOS = `
 SELECT
   rv.numero,
   rv.duracao_prevista_seg,
@@ -173,7 +173,7 @@ function mapearFaixaRisco(bruto: string): FaixaRisco {
   return "Baixo";
 }
 
-function mapearRisco(row: Record<string, unknown>): RiscoOla {
+export function mapearRisco(row: Record<string, unknown>): RiscoOla {
   const faixaBruta = String(row.faixa_risco ?? "4_BAIXO");
   const faixa_risco = mapearFaixaRisco(faixaBruta);
 

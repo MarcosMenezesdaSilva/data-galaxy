@@ -52,7 +52,7 @@ export const useApp = create<AppState>()(
     (set, get) => ({
       theme: "light",
       perfil: null,
-      modo: "demo",
+      modo: "importado",
       faixasRisco: FAIXAS_RISCO_PADRAO,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" }),

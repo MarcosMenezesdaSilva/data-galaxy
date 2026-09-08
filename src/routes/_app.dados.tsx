@@ -306,8 +306,8 @@ function DadosPage() {
     await clearAllData();
     resetSeed();
     await seedIfEmpty();
-    setModo("demo");
-    toast.success("Dados demonstrativos recarregados");
+    setModo("importado");
+    toast.success("Dados padrão (Databricks) restaurados");
   }
 
   async function exportarBackup() {
@@ -351,7 +351,7 @@ function DadosPage() {
               <DownloadCloud className="h-4 w-4 mr-1.5" /> Backup
             </Button>
             <Button variant="outline" size="sm" onClick={recarregarDemo}>
-              <RotateCcw className="h-4 w-4 mr-1.5" /> Recarregar demo
+              <RotateCcw className="h-4 w-4 mr-1.5" /> Restaurar dados padrão
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -433,9 +433,10 @@ function DadosPage() {
           <div className="text-sm font-semibold">Sincronizar com Databricks</div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Puxa incidentes (gold.fato_incidentes), previsões D+1/D+7 (ml.previsao_futuro) e riscos de
-          OLA (ml.risco_violacao) direto do catálogo real e substitui a base local — as telas e o
-          Assistente passam a refletir esses dados na hora, sem nenhuma configuração adicional.
+          O app já carrega por padrão um retrato real do Databricks (incidentes, previsões D+1/D+7 e
+          riscos de OLA). Este botão é opcional: puxa os dados ao vivo direto do catálogo
+          (gold.fato_incidentes, ml.previsao_futuro, ml.risco_violacao) e substitui a base local —
+          pode levar até ~1-2 minutos dependendo do warehouse.
         </p>
         <Button size="sm" onClick={sincronizarComDatabricks} disabled={sincronizando}>
           {sincronizando ? (
