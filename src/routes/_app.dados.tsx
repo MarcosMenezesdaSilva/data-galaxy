@@ -59,6 +59,8 @@ import { pareceBaseTratada, mapearLinhaOficial } from "@/lib/import-mapping";
 import { computeQualityReport, type QualityReport } from "@/lib/quality";
 import type { Incidente } from "@/lib/types";
 import { toast } from "sonner";
+import { sincronizarDatabricks, type ResultadoSincronizacao } from "@/lib/databricks-sync";
+import { Sparkles, Loader2 } from "lucide-react";
 
 const TIPOS = [
   { id: "incidentes", label: "Incidentes", table: "incidentes" as const },
@@ -276,6 +278,30 @@ function DadosPage() {
     a.click();
   }
 
+  const [sincronizando, setSincronizando] = useState(false);
+  const [resultadoSync, setResultadoSync] = useState<ResultadoSincronizacao | null>(null);
+
+  async function sincronizarComDatabricks() {
+    setSincronizando(true);
+    setResultadoSync(null);
+    const resultado = await sincronizarDatabricks();
+    setSincronizando(false);
+    setResultadoSync(resultado);
+    if (resultado.ok) {
+      resetSeed();
+      setModo("importado");
+      toast.success(
+        `Sincronizado: ${fmtNumber(resultado.incidentes ?? 0)} incidentes, ${fmtNumber(resultado.previsoes ?? 0)} previsões, ${fmtNumber(resultado.riscos ?? 0)} riscos.`,
+      );
+    } else {
+      const detalhe =
+        resultado.motivo === "nao_configurado"
+          ? "Databricks ainda não configurado (variáveis de ambiente ausentes no Netlify)."
+          : resultado.detalhe || "Não foi possível sincronizar com o Databricks.";
+      toast.error(detalhe);
+    }
+  }
+
   async function recarregarDemo() {
     await clearAllData();
     resetSeed();
@@ -399,6 +425,40 @@ function DadosPage() {
             </div>
           </div>
         </div>
+      </Card>
+
+      <Card className="p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <div className="text-sm font-semibold">Sincronizar com Databricks</div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Puxa incidentes (gold.fato_incidentes), previsões D+1/D+7 (ml.previsao_futuro) e riscos de
+          OLA (ml.risco_violacao) direto do catálogo real e substitui a base local — as telas e o
+          Assistente passam a refletir esses dados na hora, sem nenhuma configuração adicional.
+        </p>
+        <Button size="sm" onClick={sincronizarComDatabricks} disabled={sincronizando}>
+          {sincronizando ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-1.5" />
+          )}
+          {sincronizando ? "Sincronizando..." : "Sincronizar agora"}
+        </Button>
+        {resultadoSync && !resultadoSync.ok && (
+          <div className="rounded-md border border-[color:var(--critical)]/30 bg-[color:var(--critical)]/5 p-2.5 text-xs text-[color:var(--critical)]">
+            {resultadoSync.motivo === "nao_configurado"
+              ? "Databricks ainda não configurado (variáveis de ambiente ausentes no Netlify)."
+              : resultadoSync.detalhe || "Não foi possível sincronizar."}
+          </div>
+        )}
+        {resultadoSync?.ok && (
+          <div className="rounded-md border border-[color:var(--success)]/30 bg-[color:var(--success)]/5 p-2.5 text-xs text-[color:var(--success)]">
+            Sincronizado: {fmtNumber(resultadoSync.incidentes ?? 0)} incidentes,{" "}
+            {fmtNumber(resultadoSync.previsoes ?? 0)} previsões,{" "}
+            {fmtNumber(resultadoSync.riscos ?? 0)} riscos de OLA.
+          </div>
+        )}
       </Card>
 
       {qualidade && incidentesMapeados && arquivo && (

@@ -11,15 +11,26 @@
 // senha real (ver netlify/functions/admin-login.ts); sem esse gate, esta
 // function abriria um console de SQL livre pro catálogo real pra qualquer
 // visitante do site.
+//
+// Importante: essa function SÓ inicia a consulta e espera pouco (wait_timeout
+// curto) — NÃO fica em loop esperando terminar. Consultas mais pesadas (ex.:
+// os JOINs de sincronização) podem levar bem mais do que os ~10s que uma
+// function síncrona do Netlify tolera antes de ser matada — foi exatamente
+// isso que quebrou aqui da primeira vez. Quem faz o polling até terminar é o
+// navegador, chamando databricks-status.ts (na verdade, este mesmo endpoint
+// aceita `statementId` em vez de `statement` pra continuar consultando um
+// statement já iniciado) repetidamente — ver src/lib/databricks.ts.
 
 type DatabricksBody = {
   statement?: string;
+  statementId?: string;
 };
 
 type ColunaResultado = { nome: string; tipo: string };
 type QueryResultado =
   | { ok: true; colunas: ColunaResultado[]; linhas: unknown[][]; truncado: boolean }
-  | { ok: false; motivo: string; detalhe?: string };
+  | { ok: false; pendente: true; statementId: string }
+  | { ok: false; pendente?: false; motivo: string; detalhe?: string };
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -49,24 +60,31 @@ interface StatementStatus {
   result?: { data_array?: unknown[][] };
 }
 
-async function aguardarConclusao(
-  host: string,
-  token: string,
-  statementId: string,
-): Promise<StatementStatus> {
-  // A API pode responder PENDING/RUNNING mesmo com wait_timeout — faz um
-  // polling curto (até ~25s no total) antes de desistir.
-  for (let tentativa = 0; tentativa < 12; tentativa++) {
-    const resp = await fetch(`https://${host}/api/2.0/sql/statements/${statementId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const dados = (await resp.json()) as StatementStatus;
-    if (dados.status?.state !== "PENDING" && dados.status?.state !== "RUNNING") return dados;
-    await new Promise((r) => setTimeout(r, 2000));
+function interpretarStatus(dados: StatementStatus): QueryResultado {
+  const estado = dados.status?.state;
+
+  if (estado === "PENDING" || estado === "RUNNING") {
+    return { ok: false, pendente: true, statementId: dados.statement_id };
   }
+
+  if (estado !== "SUCCEEDED") {
+    return {
+      ok: false,
+      motivo: "consulta_falhou",
+      detalhe: dados.status?.error?.message ?? `Estado: ${estado}`,
+    };
+  }
+
+  const colunasBrutas = dados.manifest?.schema?.columns ?? [];
+  const colunas: ColunaResultado[] = colunasBrutas.map((c) => ({
+    nome: c.name,
+    tipo: c.type_name,
+  }));
   return {
-    statement_id: statementId,
-    status: { state: "TIMEOUT", error: { message: "A consulta demorou demais para responder." } },
+    ok: true,
+    colunas,
+    linhas: dados.result?.data_array ?? [],
+    truncado: Boolean(dados.manifest?.truncated),
   };
 }
 
@@ -82,7 +100,6 @@ export default async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, motivo: "requisicao_invalida" }, 400);
   }
 
-  const { statement } = body;
   const token = process.env.DATABRICKS_TOKEN;
   const warehouseId = process.env.DATABRICKS_WAREHOUSE_ID;
   const host = process.env.DATABRICKS_HOST ? limparHost(process.env.DATABRICKS_HOST) : undefined;
@@ -90,15 +107,25 @@ export default async (req: Request): Promise<Response> => {
   if (!host || !token || !warehouseId) {
     return jsonResponse({ ok: false, motivo: "nao_configurado" } satisfies QueryResultado);
   }
-  if (!statement?.trim()) {
-    return jsonResponse(
-      { ok: false, motivo: "requisicao_invalida", detalhe: "Preencha a consulta." },
-      400,
-    );
-  }
 
   try {
-    const respInicial = await fetch(`https://${host}/api/2.0/sql/statements`, {
+    // Continuando um statement que já estava rodando.
+    if (body.statementId) {
+      const resp = await fetch(`https://${host}/api/2.0/sql/statements/${body.statementId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const dados = (await resp.json()) as StatementStatus;
+      return jsonResponse(interpretarStatus(dados));
+    }
+
+    if (!body.statement?.trim()) {
+      return jsonResponse(
+        { ok: false, motivo: "requisicao_invalida", detalhe: "Preencha a consulta." },
+        400,
+      );
+    }
+
+    const resp = await fetch(`https://${host}/api/2.0/sql/statements`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -106,15 +133,15 @@ export default async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         warehouse_id: warehouseId,
-        statement,
-        wait_timeout: "10s",
+        statement: body.statement,
+        wait_timeout: "5s",
       }),
     });
 
-    if (!respInicial.ok) {
-      let detalhe = `Databricks respondeu status ${respInicial.status}`;
+    if (!resp.ok) {
+      let detalhe = `Databricks respondeu status ${resp.status}`;
       try {
-        const errJson = (await respInicial.json()) as { message?: string; error_code?: string };
+        const errJson = (await resp.json()) as { message?: string; error_code?: string };
         if (errJson?.message) detalhe = errJson.message;
       } catch {
         // corpo de erro não era JSON — mantém detalhe genérico
@@ -126,32 +153,8 @@ export default async (req: Request): Promise<Response> => {
       } satisfies QueryResultado);
     }
 
-    let dados = (await respInicial.json()) as StatementStatus;
-    if (dados.status?.state === "PENDING" || dados.status?.state === "RUNNING") {
-      dados = await aguardarConclusao(host, token, dados.statement_id);
-    }
-
-    if (dados.status?.state !== "SUCCEEDED") {
-      return jsonResponse({
-        ok: false,
-        motivo: "consulta_falhou",
-        detalhe: dados.status?.error?.message ?? `Estado: ${dados.status?.state}`,
-      } satisfies QueryResultado);
-    }
-
-    const colunasBrutas = dados.manifest?.schema?.columns ?? [];
-    const colunas: ColunaResultado[] = colunasBrutas.map((c) => ({
-      nome: c.name,
-      tipo: c.type_name,
-    }));
-    const linhas = dados.result?.data_array ?? [];
-
-    return jsonResponse({
-      ok: true,
-      colunas,
-      linhas,
-      truncado: Boolean(dados.manifest?.truncated),
-    } satisfies QueryResultado);
+    const dados = (await resp.json()) as StatementStatus;
+    return jsonResponse(interpretarStatus(dados));
   } catch (err) {
     return jsonResponse({
       ok: false,

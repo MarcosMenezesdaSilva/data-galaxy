@@ -30,7 +30,10 @@ export interface Incidente extends RegistroBase {
   incidente_pai?: string;
   elegivel_kpi: boolean;
   dentro_ola: boolean;
-  origem_incidente: "Monitoramento" | "Manual" | "API";
+  // "Monitoramento" | "Manual" | "API" nos dados demo/CSV; a base real do
+  // Databricks também pode trazer "Não informado" — string livre pra
+  // acomodar isso sem inventar um valor que a origem não tem.
+  origem_incidente: string;
   tipo_abertura: "Automática" | "Manual";
 }
 
@@ -46,7 +49,9 @@ export interface Previsao extends RegistroBase {
   volume_previsto: number;
   limite_inferior: number;
   limite_superior: number;
-  modelo: "AutoETS" | "SeasonalNaive";
+  // "AutoETS" | "SeasonalNaive" nos dados demo; o Databricks pode trazer
+  // outro nome de modelo — string livre pra não forçar um rótulo errado.
+  modelo: string;
   versao_modelo: string;
 }
 
