@@ -11,6 +11,14 @@
 import { executarConsultaDatabricks, linhasComoObjetos } from "./databricks";
 import type { Incidente, Previsao, RiscoOla, Prioridade, FaixaRisco } from "./types";
 
+// A Statement Execution API do Databricks devolve TODA célula como string no
+// data_array (mesmo colunas BOOLEAN vêm como "true"/"false" em texto) — usar
+// Boolean(valor) direto é um bug clássico aqui, porque "false" (string) é
+// truthy em JS. Esse helper compara o texto de verdade.
+function paraBooleano(valor: unknown): boolean {
+  return String(valor).toLowerCase() === "true";
+}
+
 // ── Incidentes (gold.fato_incidentes + dimensões) ──────────────────────────
 
 const QUERY_INCIDENTES = `
@@ -82,8 +90,8 @@ function mapearIncidente(row: Record<string, unknown>): Incidente {
     incidente_pai: row.incidente_pai ? String(row.incidente_pai) : undefined,
     // fl_entrou_kpi/fl_kpi_violado já vêm calculados pela pipeline real do
     // Databricks — usamos direto em vez de recalcular localmente.
-    elegivel_kpi: Boolean(row.fl_entrou_kpi),
-    dentro_ola: !row.fl_kpi_violado,
+    elegivel_kpi: paraBooleano(row.fl_entrou_kpi),
+    dentro_ola: !paraBooleano(row.fl_kpi_violado),
     origem_incidente: origem,
     tipo_abertura: /monitor/i.test(origem) ? "Automática" : "Manual",
     origem_dado: "IMPORTADO",
@@ -214,7 +222,7 @@ function mapearRisco(row: Record<string, unknown>): RiscoOla {
     // O incidente correspondente já resolvido = risco mitigado; ainda
     // aberto = risco ativo. Vem do fl_resolvido real do fato, não de um
     // status próprio desta tabela (que não existe).
-    status: row.fl_resolvido ? "Mitigado" : "Ativo",
+    status: paraBooleano(row.fl_resolvido) ? "Mitigado" : "Ativo",
     origem_dado: "IMPORTADO",
     gerado_para_mvp: false,
   };
