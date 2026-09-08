@@ -512,36 +512,128 @@ export function gerarMudancas(): Mudanca[] {
   });
 }
 
+// Artigos reais, transcritos do "Dicionário de Dados - v2" — documento
+// oficial da Locaweb que define os campos, valores válidos e regras de
+// negócio (KPI, SLA, metas anuais) da base de incidentes. Diferente do
+// resto deste arquivo, este conteúdo NÃO é sintético: é a regra oficial,
+// só reformatada em formato de artigo pra alimentar a Base de Conhecimento
+// e o RAG do Assistente com algo que a banca pode conferir contra o
+// documento fonte.
+const DATA_DOCUMENTO_OFICIAL = "2026-07-20T00:00:00.000Z";
+const AUTOR_DOCUMENTO_OFICIAL = "Dicionário de Dados — Locaweb (v2)";
+
 export function gerarArtigos(): Artigo[] {
-  const rng = mulberry32(31);
-  return Array.from({ length: 20 }, (_, i) => ({
-    id_artigo: `KB${6000 + i}`,
-    titulo: pick(
-      [
-        "Runbook: Reinício seguro do Apache",
-        "Diagnóstico de I/O elevado em disco",
-        "Timeout em APIs — checklist",
-        "Alertas de monitoramento — glossário",
-        "Padrão de rollback de deploy",
-        "Expansão de capacidade de banco de dados",
-        "Investigação de reincidência de incidentes",
-        "Configuração recomendada de OLA por produto",
-      ],
-      rng,
-    ),
-    categoria: pick(["Runbook", "Troubleshooting", "Boas práticas", "Postmortem"], rng),
-    produto: pick(PRODUTOS, rng),
-    causa_raiz: pick(
-      ["Configuração", "Capacidade", "Bug", "Dependência externa", "Sazonalidade"],
-      rng,
-    ),
-    solucao: "Aplicar o procedimento descrito e validar métricas por 30 minutos.",
-    data_criacao: new Date(Date.now() - randInt(rng, 5, 300) * 86400000).toISOString(),
-    autor: pick(RESPONSAVEIS, rng),
-    favorito: rng() < 0.25,
-    tags: [pick(CATEGORIAS, rng), pick(SUBCATEGORIAS, rng)],
-    origem_dado: "DEMONSTRACAO" as const,
-    gerado_para_mvp: true,
+  const artigos: Omit<Artigo, "origem_dado" | "gerado_para_mvp">[] = [
+    {
+      id_artigo: "KB6000",
+      titulo: "Elegibilidade de KPI — quais incidentes contam",
+      categoria: "Política Oficial",
+      produto: "Todos os produtos",
+      causa_raiz: "Regra de negócio",
+      solucao:
+        'Só entram no cálculo de KPI incidentes de prioridade 1 (Crítica), 2 (Alta) ou 3 (Média). Incidentes com o campo "Incidente Pai" preenchido, ou com Status = "Sem Intervenção", ficam de fora do KPI — mesmo assim, podem ter prejudicado outro incidente que entrou no cálculo.',
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: true,
+      tags: ["KPI", "Elegibilidade", "Regra oficial"],
+    },
+    {
+      id_artigo: "KB6001",
+      titulo: "SLA por prioridade — tempo máximo de resolução",
+      categoria: "Política Oficial",
+      produto: "Todos os produtos",
+      causa_raiz: "Regra de negócio",
+      solucao:
+        "1-Crítica e 2-Alta: até 4h. 3-Média: até 12h. 4-Baixa: até 24h. 5-Muito Baixa: até 96h. O tempo é medido pelo campo Duração, da abertura até a resolução (ou encerramento).",
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: true,
+      tags: ["SLA", "OLA", "Prioridade"],
+    },
+    {
+      id_artigo: "KB6002",
+      titulo: 'Por que existem incidentes "Sem Intervenção"',
+      categoria: "Dicionário de Dados",
+      produto: "Todos os produtos",
+      causa_raiz: "Monitoramento automático",
+      solucao:
+        'A maioria dos incidentes fechados como "Sem Intervenção" está associada ao campo Aberto por: "Monitoramento" — o alerta automático se resolveu sozinho ou não precisou de ação humana. Esses casos não entram no cálculo de KPI.',
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: true,
+      tags: ["Sem Intervenção", "Monitoramento", "Status"],
+    },
+    {
+      id_artigo: "KB6003",
+      titulo: "Dicionário de campos — Prioridade e Status",
+      categoria: "Dicionário de Dados",
+      produto: "Todos os produtos",
+      causa_raiz: "Documentação",
+      solucao:
+        "Prioridade: 1-Crítica, 2-Alta, 3-Média, 4-Baixa, 5-Muito Baixa. Status do incidente: Aguardando Problema, Encerrado, Encerrado Automaticamente, Sem Intervenção.",
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: false,
+      tags: ["Dicionário", "Prioridade", "Status"],
+    },
+    {
+      id_artigo: "KB6004",
+      titulo: "Metas anuais de OLA — Prioridade Alta e Média",
+      categoria: "Política Oficial",
+      produto: "Todos os produtos",
+      causa_raiz: "Meta corporativa",
+      solucao:
+        "Indicador medido mensalmente, sobre incidentes com OLA quebrado no ano. Prioridade Alta: menos de 31 quebras = 150% da meta; 31–35 = 125%; 36–39 = 100%; 40–45 = 75%; 46–53 = 50%; mais de 53 = 0%. Prioridade Média: menos de 201 = 150%; 201–230 = 125%; 231–263 = 100%; 264–290 = 75%; 291–320 = 50%; mais de 320 = 0%.",
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: false,
+      tags: ["Meta", "OLA", "KPI anual"],
+    },
+    {
+      id_artigo: "KB6005",
+      titulo: "Metas anuais de volume total de incidentes",
+      categoria: "Política Oficial",
+      produto: "Todos os produtos",
+      causa_raiz: "Meta corporativa",
+      solucao:
+        "Prioridade Alta: menos de 4.585 incidentes no ano = 150%; 4.585–5.388 = 125%; 5.389–6.168 = 100%; 6.169–6.252 = 75%; 6.253–6.336 = 50%; mais de 6.336 = 0%. Prioridade Média: menos de 19.489 = 150%; 19.489–22.116 = 125%; 22.117–22.524 = 100%; 22.525–23.892 = 75%; 23.893–24.276 = 50%; mais de 24.276 = 0%.",
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: false,
+      tags: ["Meta", "Volume", "KPI anual"],
+    },
+    {
+      id_artigo: "KB6006",
+      titulo: "Dicionário de campos — Solução aplicada",
+      categoria: "Dicionário de Dados",
+      produto: "Todos os produtos",
+      causa_raiz: "Documentação",
+      solucao:
+        "O campo Solução indica se a correção foi Contorno (paliativa), Definitiva, ou ficou em branco (sem solução registrada).",
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: false,
+      tags: ["Dicionário", "Solução"],
+    },
+    {
+      id_artigo: "KB6007",
+      titulo: "Dicionário de campos — Origem da abertura",
+      categoria: "Dicionário de Dados",
+      produto: "Todos os produtos",
+      causa_raiz: "Documentação",
+      solucao:
+        'O campo "Aberto por" indica se o incidente entrou pelo canal Manual ou por Monitoramento automático — esse campo é obrigatório em todo registro.',
+      data_criacao: DATA_DOCUMENTO_OFICIAL,
+      autor: AUTOR_DOCUMENTO_OFICIAL,
+      favorito: false,
+      tags: ["Dicionário", "Origem", "Monitoramento"],
+    },
+  ];
+
+  return artigos.map((a) => ({
+    ...a,
+    origem_dado: "IMPORTADO" as const,
+    gerado_para_mvp: false,
   }));
 }
 

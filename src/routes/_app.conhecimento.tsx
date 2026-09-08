@@ -66,10 +66,10 @@ function ConhecimentoPage() {
         <div className="flex items-start gap-3">
           <Sparkles className="h-5 w-5 text-primary mt-0.5" />
           <div>
-            <div className="text-sm font-semibold">Recomendações do histórico</div>
+            <div className="text-sm font-semibold">Documentação oficial</div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Sugestões baseadas em incidentes recentes: <b>Timeout em APIs — checklist</b>,{" "}
-              <b>Diagnóstico de I/O elevado em disco</b>, <b>Runbook: Reinício seguro do Apache</b>.
+              Estes artigos vêm do Dicionário de Dados oficial da Locaweb — regras de KPI, SLA por
+              prioridade e definição de cada campo, não conteúdo sintético.
             </p>
           </div>
         </div>
