@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useApp, useDatabricksConfig, useIAConfig, USUARIOS, type FaixasRisco } from "@/lib/store";
+import { useApp, useDatabricksConfig, USUARIOS, type FaixasRisco } from "@/lib/store";
 import type { Perfil } from "@/lib/store";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -146,51 +146,36 @@ function ConfigPage() {
     if (!resultado.ok) toast.error(resultado.detalhe || "A consulta falhou.");
   }
 
-  // Configure sua IA: mesma decisão de guardar no navegador (localStorage)
-  // que já tomamos para o Databricks — Administrador cola uma vez, fica
-  // valendo nas próximas sessões nesse navegador.
-  const iaCfgSalva = useIAConfig();
-  const [iaApiKey, setIaApiKey] = useState(iaCfgSalva.apiKey);
-  const [iaModel, setIaModel] = useState(iaCfgSalva.model);
+  // A IA (Claude) fica em variável de ambiente no Netlify — diferente do
+  // Databricks, ela precisa funcionar pra qualquer visitante do link
+  // publicado, não só em quem configurou o próprio navegador. Aqui só
+  // mostramos status e um botão de teste; nada de credencial nesta tela.
+  const [iaDisponivel, setIaDisponivel] = useState<boolean | null>(null);
   const [iaTestando, setIaTestando] = useState(false);
-  const [iaConexaoOk, setIaConexaoOk] = useState<boolean | null>(null);
   const [iaErro, setIaErro] = useState<string | null>(null);
 
-  function salvarCredenciaisIA() {
-    iaCfgSalva.setConfig({ apiKey: iaApiKey.trim(), model: iaModel.trim() || "claude-sonnet-5" });
-    setIaConexaoOk(null);
-    setIaErro(null);
-    toast.success("Credenciais da IA salvas neste navegador.");
-  }
-
-  function limparCredenciaisIA() {
-    iaCfgSalva.limpar();
-    setIaApiKey("");
-    setIaModel("claude-sonnet-5");
-    setIaConexaoOk(null);
-    setIaErro(null);
-    toast.info("Credenciais da IA removidas deste navegador.");
-  }
+  useEffect(() => {
+    iaConfigurada().then(setIaDisponivel);
+  }, []);
 
   async function testarConexaoIA() {
-    if (!iaConfigurada({ apiKey: iaApiKey })) {
-      toast.warning("Preencha a API key antes de testar.");
-      return;
-    }
     setIaTestando(true);
     setIaErro(null);
     const resultado = await perguntarIA(
       "Responda apenas com a palavra: conectado.",
       { incidentes: [], riscos: [], alertas: [], acoes: [], previsoes: [] },
       [],
-      { apiKey: iaApiKey, model: iaModel },
     );
     setIaTestando(false);
-    setIaConexaoOk(resultado.ok);
     if (resultado.ok) {
+      setIaDisponivel(true);
       toast.success("Conectado ao Claude com sucesso.");
     } else {
-      const detalhe = resultado.detalhe || "Não foi possível conectar à IA.";
+      if (resultado.motivo === "nao_configurado") setIaDisponivel(false);
+      const detalhe =
+        resultado.motivo === "nao_configurado"
+          ? "ANTHROPIC_API_KEY ainda não foi configurada no Netlify."
+          : resultado.detalhe || "Não foi possível conectar à IA.";
       setIaErro(detalhe);
       toast.error(detalhe);
     }
@@ -666,24 +651,28 @@ function ConfigPage() {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <div className="text-sm font-semibold">Configure sua IA</div>
-          {iaConexaoOk === true && (
-            <Badge className="border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Conectado
-            </Badge>
-          )}
-          {iaConexaoOk === false && (
-            <Badge className="border-[color:var(--critical)]/30 bg-[color:var(--critical)]/10 text-[color:var(--critical)]">
-              <XCircle className="h-3 w-3 mr-1" /> Falha na conexão
-            </Badge>
-          )}
+          <div className="text-sm font-semibold">IA do Assistente (Claude)</div>
+          <Badge
+            variant="outline"
+            className={
+              iaDisponivel
+                ? "border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]"
+                : "border-border bg-muted text-muted-foreground"
+            }
+          >
+            {iaDisponivel === null
+              ? "Verificando..."
+              : iaDisponivel
+                ? "Configurado"
+                : "Não configurado"}
+          </Badge>
         </div>
 
         <p className="text-xs text-muted-foreground">
           Quando configurada, o Assistente passa a usar o Claude (Anthropic) de verdade — combinando
           os dados operacionais em tempo real e os artigos relevantes da Base de Conhecimento como
-          contexto — em vez do motor de regras local. Sem uma key aqui, o Assistente continua
-          funcionando normalmente no modo baseado em regras.
+          contexto — em vez do motor de regras local. Sem isso, o Assistente continua funcionando
+          normalmente no modo baseado em regras.
         </p>
 
         {iaErro && (
@@ -692,53 +681,23 @@ function ConfigPage() {
           </div>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label className="text-xs">API key da Anthropic</Label>
-            <Input
-              type="password"
-              placeholder="sk-ant-..."
-              value={iaApiKey}
-              onChange={(e) => setIaApiKey(e.target.value)}
-              className="h-9 text-xs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Modelo</Label>
-            <Input
-              placeholder="claude-sonnet-5"
-              value={iaModel}
-              onChange={(e) => setIaModel(e.target.value)}
-              className="h-9 text-xs"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={salvarCredenciaisIA}>
-            Salvar credenciais
-          </Button>
-          <Button size="sm" variant="outline" onClick={testarConexaoIA} disabled={iaTestando}>
-            {iaTestando ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-            )}
-            Testar conexão
-          </Button>
-          <Button size="sm" variant="ghost" onClick={limparCredenciaisIA}>
-            Esquecer credenciais
-          </Button>
-        </div>
+        <Button size="sm" variant="outline" onClick={testarConexaoIA} disabled={iaTestando}>
+          {iaTestando ? (
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+          )}
+          Testar conexão
+        </Button>
 
         <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           <span>
-            Gere a key em console.anthropic.com → API Keys → Create Key. Modelos disponíveis:{" "}
-            <code>claude-sonnet-5</code> (melhor qualidade) ou{" "}
-            <code>claude-haiku-4-5-20251001</code> (mais rápido, bom para demonstração ao vivo).
-            Salvo apenas neste navegador — nunca enviado a nenhum outro lugar além da function que
-            fala com a Anthropic.
+            Configurada como variável de ambiente no painel do Netlify (Site settings → Environment
+            variables), nunca no código-fonte: <code>ANTHROPIC_API_KEY</code> (gere em
+            console.anthropic.com → API Keys → Create Key) e, opcionalmente,{" "}
+            <code>ANTHROPIC_MODEL</code> (padrão <code>claude-sonnet-5</code>; use{" "}
+            <code>claude-haiku-4-5-20251001</code> pra respostas mais rápidas).
           </span>
         </div>
       </Card>

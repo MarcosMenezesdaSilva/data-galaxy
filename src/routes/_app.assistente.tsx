@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useApp, useIAConfig, type Perfil } from "@/lib/store";
+import { useApp, type Perfil } from "@/lib/store";
 import {
   useIncidentes,
   useRiscos,
@@ -71,7 +71,10 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
   const acoes = useAcoes();
   const previsoes = usePrevisoes();
   const artigos = useArtigos();
-  const iaCfg = useIAConfig();
+  const [iaDisponivel, setIaDisponivel] = useState<boolean | null>(null);
+  useEffect(() => {
+    iaConfigurada().then(setIaDisponivel);
+  }, []);
 
   const quickQs = QUICK_QS_POR_PERFIL[perfil ?? "admin"] ?? QUICK_QS_POR_PERFIL.admin;
 
@@ -98,8 +101,8 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
     const atrasoMinimo = 900 + Math.random() * 700;
 
     let resposta: Resposta;
-    if (iaConfigurada(iaCfg)) {
-      const resultado = await perguntarIA(t, dados, artigos, iaCfg);
+    if (iaDisponivel) {
+      const resultado = await perguntarIA(t, dados, artigos);
       if (resultado.ok) {
         resposta = {
           intencao: "ia",
@@ -203,7 +206,7 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
             <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
               <Sparkles className="h-3 w-3" /> Como funciona
             </div>
-            {iaConfigurada(iaCfg) ? (
+            {iaDisponivel ? (
               <p className="text-xs text-muted-foreground leading-relaxed">
                 As respostas vêm do Claude (Anthropic), com os dados operacionais em tempo real e os
                 artigos relevantes da Base de Conhecimento passados como contexto — o modelo é
@@ -214,10 +217,7 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
                 O assistente não usa um modelo de linguagem externo: ele interpreta a pergunta e
                 calcula a resposta direto sobre os dados desta base (incidentes, riscos, alertas,
                 ações e previsões). Se a pergunta não puder ser respondida com esses dados, ele diz
-                isso em vez de inventar.{" "}
-                {perfil === "admin" && (
-                  <>Configure uma IA em Configurações para respostas em linguagem natural.</>
-                )}
+                isso em vez de inventar.
               </p>
             )}
           </CardContent>

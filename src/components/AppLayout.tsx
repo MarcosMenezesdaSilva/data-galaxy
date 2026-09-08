@@ -29,11 +29,13 @@ import {
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useApp, USUARIOS } from "@/lib/store";
+import { useApp, USUARIOS, type Perfil } from "@/lib/store";
 import { BrandMark, BrandWordmark } from "@/components/Brand";
 import { ModoBadge } from "@/components/Badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
+import { adminAutenticadoNestaSessao } from "@/lib/admin-auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +80,7 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [seeded, setSeeded] = useState(false);
+  const [pedirSenhaAdmin, setPedirSenhaAdmin] = useState(false);
   const { theme, toggleTheme, perfil, setPerfil, modo } = useApp();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -105,6 +108,25 @@ export function AppLayout() {
       navigate({ to: "/dashboard" });
     }
   }, [perfil, pathname, navigate]);
+
+  // O perfil fica salvo em localStorage (persist do zustand) — alguém podia
+  // editar isso direto no DevTools pra virar "admin" sem nunca passar pela
+  // senha. Essa checagem fecha essa brecha: sem o flag de sessão (que só a
+  // function de login gera), volta pra seleção de perfil.
+  useEffect(() => {
+    if (perfil === "admin" && !adminAutenticadoNestaSessao()) {
+      setPerfil(null);
+      navigate({ to: "/login" });
+    }
+  }, [perfil, navigate, setPerfil]);
+
+  function trocarPerfil(p: Perfil) {
+    if (p === "admin" && !adminAutenticadoNestaSessao()) {
+      setPedirSenhaAdmin(true);
+      return;
+    }
+    setPerfil(p);
+  }
 
   // Fecha o menu mobile ao navegar para outra tela.
   useEffect(() => {
@@ -297,7 +319,7 @@ export function AppLayout() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Trocar de perfil</DropdownMenuLabel>
                   {Object.values(USUARIOS).map((u) => (
-                    <DropdownMenuItem key={u.id} onClick={() => setPerfil(u.id)}>
+                    <DropdownMenuItem key={u.id} onClick={() => trocarPerfil(u.id)}>
                       <UserIcon className="h-4 w-4 mr-2" /> {u.nome}
                       <span className="ml-auto text-[10px] text-muted-foreground">
                         {u.cargo.split("/")[0].trim()}
@@ -324,6 +346,12 @@ export function AppLayout() {
           </main>
         </div>
       </div>
+
+      <AdminPasswordDialog
+        open={pedirSenhaAdmin}
+        onOpenChange={setPedirSenhaAdmin}
+        onSucesso={() => setPerfil("admin")}
+      />
     </TooltipProvider>
   );
 }

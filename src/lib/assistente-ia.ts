@@ -1,30 +1,32 @@
 // Orquestra a chamada de IA de verdade do Assistente: monta os fatos
 // operacionais (montarResumoDados), recupera artigos relevantes da Base de
 // Conhecimento (buscarArtigosRelevantes) e chama a function que fala com a
-// Anthropic. Nunca deixa a Promise rejeitar — erro vira `ok: false`, pra
-// quem chama poder cair de volta pro motor de regras sem drama.
+// Anthropic. A key vive só como variável de ambiente no Netlify (ver
+// netlify/functions/assistente-ia.ts) — o cliente nunca a vê nem a envia.
+// Nunca deixa a Promise rejeitar — erro vira `ok: false`, pra quem chama
+// poder cair de volta pro motor de regras sem drama.
 import type { Artigo } from "./types";
 import { montarResumoDados, type DadosAssistente } from "./assistente";
 import { buscarArtigosRelevantes } from "./conhecimento-rag";
-
-export interface IAConfig {
-  apiKey: string;
-  model: string;
-}
 
 export type RespostaIA =
   | { ok: true; resposta: string; artigosUsados: string[] }
   | { ok: false; motivo: string; detalhe?: string };
 
-export function iaConfigurada(cfg: Partial<IAConfig>): cfg is IAConfig {
-  return Boolean(cfg.apiKey?.trim());
+export async function iaConfigurada(): Promise<boolean> {
+  try {
+    const resp = await fetch("/api/ia-status");
+    const dados = (await resp.json()) as { configurado?: boolean };
+    return Boolean(dados.configurado);
+  } catch {
+    return false;
+  }
 }
 
 export async function perguntarIA(
   pergunta: string,
   dados: DadosAssistente,
   artigos: Artigo[],
-  cfg: IAConfig,
 ): Promise<RespostaIA> {
   const fatos = montarResumoDados(dados);
   const relevantes = buscarArtigosRelevantes(pergunta, artigos);
@@ -34,8 +36,6 @@ export async function perguntarIA(
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        apiKey: cfg.apiKey,
-        model: cfg.model || undefined,
         pergunta,
         fatos,
         artigos: relevantes.map((a) => ({

@@ -1,8 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useApp, USUARIOS, type Perfil } from "@/lib/store";
 import { BrandWordmark } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
+import { adminAutenticadoNestaSessao } from "@/lib/admin-auth";
 import { Sun, Moon, Shield, LineChart, Wrench, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,8 +17,13 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { theme, toggleTheme, setPerfil } = useApp();
   const nav = useNavigate();
+  const [pedirSenhaAdmin, setPedirSenhaAdmin] = useState(false);
 
   function entrar(p: Perfil) {
+    if (p === "admin" && !adminAutenticadoNestaSessao()) {
+      setPedirSenhaAdmin(true);
+      return;
+    }
     setPerfil(p);
     toast.success(`Bem-vindo(a), ${USUARIOS[p].nome.split(" ")[0]}!`);
     nav({ to: "/dashboard" });
@@ -132,6 +140,12 @@ function LoginPage() {
           </div>
         </div>
       </div>
+
+      <AdminPasswordDialog
+        open={pedirSenhaAdmin}
+        onOpenChange={setPedirSenhaAdmin}
+        onSucesso={() => entrar("admin")}
+      />
     </div>
   );
 }

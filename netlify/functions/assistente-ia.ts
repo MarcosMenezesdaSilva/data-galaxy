@@ -3,9 +3,14 @@
 // API externa direto (a key ficaria visível em qualquer devtools de quem
 // abrir o site), e essa function nunca loga nem guarda a key em disco.
 //
-// A key vem no corpo da requisição (digitada pelo Administrador em
-// Configurações → Configure sua IA), não de variável de ambiente — mesma
-// decisão já tomada para o Databricks.
+// A key vem de variável de ambiente (ANTHROPIC_API_KEY / ANTHROPIC_MODEL) —
+// diferente do Databricks, aqui não faz sentido pedir pro Administrador
+// digitar a key toda vez: o Assistente precisa funcionar pra qualquer pessoa
+// que abrir o link publicado, não só em quem já configurou o próprio
+// navegador. O risco de expor essa function pra qualquer visitante é baixo
+// (pior caso: alguém gasta crédito de API mandando pergunta), diferente do
+// Databricks, que dá acesso de leitura a um catálogo de dados real — por
+// isso os dois ficaram com tratamento diferente.
 //
 // O modelo só responde com base nos FATOS e ARTIGOS que a gente manda no
 // prompt (calculados/recuperados no cliente a partir dos dados reais) — o
@@ -22,8 +27,6 @@ type ArtigoContexto = {
 };
 
 type PedidoIA = {
-  apiKey?: string;
-  model?: string;
   pergunta?: string;
   fatos?: string;
   artigos?: ArtigoContexto[];
@@ -78,15 +81,18 @@ export default async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, motivo: "requisicao_invalida" }, 400);
   }
 
-  const apiKey = body.apiKey?.trim();
-  const model = body.model?.trim() || "claude-sonnet-5";
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const model = process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-5";
   const pergunta = body.pergunta?.trim();
   const fatos = body.fatos?.trim() || "Nenhum dado disponível.";
   const artigos = body.artigos ?? [];
 
-  if (!apiKey || !pergunta) {
+  if (!apiKey) {
+    return jsonResponse({ ok: false, motivo: "nao_configurado" } satisfies RespostaIA);
+  }
+  if (!pergunta) {
     return jsonResponse(
-      { ok: false, motivo: "requisicao_invalida", detalhe: "Preencha a API key e a pergunta." },
+      { ok: false, motivo: "requisicao_invalida", detalhe: "Preencha a pergunta." },
       400,
     );
   }
