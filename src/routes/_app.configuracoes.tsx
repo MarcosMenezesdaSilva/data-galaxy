@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useApp, useDatabricksConfig, USUARIOS, type FaixasRisco } from "@/lib/store";
+import { useApp, USUARIOS, type FaixasRisco } from "@/lib/store";
 import type { Perfil } from "@/lib/store";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -40,12 +40,10 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import {
   executarConsultaDatabricks,
-  configuracaoCompleta,
-  normalizarWarehouseId,
-  normalizarHost,
+  databricksConfigurado,
   type ConsultaResultado,
 } from "@/lib/databricks";
-import { Database, Loader2, CheckCircle2, XCircle, Sparkles } from "lucide-react";
+import { Database, Loader2, Sparkles } from "lucide-react";
 import { perguntarIA, iaConfigurada } from "@/lib/assistente-ia";
 
 export const Route = createFileRoute("/_app/configuracoes")({
@@ -71,76 +69,45 @@ function ConfigPage() {
   }, []);
   const linkOptIn = statusCanais ? linkOptInWhatsapp(statusCanais) : null;
 
-  // Integração Databricks: host/warehouse/token entrados aqui pelo
-  // Administrador, salvos no navegador (decisão consciente — ver comentário
-  // na store). Nunca viram variável de ambiente no Netlify.
-  const dbCfgSalva = useDatabricksConfig();
-  const [dbHost, setDbHost] = useState(dbCfgSalva.host);
-  const [dbWarehouse, setDbWarehouse] = useState(dbCfgSalva.warehouseId);
-  const [dbToken, setDbToken] = useState(dbCfgSalva.token);
+  // Integração Databricks: credencial em variável de ambiente no Netlify
+  // (DATABRICKS_HOST, DATABRICKS_WAREHOUSE_ID, DATABRICKS_TOKEN) — só é
+  // seguro expor a consulta SQL livre porque o perfil Administrador exige
+  // senha real (ver AdminPasswordDialog / admin-login.ts).
+  const [dbDisponivel, setDbDisponivel] = useState<boolean | null>(null);
   const [dbTestando, setDbTestando] = useState(false);
-  const [dbConexaoOk, setDbConexaoOk] = useState<boolean | null>(null);
   const [dbErro, setDbErro] = useState<string | null>(null);
   const [dbQuery, setDbQuery] = useState("SHOW TABLES IN fiap_analytics.gold");
   const [dbExecutando, setDbExecutando] = useState(false);
   const [dbResultado, setDbResultado] = useState<ConsultaResultado | null>(null);
 
-  function salvarCredenciaisDatabricks() {
-    const host = normalizarHost(dbHost);
-    const warehouseId = normalizarWarehouseId(dbWarehouse);
-    setDbHost(host);
-    setDbWarehouse(warehouseId);
-    dbCfgSalva.setConfig({ host, warehouseId, token: dbToken.trim() });
-    setDbConexaoOk(null);
-    setDbErro(null);
-    toast.success("Credenciais do Databricks salvas neste navegador.");
-  }
-
-  function limparCredenciaisDatabricks() {
-    dbCfgSalva.limpar();
-    setDbHost("");
-    setDbWarehouse("");
-    setDbToken("");
-    setDbConexaoOk(null);
-    setDbErro(null);
-    setDbResultado(null);
-    toast.info("Credenciais do Databricks removidas deste navegador.");
-  }
+  useEffect(() => {
+    databricksConfigurado().then(setDbDisponivel);
+  }, []);
 
   async function testarConexaoDatabricks() {
-    if (!configuracaoCompleta({ host: dbHost, warehouseId: dbWarehouse, token: dbToken })) {
-      toast.warning("Preencha host, warehouse ID e token antes de testar.");
-      return;
-    }
     setDbTestando(true);
     setDbErro(null);
-    const resultado = await executarConsultaDatabricks(
-      { host: dbHost, warehouseId: dbWarehouse, token: dbToken },
-      "SELECT 1",
-    );
+    const resultado = await executarConsultaDatabricks("SELECT 1");
     setDbTestando(false);
-    setDbConexaoOk(resultado.ok);
     if (resultado.ok) {
+      setDbDisponivel(true);
       toast.success("Conectado ao Databricks com sucesso.");
     } else {
-      const detalhe = resultado.detalhe || "Não foi possível conectar ao Databricks.";
+      if (resultado.motivo === "nao_configurado") setDbDisponivel(false);
+      const detalhe =
+        resultado.motivo === "nao_configurado"
+          ? "Variáveis do Databricks ainda não configuradas no Netlify."
+          : resultado.detalhe || "Não foi possível conectar ao Databricks.";
       setDbErro(detalhe);
       toast.error(detalhe);
     }
   }
 
   async function executarQueryDatabricks() {
-    if (!configuracaoCompleta({ host: dbHost, warehouseId: dbWarehouse, token: dbToken })) {
-      toast.warning("Preencha host, warehouse ID e token antes de consultar.");
-      return;
-    }
     if (!dbQuery.trim()) return;
     setDbExecutando(true);
     setDbResultado(null);
-    const resultado = await executarConsultaDatabricks(
-      { host: dbHost, warehouseId: dbWarehouse, token: dbToken },
-      dbQuery,
-    );
+    const resultado = await executarConsultaDatabricks(dbQuery);
     setDbExecutando(false);
     setDbResultado(resultado);
     if (!resultado.ok) toast.error(resultado.detalhe || "A consulta falhou.");
@@ -499,16 +466,20 @@ function ConfigPage() {
         <div className="flex items-center gap-2">
           <Database className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Integração Databricks</div>
-          {dbConexaoOk === true && (
-            <Badge className="border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Conectado
-            </Badge>
-          )}
-          {dbConexaoOk === false && (
-            <Badge className="border-[color:var(--critical)]/30 bg-[color:var(--critical)]/10 text-[color:var(--critical)]">
-              <XCircle className="h-3 w-3 mr-1" /> Falha na conexão
-            </Badge>
-          )}
+          <Badge
+            variant="outline"
+            className={
+              dbDisponivel
+                ? "border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]"
+                : "border-border bg-muted text-muted-foreground"
+            }
+          >
+            {dbDisponivel === null
+              ? "Verificando..."
+              : dbDisponivel
+                ? "Configurado"
+                : "Não configurado"}
+          </Badge>
         </div>
 
         {dbErro && (
@@ -517,69 +488,23 @@ function ConfigPage() {
           </div>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Host</Label>
-            <Input
-              placeholder="dbc-xxxxxxxx-xxxx.cloud.databricks.com"
-              value={dbHost}
-              onChange={(e) => setDbHost(e.target.value)}
-              className="h-9 text-xs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Warehouse ID</Label>
-            <Input
-              placeholder="862f1d757356a3a5"
-              value={dbWarehouse}
-              onChange={(e) => setDbWarehouse(e.target.value)}
-              className="h-9 text-xs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Token de acesso pessoal</Label>
-            <Input
-              type="password"
-              placeholder="dapi..."
-              value={dbToken}
-              onChange={(e) => setDbToken(e.target.value)}
-              className="h-9 text-xs"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={salvarCredenciaisDatabricks}>
-            Salvar credenciais
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={testarConexaoDatabricks}
-            disabled={dbTestando}
-          >
-            {dbTestando ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-            ) : (
-              <Database className="h-3.5 w-3.5 mr-1.5" />
-            )}
-            Testar conexão
-          </Button>
-          <Button size="sm" variant="ghost" onClick={limparCredenciaisDatabricks}>
-            Esquecer credenciais
-          </Button>
-        </div>
+        <Button size="sm" variant="outline" onClick={testarConexaoDatabricks} disabled={dbTestando}>
+          {dbTestando ? (
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+          ) : (
+            <Database className="h-3.5 w-3.5 mr-1.5" />
+          )}
+          Testar conexão
+        </Button>
 
         <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           <span>
-            SQL Warehouses → clique no warehouse → aba &ldquo;Connection details&rdquo;: o Host é o
-            campo &ldquo;Server hostname&rdquo;. Não existe um campo &ldquo;Warehouse ID&rdquo;
-            separado — ele é só a parte final do &ldquo;HTTP Path&rdquo; (depois de
-            &ldquo;/warehouses/&rdquo;); pode colar o HTTP Path inteiro aqui que o app extrai o ID
-            sozinho. Token: ícone de usuário (canto superior direito) → Settings → Developer →
-            Access tokens → Generate new token. Salvo apenas neste navegador — nunca enviado a
-            nenhum outro lugar além da function que fala com o Databricks.
+            Configurada como variável de ambiente no painel do Netlify (Site settings → Environment
+            variables), nunca no código-fonte: <code>DATABRICKS_HOST</code> (Server hostname, sem
+            protocolo), <code>DATABRICKS_WAREHOUSE_ID</code> (a parte final do HTTP Path, depois de
+            &ldquo;/warehouses/&rdquo;) e <code>DATABRICKS_TOKEN</code> (ícone de usuário → Settings
+            → Developer → Access tokens → Generate new token).
           </span>
         </div>
 

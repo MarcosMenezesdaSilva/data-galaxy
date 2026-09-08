@@ -63,29 +63,3 @@ export const useApp = create<AppState>()(
     { name: "data-galaxy-app" },
   ),
 );
-
-// Store separada (chave própria no localStorage) para a credencial do
-// Databricks — decisão explícita do usuário de manter salva no navegador
-// entre sessões, pra não precisar colar o token toda vez durante os testes
-// e a apresentação. Fica isolada da store principal pra ficar fácil de
-// limpar (botão "Esquecer credenciais") sem mexer no resto das preferências.
-export interface DatabricksConfigState {
-  host: string;
-  warehouseId: string;
-  token: string;
-  setConfig: (c: { host: string; warehouseId: string; token: string }) => void;
-  limpar: () => void;
-}
-
-export const useDatabricksConfig = create<DatabricksConfigState>()(
-  persist(
-    (set) => ({
-      host: "",
-      warehouseId: "",
-      token: "",
-      setConfig: (c) => set(c),
-      limpar: () => set({ host: "", warehouseId: "", token: "" }),
-    }),
-    { name: "data-galaxy-databricks" },
-  ),
-);

@@ -4,16 +4,15 @@
 // token nunca aparece no corpo de uma resposta logada por engano em algum
 // lugar do lado do cliente.
 //
-// Diferente das outras functions deste projeto, aqui a credencial (host,
-// warehouseId, token) NÃO vem de variável de ambiente — vem no corpo da
-// requisição, digitada pelo Administrador na tela de Configurações. Essa
-// function só repassa a chamada pro Databricks e devolve o resultado; não
-// guarda nada, não loga o token, não persiste nada em disco.
+// A credencial (DATABRICKS_HOST, DATABRICKS_WAREHOUSE_ID, DATABRICKS_TOKEN)
+// vem de variável de ambiente — assim quem o Administrador chamar pra testar
+// já acessa sem precisar configurar nada no próprio navegador. Isso só é
+// seguro porque o perfil Administrador (única rota até esta tela) exige
+// senha real (ver netlify/functions/admin-login.ts); sem esse gate, esta
+// function abriria um console de SQL livre pro catálogo real pra qualquer
+// visitante do site.
 
 type DatabricksBody = {
-  host?: string;
-  token?: string;
-  warehouseId?: string;
   statement?: string;
 };
 
@@ -83,16 +82,17 @@ export default async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, motivo: "requisicao_invalida" }, 400);
   }
 
-  const { token, warehouseId, statement } = body;
-  const host = body.host ? limparHost(body.host) : undefined;
+  const { statement } = body;
+  const token = process.env.DATABRICKS_TOKEN;
+  const warehouseId = process.env.DATABRICKS_WAREHOUSE_ID;
+  const host = process.env.DATABRICKS_HOST ? limparHost(process.env.DATABRICKS_HOST) : undefined;
 
-  if (!host || !token || !warehouseId || !statement?.trim()) {
+  if (!host || !token || !warehouseId) {
+    return jsonResponse({ ok: false, motivo: "nao_configurado" } satisfies QueryResultado);
+  }
+  if (!statement?.trim()) {
     return jsonResponse(
-      {
-        ok: false,
-        motivo: "requisicao_invalida",
-        detalhe: "Preencha host, warehouse, token e a consulta.",
-      },
+      { ok: false, motivo: "requisicao_invalida", detalhe: "Preencha a consulta." },
       400,
     );
   }

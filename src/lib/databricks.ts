@@ -1,13 +1,8 @@
 // Cliente HTTP para a integração com Databricks (via
-// netlify/functions/databricks-query.ts). O host/warehouseId/token vêm da
-// tela de Configurações — nunca ficam fixos no código. Assim como notify.ts,
-// nunca deixa a Promise rejeitar: qualquer erro vira um resultado `ok: false`.
-
-export interface DatabricksConfig {
-  host: string;
-  warehouseId: string;
-  token: string;
-}
+// netlify/functions/databricks-query.ts). A credencial vive só como variável
+// de ambiente no Netlify — o cliente nunca a vê nem a envia, só manda a
+// consulta. Assim como notify.ts, nunca deixa a Promise rejeitar: qualquer
+// erro vira um resultado `ok: false`.
 
 export interface ColunaResultado {
   nome: string;
@@ -18,50 +13,22 @@ export type ConsultaResultado =
   | { ok: true; colunas: ColunaResultado[]; linhas: unknown[][]; truncado: boolean }
   | { ok: false; motivo: string; detalhe?: string };
 
-export function configuracaoCompleta(cfg: Partial<DatabricksConfig>): cfg is DatabricksConfig {
-  return Boolean(cfg.host?.trim() && cfg.warehouseId?.trim() && cfg.token?.trim());
-}
-
-// A aba "Connection details" do Databricks não tem um campo chamado
-// "Warehouse ID" — só mostra "HTTP Path" (algo como
-// "/sql/1.0/warehouses/862f1d757356a3a5"), e o ID é o trecho final. É fácil
-// colar o path inteiro sem perceber, então aceitamos os dois formatos aqui
-// em vez de exigir que o admin edite a mão.
-export function normalizarWarehouseId(valor: string): string {
-  const limpo = valor.trim();
-  const match = limpo.match(/warehouses\/([a-zA-Z0-9]+)/);
-  return match ? match[1] : limpo;
-}
-
-// Aceita o host colado de qualquer jeito — com "https://" na frente, com
-// caminho sobrando no final (ex.: uma aba de login que terminou em
-// ".../oidc") — e devolve só o hostname puro, sem nada a mais.
-export function normalizarHost(valor: string): string {
-  const bruto = valor.trim();
-  if (!bruto) return bruto;
-  const comProtocolo = /^https?:\/\//.test(bruto) ? bruto : `https://${bruto}`;
+export async function databricksConfigurado(): Promise<boolean> {
   try {
-    return new URL(comProtocolo).host;
+    const resp = await fetch("/api/databricks-status");
+    const dados = (await resp.json()) as { configurado?: boolean };
+    return Boolean(dados.configurado);
   } catch {
-    return bruto.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    return false;
   }
 }
 
-export async function executarConsultaDatabricks(
-  cfg: DatabricksConfig,
-  statement: string,
-): Promise<ConsultaResultado> {
+export async function executarConsultaDatabricks(statement: string): Promise<ConsultaResultado> {
   try {
     const resp = await fetch("/api/databricks-query", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        ...cfg,
-        host: normalizarHost(cfg.host),
-        warehouseId: normalizarWarehouseId(cfg.warehouseId),
-        token: cfg.token.trim().replace(/^Bearer\s+/i, ""),
-        statement,
-      }),
+      body: JSON.stringify({ statement }),
     });
     return (await resp.json()) as ConsultaResultado;
   } catch {
