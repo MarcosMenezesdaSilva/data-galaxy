@@ -5,10 +5,18 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useArtigos } from "@/lib/hooks";
 import { fmtDate } from "@/lib/format";
 import { db } from "@/lib/db";
-import { Search, Star, Plus, BookOpen, Sparkles } from "lucide-react";
+import type { Artigo } from "@/lib/types";
+import { Search, Star, Plus, BookOpen, Sparkles, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/conhecimento")({
@@ -19,6 +27,7 @@ export const Route = createFileRoute("/_app/conhecimento")({
 function ConhecimentoPage() {
   const artigos = useArtigos();
   const [q, setQ] = useState("");
+  const [aberto, setAberto] = useState<Artigo | null>(null);
 
   const filtrados = useMemo(
     () =>
@@ -79,13 +88,19 @@ function ConhecimentoPage() {
         {filtrados.map((a) => (
           <Card
             key={a.id_artigo}
+            onClick={() => setAberto(a)}
             className="p-4 space-y-2 hover:shadow-md transition-shadow cursor-pointer"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="rounded-md bg-primary/10 text-primary p-1.5">
                 <BookOpen className="h-4 w-4" />
               </div>
-              <button onClick={() => favoritar(a.id!, a.favorito)}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  favoritar(a.id!, a.favorito);
+                }}
+              >
                 <Star
                   className={`h-4 w-4 ${a.favorito ? "fill-[color:var(--warning)] text-[color:var(--warning)]" : "text-muted-foreground"}`}
                 />
@@ -101,6 +116,7 @@ function ConhecimentoPage() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">Causa raiz: {a.causa_raiz}</p>
+            <p className="text-xs text-foreground/80 line-clamp-2">{a.solucao}</p>
             <div className="flex items-center justify-between pt-2 border-t border-border text-[11px] text-muted-foreground">
               <span>{a.autor}</span>
               <span>{fmtDate(a.data_criacao)}</span>
@@ -108,6 +124,57 @@ function ConhecimentoPage() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!aberto} onOpenChange={(open) => !open && setAberto(null)}>
+        <DialogContent className="sm:max-w-lg">
+          {aberto && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{aberto.titulo}</DialogTitle>
+                <DialogDescription asChild>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <Badge variant="secondary" className="text-[10px]">
+                      {aberto.categoria}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px]">
+                      {aberto.produto}
+                    </Badge>
+                    {aberto.tags.map((t) => (
+                      <Badge key={t} variant="outline" className="text-[10px]">
+                        {t}
+                      </Badge>
+                    ))}
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Causa raiz
+                  </div>
+                  <p className="mt-0.5">{aberto.causa_raiz}</p>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Conteúdo
+                  </div>
+                  <p className="mt-0.5 leading-relaxed">{aberto.solucao}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-border text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <User className="h-3 w-3" /> {aberto.autor}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> {fmtDate(aberto.data_criacao)}
+                </span>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
