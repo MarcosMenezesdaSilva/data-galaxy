@@ -144,7 +144,11 @@ function DashboardPage() {
     );
   }, [filtrados]);
 
-  const serieMensal6 = useMemo(() => porMes.slice(-6), [porMes]);
+  // Antes só mostrava os últimos 6 meses — com a base real completa
+  // (2023-2025) isso escondia todo o histórico anterior ao pico de
+  // set/2025. O gráfico agora recebe o período inteiro e usa zoom/pan
+  // (Brush) pra navegar sem perder a visão geral da série.
+  const serieMensalCompleta = porMes;
 
   const tendenciaMensalPct = useMemo(() => {
     if (porMes.length < 2) return null;
@@ -276,7 +280,7 @@ function DashboardPage() {
           criticos={criticos}
           totalRiscos={riscos.length}
           variacaoSemanal={variacaoSemanal}
-          serieMensal={serieMensal6}
+          serieMensal={serieMensalCompleta}
           gruposRisco={gruposRisco}
           porPrio={porPrio}
         />

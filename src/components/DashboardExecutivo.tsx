@@ -15,6 +15,7 @@ import {
   Pie,
   Cell,
   Legend,
+  Brush,
 } from "recharts";
 
 export interface DashboardExecutivoProps {
@@ -144,8 +145,11 @@ export function DashboardExecutivo({
       {/* Tendência de 6 meses + prioridades */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="p-4 lg:col-span-2">
-          <div className="text-sm font-semibold mb-3">
-            Tendência de incidentes (últimos 6 meses)
+          <div className="text-sm font-semibold mb-1">
+            Tendência de incidentes (período completo)
+          </div>
+          <div className="text-xs text-muted-foreground mb-3">
+            {serieMensal.length} meses · arraste as alças abaixo do gráfico pra navegar no tempo
           </div>
           <div className="h-72">
             <ResponsiveContainer>
@@ -169,6 +173,17 @@ export function DashboardExecutivo({
                     fill="var(--foreground)"
                   />
                 </Bar>
+                {serieMensal.length > 6 && (
+                  <Brush
+                    dataKey="mes"
+                    height={22}
+                    stroke="var(--brand)"
+                    fill="var(--muted)"
+                    travellerWidth={8}
+                    startIndex={Math.max(0, serieMensal.length - 6)}
+                    endIndex={serieMensal.length - 1}
+                  />
+                )}
               </BarChart>
             </ResponsiveContainer>
           </div>

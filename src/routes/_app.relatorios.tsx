@@ -20,6 +20,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Brush,
 } from "recharts";
 import Papa from "papaparse";
 
@@ -159,6 +160,17 @@ function RelatoriosPage() {
                       fill="var(--foreground)"
                     />
                   </Bar>
+                  {porMes.length > 6 && (
+                    <Brush
+                      dataKey="mes"
+                      height={22}
+                      stroke="var(--brand)"
+                      fill="var(--muted)"
+                      travellerWidth={8}
+                      startIndex={Math.max(0, porMes.length - 6)}
+                      endIndex={porMes.length - 1}
+                    />
+                  )}
                 </BarChart>
               </ResponsiveContainer>
             </div>
