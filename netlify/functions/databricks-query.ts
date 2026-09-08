@@ -53,14 +53,69 @@ function limparHost(hostBruto: string): string {
   }
 }
 
+interface ExternalLink {
+  chunk_index: number;
+  row_offset: number;
+  row_count: number;
+  external_link: string;
+  next_chunk_index?: number;
+  next_chunk_internal_link?: string;
+}
+
 interface StatementStatus {
   statement_id: string;
   status: { state: string; error?: { message?: string } };
   manifest?: { schema?: { columns?: { name: string; type_name: string }[] }; truncated?: boolean };
-  result?: { data_array?: unknown[][] };
+  result?: { data_array?: unknown[][]; external_links?: ExternalLink[] };
 }
 
-function interpretarStatus(dados: StatementStatus): QueryResultado {
+// Consultas cujo resultado passa de 25 MB (ex.: o JOIN completo de incidentes,
+// ~120 mil linhas) não cabem no modo INLINE padrão da Statement Execution API
+// — o Databricks devolve o erro "Inline byte limit exceeded" e pede
+// disposition=EXTERNAL_LINKS. Nesse modo o resultado vem em um ou mais
+// "chunks", cada um com uma URL pré-assinada (external_link) pra baixar o
+// JSON puro direto do storage (sem precisar do token do Databricks) — e,
+// se houver mais chunks, um next_chunk_internal_link pra pedir o próximo.
+// Isso baixa e concatena todos os chunks antes de responder ao cliente, pra
+// manter o contrato de resposta (um array `linhas` já completo) igual ao que
+// o resto do app espera.
+async function coletarExternalLinks(
+  host: string,
+  token: string,
+  primeiroLote: ExternalLink[],
+): Promise<unknown[][]> {
+  const linhas: unknown[][] = [];
+  let lote: ExternalLink[] = primeiroLote;
+
+  while (lote.length > 0) {
+    const paginas = await Promise.all(
+      lote.map(async (link) => {
+        const resp = await fetch(link.external_link);
+        return (await resp.json()) as unknown[][];
+      }),
+    );
+    for (const pagina of paginas) linhas.push(...pagina);
+
+    const ultimo = lote[lote.length - 1];
+    if (ultimo.next_chunk_internal_link) {
+      const resp = await fetch(`https://${host}${ultimo.next_chunk_internal_link}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const dados = (await resp.json()) as { external_links?: ExternalLink[] };
+      lote = dados.external_links ?? [];
+    } else {
+      lote = [];
+    }
+  }
+
+  return linhas;
+}
+
+async function interpretarStatus(
+  dados: StatementStatus,
+  host: string,
+  token: string,
+): Promise<QueryResultado> {
   const estado = dados.status?.state;
 
   if (estado === "PENDING" || estado === "RUNNING") {
@@ -80,10 +135,15 @@ function interpretarStatus(dados: StatementStatus): QueryResultado {
     nome: c.name,
     tipo: c.type_name,
   }));
+
+  const linhas = dados.result?.external_links
+    ? await coletarExternalLinks(host, token, dados.result.external_links)
+    : (dados.result?.data_array ?? []);
+
   return {
     ok: true,
     colunas,
-    linhas: dados.result?.data_array ?? [],
+    linhas,
     truncado: Boolean(dados.manifest?.truncated),
   };
 }
@@ -115,7 +175,7 @@ export default async (req: Request): Promise<Response> => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const dados = (await resp.json()) as StatementStatus;
-      return jsonResponse(interpretarStatus(dados));
+      return jsonResponse(await interpretarStatus(dados, host, token));
     }
 
     if (!body.statement?.trim()) {
@@ -135,6 +195,12 @@ export default async (req: Request): Promise<Response> => {
         warehouse_id: warehouseId,
         statement: body.statement,
         wait_timeout: "5s",
+        // Resultados grandes (ex.: o JOIN completo de incidentes, ~120 mil
+        // linhas) passam do limite de 25 MB do modo INLINE padrão — pedir
+        // EXTERNAL_LINKS de saída sempre é seguro mesmo pra consultas
+        // pequenas (o Databricks devolve inline via link do mesmo jeito).
+        disposition: "EXTERNAL_LINKS",
+        format: "JSON_ARRAY",
       }),
     });
 
@@ -154,7 +220,7 @@ export default async (req: Request): Promise<Response> => {
     }
 
     const dados = (await resp.json()) as StatementStatus;
-    return jsonResponse(interpretarStatus(dados));
+    return jsonResponse(await interpretarStatus(dados, host, token));
   } catch (err) {
     return jsonResponse({
       ok: false,

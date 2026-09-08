@@ -53,7 +53,6 @@ LEFT JOIN fiap_analytics.gold.dim_codigo_fechamento dcf ON dcf.sk_codigo_fechame
 LEFT JOIN fiap_analytics.gold.dim_solucao dsol ON dsol.sk_solucao = f.sk_solucao
 LEFT JOIN fiap_analytics.gold.dim_origem_abertura doa ON doa.sk_origem = f.sk_origem
 ORDER BY f.dt_aberto DESC
-LIMIT 3000
 `.trim();
 
 export function mapearIncidente(row: Record<string, unknown>): Incidente {
@@ -156,11 +155,12 @@ LEFT JOIN fiap_analytics.gold.dim_produto dp ON dp.sk_produto = f.sk_produto
 LEFT JOIN fiap_analytics.gold.dim_grupo dg ON dg.sk_grupo = f.sk_grupo
 LEFT JOIN fiap_analytics.gold.dim_prioridade dpr ON dpr.sk_prioridade = f.sk_prioridade
 ORDER BY f.fl_resolvido ASC, rv.dt_geracao DESC
-LIMIT 500
 `.trim();
-// ORDER BY fl_resolvido ASC prioriza os incidentes ainda em aberto (poucos —
-// a maioria de risco_violacao é histórico já resolvido) pra garantir que
-// eles sempre entrem dentro do LIMIT, em vez de ficarem de fora por acaso.
+// ORDER BY fl_resolvido ASC traz primeiro os incidentes ainda em aberto (a
+// minoria — a maior parte de risco_violacao é histórico já resolvido). Sem
+// LIMIT: traz a tabela inteira, já que ela é pequena (pouco mais de mil
+// linhas) — a tela de Riscos de OLA filtra por padrão só os "Ativo" (ver
+// src/routes/_app.riscos-ola.tsx), o histórico fica disponível como opção.
 
 // faixa_risco real vem como "1_ALTO (prevê estouro)", "2_ATENCAO (>70% do
 // prazo)", "3_MODERADO", "4_BAIXO" — o prefixo numérico é a ordem de

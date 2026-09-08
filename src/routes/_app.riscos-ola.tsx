@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import {
   Bell,
   Wrench,
@@ -83,8 +84,16 @@ function RiscosPage() {
     () => db.riscos.orderBy("probabilidade_violacao").reverse().toArray(),
     [],
   );
-  const riscos = riscosRaw ?? [];
+  const todosRiscos = riscosRaw ?? [];
   const carregando = riscosRaw === undefined;
+  // A base real do Databricks traz risco calculado tanto de incidentes ainda
+  // abertos quanto de incidentes já resolvidos (histórico) — por padrão só
+  // mostramos os "Ativo" pra não passar a impressão de que há mais risco
+  // aberto agora do que realmente existe; o histórico fica disponível ao
+  // ligar o toggle.
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+  const riscosAtivos = todosRiscos.filter((r) => r.status === "Ativo");
+  const riscos = mostrarHistorico ? todosRiscos : riscosAtivos;
   const [sel, setSel] = useState<RiscoOla | null>(null);
   const atual = sel ?? riscos[0] ?? null;
   const navigate = useNavigate();
@@ -282,17 +291,39 @@ function RiscosPage() {
     );
   }
 
+  const toggleHistorico = (
+    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+      <Switch checked={mostrarHistorico} onCheckedChange={setMostrarHistorico} />
+      Incluir histórico (resolvidos)
+      {todosRiscos.length > 0 && (
+        <span className="text-muted-foreground/70">
+          · {riscosAtivos.length} ativo{riscosAtivos.length === 1 ? "" : "s"} de{" "}
+          {todosRiscos.length}
+        </span>
+      )}
+    </label>
+  );
+
   if (riscos.length === 0) {
     return (
       <div className="space-y-4">
         <PageHeader
           title="Riscos de OLA"
           subtitle="Ordenado pelo maior risco de violação · fatores explicáveis por incidente"
+          actions={todosRiscos.length > 0 ? toggleHistorico : undefined}
         />
         <EmptyState
           icon={<ShieldOff className="h-8 w-8" />}
-          title="Nenhum risco de OLA calculado"
-          description="Os riscos aparecem aqui a partir dos incidentes ativos carregados na base atual."
+          title={
+            !mostrarHistorico && todosRiscos.length > 0
+              ? "Nenhum risco ativo no momento"
+              : "Nenhum risco de OLA calculado"
+          }
+          description={
+            !mostrarHistorico && todosRiscos.length > 0
+              ? 'Todos os incidentes com risco calculado na base atual já foram resolvidos. Ligue "Incluir histórico" para vê-los.'
+              : "Os riscos aparecem aqui a partir dos incidentes ativos carregados na base atual."
+          }
         />
       </div>
     );
@@ -303,6 +334,7 @@ function RiscosPage() {
       <PageHeader
         title="Riscos de OLA"
         subtitle="Ordenado pelo maior risco de violação · fatores explicáveis por incidente"
+        actions={toggleHistorico}
       />
       <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
         <Card className="p-0 overflow-hidden">

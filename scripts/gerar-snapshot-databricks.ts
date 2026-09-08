@@ -1,8 +1,22 @@
 // Gera um snapshot congelado dos dados reais do Databricks (incidentes,
-// previsões, riscos) e grava em src/lib/databricks-snapshot.json — usado
-// como carga PADRÃO do app (ver src/lib/init.ts), pra não depender de uma
-// sincronização ao vivo (lenta, ~10-30s) durante uma apresentação com tempo
-// contado.
+// previsões, riscos) e grava em dois arquivos — usados como carga PADRÃO do
+// app (ver src/lib/init.ts), pra não depender de uma sincronização ao vivo
+// (lenta, pode levar minutos pro volume real) durante uma apresentação com
+// tempo contado:
+//
+//   - databricks-snapshot-amostra.json: uma fatia pequena (os incidentes
+//     mais recentes) + TODAS as previsões e riscos. É importada de forma
+//     estática (bundle principal) e carrega instantaneamente.
+//   - databricks-snapshot-resto.json: o restante dos incidentes (o grosso
+//     dos ~120 mil). É importada via import() dinâmico só depois da carga
+//     inicial (ver continuarCargaEmSegundoPlano em src/lib/init.ts), pra não
+//     travar nem atrasar o primeiro carregamento da página — o navegador
+//     baixa isso em segundo plano enquanto a pessoa já está navegando.
+//
+// (Um único arquivo com tudo já foi tentado: o import estático de ~83 MB de
+// JSON trava o carregamento inicial da página por minutos, porque o bundle
+// inteiro precisa terminar de baixar e fazer parse antes de qualquer código
+// rodar — dividir só a escrita no IndexedDB em lotes não resolve isso.)
 //
 // Roda manualmente quando quiser atualizar o snapshot com dado mais recente:
 //   bun run scripts/gerar-snapshot-databricks.ts
@@ -84,15 +98,22 @@ async function main() {
   const riscos = linhasRiscos.map(mapearRisco);
   console.log(`[snapshot] ${riscos.length} riscos`);
 
-  const snapshot = {
+  const AMOSTRA_INICIAL = 3000;
+  const amostra = {
     gerado_em: new Date().toISOString(),
-    incidentes,
+    incidentes: incidentes.slice(0, AMOSTRA_INICIAL),
     previsoes,
     riscos,
   };
+  const resto = {
+    incidentes: incidentes.slice(AMOSTRA_INICIAL),
+  };
 
-  await Bun.write("src/lib/databricks-snapshot.json", JSON.stringify(snapshot, null, 0));
-  console.log("[snapshot] Salvo em src/lib/databricks-snapshot.json");
+  await Bun.write("src/lib/databricks-snapshot-amostra.json", JSON.stringify(amostra, null, 0));
+  await Bun.write("src/lib/databricks-snapshot-resto.json", JSON.stringify(resto, null, 0));
+  console.log(
+    `[snapshot] Salvo: amostra (${amostra.incidentes.length} incidentes + previsões/riscos) e resto (${resto.incidentes.length} incidentes)`,
+  );
 }
 
 main().catch((err) => {
