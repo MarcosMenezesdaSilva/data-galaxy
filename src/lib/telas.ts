@@ -23,7 +23,7 @@ export const TELAS: Tela[] = [
     rota: "/assistente",
     nome: "Assistente",
     descricao:
-      "Este chat — responde perguntas sobre incidentes, riscos, alertas, ações e previsões direto sobre os dados carregados na base.",
+      "Este chat — responde perguntas sobre incidentes, riscos, alertas, ações e previsões direto sobre os dados carregados na base. Quando a IA está configurada em Configurações, usa o Claude com os dados e artigos relevantes da Base de Conhecimento como contexto; sem IA configurada, usa um motor de regras local.",
     apelidos: ["assistente", "chat", "você mesmo"],
   },
   {
@@ -133,7 +133,7 @@ export const TELAS: Tela[] = [
     rota: "/configuracoes",
     nome: "Configurações",
     descricao:
-      "Preferências visuais, troca de perfil, faixas de risco, regras de OLA e o painel de teste dos canais de notificação (WhatsApp, SMS, Teams).",
+      "Preferências visuais, troca de perfil, faixas de risco, regras de OLA, o painel de teste dos canais de notificação (WhatsApp, SMS, Teams), a integração com o Databricks e a configuração da IA (Claude) que dá poder ao Assistente.",
     apelidos: ["configurações", "config", "ajustes"],
   },
 ];

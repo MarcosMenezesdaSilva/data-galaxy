@@ -89,3 +89,25 @@ export const useDatabricksConfig = create<DatabricksConfigState>()(
     { name: "data-galaxy-databricks" },
   ),
 );
+
+// Mesma decisão/trade-off da store do Databricks: a API key da IA (Claude)
+// fica salva no navegador entre sessões, digitada pelo Administrador em
+// Configurações → Configure sua IA. Nunca vira variável de ambiente.
+export interface IAConfigState {
+  apiKey: string;
+  model: string;
+  setConfig: (c: { apiKey: string; model: string }) => void;
+  limpar: () => void;
+}
+
+export const useIAConfig = create<IAConfigState>()(
+  persist(
+    (set) => ({
+      apiKey: "",
+      model: "claude-sonnet-5",
+      setConfig: (c) => set(c),
+      limpar: () => set({ apiKey: "", model: "claude-sonnet-5" }),
+    }),
+    { name: "data-galaxy-ia" },
+  ),
+);

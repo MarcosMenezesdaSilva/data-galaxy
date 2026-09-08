@@ -22,6 +22,7 @@ export type Intencao =
   | "produto_risco"
   | "comparativo_impacto"
   | "explicar_tela"
+  | "ia"
   | "fallback"
   | "fora_escopo";
 
@@ -32,6 +33,10 @@ export interface Resposta {
   recomendacao?: string;
   numeros: { label: string; valor: string }[];
   foraEscopo?: boolean;
+  // Presente quando a resposta veio da IA (Claude) configurada em
+  // Configurações, em vez do motor de regras local — usado só pra mostrar
+  // um selo visual, não muda o cálculo de nada.
+  fonte?: "ia" | "regras";
 }
 
 function normalizar(s: string): string {
@@ -496,4 +501,58 @@ export function responder(
     resumo: "Não consegui montar uma resposta segura para essa pergunta com os dados atuais.",
     numeros: [],
   };
+}
+
+// Resumo de fatos operacionais calculados agora, em texto simples — é o que
+// vai no prompt da IA como grounding: o modelo só pode falar de número que
+// esteja aqui dentro, nunca inventar um por conta própria.
+export function montarResumoDados(dados: DadosAssistente): string {
+  const { incidentes, riscos, alertas, acoes, previsoes } = dados;
+
+  const riscosAtivos = riscos.filter((r) => r.status === "Ativo");
+  const riscosCriticos = riscosAtivos.filter((r) => r.faixa_risco === "Crítico");
+  const topRisco = [...riscosCriticos].sort(
+    (a, b) => b.probabilidade_violacao - a.probabilidade_violacao,
+  )[0];
+
+  const alertasNovos = alertas.filter((a) => a.status === "Novo").length;
+  const alertasPendentes = alertas.filter(
+    (a) => a.status === "Novo" || a.status === "Reconhecido",
+  ).length;
+
+  const elegiveis = incidentes.filter((i) => i.elegivel_kpi);
+  const dentroOla = elegiveis.filter((i) => i.dentro_ola).length;
+  const cumprimentoOla = elegiveis.length ? (dentroOla / elegiveis.length) * 100 : 0;
+
+  const porGrupo = new Map<string, number>();
+  for (const r of riscosAtivos) porGrupo.set(r.grupo, (porGrupo.get(r.grupo) ?? 0) + 1);
+  const grupoTop = [...porGrupo.entries()].sort((a, b) => b[1] - a[1])[0];
+
+  const definidas = acoes.filter((a) => a.classificacao !== "Pendente");
+  const efetivas = definidas.filter((a) => a.classificacao === "Efetiva").length;
+  const efetividade = definidas.length ? (efetivas / definidas.length) * 100 : null;
+
+  const prev1 = previsoes
+    .filter((p) => p.horizonte === "D+1")
+    .reduce((s, p) => s + p.volume_previsto, 0);
+  const prev7 = previsoes
+    .filter((p) => p.horizonte === "D+7")
+    .reduce((s, p) => s + p.volume_previsto, 0);
+
+  const semIntervencao = incidentes.filter((i) => i.status_incidente === "Sem Intervenção").length;
+
+  return [
+    `- Incidentes carregados na base: ${incidentes.length} (${semIntervencao} ficaram com status "Sem Intervenção").`,
+    `- Riscos de OLA ativos: ${riscosAtivos.length}, sendo ${riscosCriticos.length} críticos.`,
+    topRisco
+      ? `- Risco mais urgente: incidente ${topRisco.numero_incidente}, produto ${topRisco.produto}, grupo ${topRisco.grupo}, ${topRisco.probabilidade_violacao}% de probabilidade de violação, ${topRisco.tempo_restante_minutos} min restantes.`
+      : "- Nenhum risco crítico ativo no momento.",
+    `- Alertas: ${alertasNovos} novo(s), ${alertasPendentes} ainda pendente(s) de tratamento (de um total de ${alertas.length}).`,
+    `- Cumprimento de OLA: ${cumprimentoOla.toFixed(1)}% (${elegiveis.length} incidentes elegíveis para o KPI).`,
+    grupoTop
+      ? `- Grupo com mais riscos ativos: ${grupoTop[0]} (${grupoTop[1]} riscos).`
+      : "- Nenhum grupo com risco ativo no momento.",
+    `- Ações corretivas: ${definidas.length} avaliada(s), ${efetividade == null ? "sem dado de efetividade ainda" : `${efetividade.toFixed(1)}% classificadas como efetivas`}.`,
+    `- Previsão de volume: D+1 = ${prev1}, D+7 = ${prev7} incidentes esperados.`,
+  ].join("\n");
 }

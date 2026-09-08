@@ -1,0 +1,140 @@
+// Netlify Function (v2 API). Proxy para a Messages API da Anthropic — existe
+// pelo mesmo motivo da function do Databricks: o navegador não deve chamar a
+// API externa direto (a key ficaria visível em qualquer devtools de quem
+// abrir o site), e essa function nunca loga nem guarda a key em disco.
+//
+// A key vem no corpo da requisição (digitada pelo Administrador em
+// Configurações → Configure sua IA), não de variável de ambiente — mesma
+// decisão já tomada para o Databricks.
+//
+// O modelo só responde com base nos FATOS e ARTIGOS que a gente manda no
+// prompt (calculados/recuperados no cliente a partir dos dados reais) — o
+// system prompt proíbe explicitamente inventar números ou nomes que não
+// estejam ali. Isso preserva o mesmo compromisso do motor de regras antigo:
+// nunca alegar um dado que a base não sustenta.
+
+type ArtigoContexto = {
+  titulo: string;
+  categoria: string;
+  produto: string;
+  causa_raiz: string;
+  solucao: string;
+};
+
+type PedidoIA = {
+  apiKey?: string;
+  model?: string;
+  pergunta?: string;
+  fatos?: string;
+  artigos?: ArtigoContexto[];
+};
+
+type RespostaIA = { ok: true; resposta: string } | { ok: false; motivo: string; detalhe?: string };
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+const SYSTEM_PROMPT = `Você é o Assistente do Data Galaxy, uma plataforma de AIOps preditivo para incidentes e OLA da Locaweb (Challenge FIAP x Locaweb).
+
+Regras rígidas:
+- Responda SOMENTE com base nos FATOS (dados operacionais em tempo real) e nos ARTIGOS (Base de Conhecimento) fornecidos na mensagem do usuário. Nunca invente números, nomes de grupo/produto, causas raiz ou recomendações que não estejam explicitamente ali.
+- Se a pergunta não puder ser respondida com o que foi fornecido, diga claramente que não tem essa informação em vez de arriscar um palpite.
+- Se um ARTIGO for usado na resposta, cite o título dele entre aspas.
+- Responda em português do Brasil, direto e objetivo, no máximo 5 frases, sem markdown (não use asteriscos, listas ou títulos).
+- Você é uma camada de apoio à decisão — não afirme certezas absolutas sobre o futuro, fale em termos de risco e probabilidade quando for o caso.`;
+
+function montarMensagem(pergunta: string, fatos: string, artigos: ArtigoContexto[]): string {
+  const blocoArtigos = artigos.length
+    ? artigos
+        .map(
+          (a) =>
+            `- "${a.titulo}" (${a.categoria} · ${a.produto}) — causa raiz: ${a.causa_raiz}. Solução: ${a.solucao}`,
+        )
+        .join("\n")
+    : "Nenhum artigo da Base de Conhecimento relevante para esta pergunta foi encontrado.";
+
+  return `Pergunta do usuário: ${pergunta}
+
+FATOS (dados operacionais em tempo real, calculados agora sobre a base carregada):
+${fatos}
+
+ARTIGOS RELEVANTES DA BASE DE CONHECIMENTO:
+${blocoArtigos}`;
+}
+
+export default async (req: Request): Promise<Response> => {
+  if (req.method !== "POST") {
+    return jsonResponse({ ok: false, motivo: "metodo_nao_permitido" }, 405);
+  }
+
+  let body: PedidoIA;
+  try {
+    body = (await req.json()) as PedidoIA;
+  } catch {
+    return jsonResponse({ ok: false, motivo: "requisicao_invalida" }, 400);
+  }
+
+  const apiKey = body.apiKey?.trim();
+  const model = body.model?.trim() || "claude-sonnet-5";
+  const pergunta = body.pergunta?.trim();
+  const fatos = body.fatos?.trim() || "Nenhum dado disponível.";
+  const artigos = body.artigos ?? [];
+
+  if (!apiKey || !pergunta) {
+    return jsonResponse(
+      { ok: false, motivo: "requisicao_invalida", detalhe: "Preencha a API key e a pergunta." },
+      400,
+    );
+  }
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 400,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: montarMensagem(pergunta, fatos, artigos) }],
+      }),
+    });
+
+    if (!resp.ok) {
+      let detalhe = `Anthropic respondeu status ${resp.status}`;
+      try {
+        const errJson = (await resp.json()) as { error?: { message?: string } };
+        if (errJson?.error?.message) detalhe = errJson.error.message;
+      } catch {
+        // corpo de erro não era JSON — mantém detalhe genérico
+      }
+      return jsonResponse({ ok: false, motivo: "falha_ia", detalhe } satisfies RespostaIA);
+    }
+
+    const dados = (await resp.json()) as { content?: { type: string; text?: string }[] };
+    const texto = dados.content?.find((c) => c.type === "text")?.text?.trim();
+
+    if (!texto) {
+      return jsonResponse({
+        ok: false,
+        motivo: "resposta_vazia",
+        detalhe: "A IA não retornou texto.",
+      } satisfies RespostaIA);
+    }
+
+    return jsonResponse({ ok: true, resposta: texto } satisfies RespostaIA);
+  } catch (err) {
+    return jsonResponse({
+      ok: false,
+      motivo: "erro_rede",
+      detalhe: err instanceof Error ? err.message : "Erro de rede ao contatar a Anthropic",
+    } satisfies RespostaIA);
+  }
+};

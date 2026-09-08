@@ -3,9 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useApp, type Perfil } from "@/lib/store";
-import { useIncidentes, useRiscos, useAlertas, useAcoes, usePrevisoes } from "@/lib/hooks";
+import { useApp, useIAConfig, type Perfil } from "@/lib/store";
+import {
+  useIncidentes,
+  useRiscos,
+  useAlertas,
+  useAcoes,
+  usePrevisoes,
+  useArtigos,
+} from "@/lib/hooks";
 import { responder, type Resposta } from "@/lib/assistente";
+import { perguntarIA, iaConfigurada } from "@/lib/assistente-ia";
 import { Bot, Send, Sparkles, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/assistente")({
@@ -62,6 +70,8 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
   const alertas = useAlertas();
   const acoes = useAcoes();
   const previsoes = usePrevisoes();
+  const artigos = useArtigos();
+  const iaCfg = useIAConfig();
 
   const quickQs = QUICK_QS_POR_PERFIL[perfil ?? "admin"] ?? QUICK_QS_POR_PERFIL.admin;
 
@@ -73,18 +83,50 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs.length, isThinking]);
 
-  function enviar(texto?: string) {
+  const dados = { incidentes, riscos, alertas, acoes, previsoes };
+
+  async function enviar(texto?: string) {
     const t = (texto ?? input).trim();
     if (!t || isThinking) return;
     setInput("");
     setMsgs((m) => [...m, { role: "user", text: t, ts: Date.now() }]);
     setIsThinking(true);
-    const delay = 900 + Math.random() * 700;
-    setTimeout(() => {
-      const resposta = responder(t, { incidentes, riscos, alertas, acoes, previsoes }, perfil);
-      setIsThinking(false);
-      setMsgs((m) => [...m, { role: "assistant", resposta, isStreaming: true, ts: Date.now() }]);
-    }, delay);
+
+    // Efeito "pensando" mínimo mesmo quando a IA responde rápido — reforça
+    // que algo está processando em vez de trocar de estado instantaneamente.
+    const inicio = Date.now();
+    const atrasoMinimo = 900 + Math.random() * 700;
+
+    let resposta: Resposta;
+    if (iaConfigurada(iaCfg)) {
+      const resultado = await perguntarIA(t, dados, artigos, iaCfg);
+      if (resultado.ok) {
+        resposta = {
+          intencao: "ia",
+          resumo: resultado.resposta,
+          detalhe: resultado.artigosUsados.length
+            ? `Fontes consultadas: ${resultado.artigosUsados.map((a) => `"${a}"`).join(", ")}.`
+            : undefined,
+          numeros: [],
+          fonte: "ia",
+        };
+      } else {
+        // IA falhou (sem rede, key inválida, etc.) — cai pro motor de regras
+        // local em vez de deixar a conversa travada.
+        resposta = responder(t, dados, perfil);
+      }
+    } else {
+      resposta = responder(t, dados, perfil);
+    }
+
+    const faltam = atrasoMinimo - (Date.now() - inicio);
+    setTimeout(
+      () => {
+        setIsThinking(false);
+        setMsgs((m) => [...m, { role: "assistant", resposta, isStreaming: true, ts: Date.now() }]);
+      },
+      Math.max(0, faltam),
+    );
   }
 
   return (
@@ -161,12 +203,23 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
             <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
               <Sparkles className="h-3 w-3" /> Como funciona
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              O assistente não usa um modelo de linguagem externo: ele interpreta a pergunta e
-              calcula a resposta direto sobre os dados desta base (incidentes, riscos, alertas,
-              ações e previsões). Se a pergunta não puder ser respondida com esses dados, ele diz
-              isso em vez de inventar.
-            </p>
+            {iaConfigurada(iaCfg) ? (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                As respostas vêm do Claude (Anthropic), com os dados operacionais em tempo real e os
+                artigos relevantes da Base de Conhecimento passados como contexto — o modelo é
+                instruído a nunca afirmar um número ou uma causa que não esteja nesse contexto.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                O assistente não usa um modelo de linguagem externo: ele interpreta a pergunta e
+                calcula a resposta direto sobre os dados desta base (incidentes, riscos, alertas,
+                ações e previsões). Se a pergunta não puder ser respondida com esses dados, ele diz
+                isso em vez de inventar.{" "}
+                {perfil === "admin" && (
+                  <>Configure uma IA em Configurações para respostas em linguagem natural.</>
+                )}
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card className="border-amber-400/40 bg-amber-50/40 dark:bg-amber-950/10">
@@ -300,6 +353,11 @@ function RespostaCard({ r, isStreaming }: { r: Resposta; isStreaming?: boolean }
   return (
     <Card>
       <CardContent className="space-y-3 p-5 text-sm">
+        {r.fonte === "ia" && (
+          <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-primary">
+            <Sparkles className="h-3 w-3" /> Respondido com Claude
+          </div>
+        )}
         {secoes.map((s) => {
           const idx = ORDEM.indexOf(s.campo);
           const ativa = isStreaming && stream.fase === s.campo;
