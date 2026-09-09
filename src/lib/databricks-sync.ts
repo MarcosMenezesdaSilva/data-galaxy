@@ -103,13 +103,13 @@ export function mapearIncidente(row: Record<string, unknown>): Incidente {
 export const QUERY_PREVISOES = `
 SELECT data, horizonte, previsto, baseline, dt_geracao
 FROM fiap_analytics.ml.previsao_futuro
-WHERE unique_id = 'total' AND horizonte IN (1, 7)
+WHERE unique_id = 'total'
 ORDER BY data
 `.trim();
 
 export function mapearPrevisao(row: Record<string, unknown>): Previsao {
   const horizonteNum = Number(row.horizonte);
-  const horizonte = horizonteNum === 1 ? "D+1" : "D+7";
+  const horizonte = `D+${horizonteNum}`;
   const previsto = Number(row.previsto ?? 0);
 
   return {

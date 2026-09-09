@@ -528,6 +528,14 @@ export function montarResumoDados(dados: DadosAssistente): string {
   for (const r of riscosAtivos) porGrupo.set(r.grupo, (porGrupo.get(r.grupo) ?? 0) + 1);
   const grupoTop = [...porGrupo.entries()].sort((a, b) => b[1] - a[1])[0];
 
+  // Volume total de incidentes por grupo (não só riscos ativos) — o que
+  // sustenta de fato uma resposta sobre "grupo mais sobrecarregado", em vez
+  // de só a contagem de riscos (uma proxy mais estreita).
+  const incidentesPorGrupo = new Map<string, number>();
+  for (const i of incidentes)
+    incidentesPorGrupo.set(i.grupo_designado, (incidentesPorGrupo.get(i.grupo_designado) ?? 0) + 1);
+  const grupoMaisIncidentes = [...incidentesPorGrupo.entries()].sort((a, b) => b[1] - a[1])[0];
+
   const definidas = acoes.filter((a) => a.classificacao !== "Pendente");
   const efetivas = definidas.filter((a) => a.classificacao === "Efetiva").length;
   const efetividade = definidas.length ? (efetivas / definidas.length) * 100 : null;
@@ -552,6 +560,9 @@ export function montarResumoDados(dados: DadosAssistente): string {
     grupoTop
       ? `- Grupo com mais riscos ativos: ${grupoTop[0]} (${grupoTop[1]} riscos).`
       : "- Nenhum grupo com risco ativo no momento.",
+    grupoMaisIncidentes
+      ? `- Grupo com mais incidentes no total (todo o período carregado): ${grupoMaisIncidentes[0]} (${fmtNumber(grupoMaisIncidentes[1])} incidentes).`
+      : "- Nenhum grupo com incidentes atribuídos no momento.",
     `- Ações corretivas: ${definidas.length} avaliada(s), ${efetividade == null ? "sem dado de efetividade ainda" : `${efetividade.toFixed(1)}% classificadas como efetivas`}.`,
     `- Previsão de volume: D+1 = ${prev1}, D+7 = ${prev7} incidentes esperados.`,
   ].join("\n");

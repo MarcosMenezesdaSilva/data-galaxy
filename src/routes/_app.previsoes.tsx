@@ -21,7 +21,6 @@ import {
   LabelList,
   Brush,
 } from "recharts";
-import { PRODUTOS } from "@/lib/demo-data";
 import { Info, Brain, Layers, TrendingUp } from "lucide-react";
 import {
   Table,
@@ -111,14 +110,19 @@ function PrevisoesPage() {
     return Array.from(map.values());
   }, [previsoes, incidentes, contagemPorDia, dataAncora]);
 
-  const porProduto = useMemo(() => {
-    const map = new Map<string, number>();
-    previsoes
-      .filter((p) => p.horizonte === "D+7")
-      .forEach((p) => map.set(p.produto, (map.get(p.produto) ?? 0) + p.volume_previsto));
-    return Array.from(map, ([produto, volume]) => ({ produto, volume })).sort(
-      (a, b) => b.volume - a.volume,
-    );
+  // A tabela real (ml.previsao_futuro) é uma série agregada — não quebrada
+  // por produto (todo registro cai em "Todos os produtos") — então um
+  // gráfico "por produto" seria só uma barra sozinha sem sentido. O que a
+  // tabela realmente tem de rico é a previsão dia a dia: mostra os 7 dias
+  // (D+1 a D+7), não só os dois extremos.
+  const previsaoDiaria = useMemo(() => {
+    return [...previsoes]
+      .sort((a, b) => Number(a.horizonte.replace("D+", "")) - Number(b.horizonte.replace("D+", "")))
+      .map((p) => ({
+        horizonte: p.horizonte,
+        data: fmtDate(p.data_prevista),
+        volume: p.volume_previsto,
+      }));
   }, [previsoes]);
 
   const totalD1 = previsoes
@@ -173,8 +177,12 @@ function PrevisoesPage() {
       <div className="grid gap-3 md:grid-cols-4">
         <StatCard label="Volume previsto D+1" value={fmtNumber(totalD1)} accent="brand" />
         <StatCard label="Volume previsto D+7" value={fmtNumber(totalD7)} accent="orange" />
-        <StatCard label="Confiança média" value="82%" accent="info" />
-        <StatCard label="Produtos monitorados" value={String(PRODUTOS.length)} accent="success" />
+        <StatCard label="Dias previstos" value={String(previsoes.length)} accent="info" />
+        <StatCard
+          label="Última geração"
+          value={previsoes[0] ? fmtDate(previsoes[0].data_execucao) : "—"}
+          accent="success"
+        />
       </div>
 
       <Card className="p-4">
@@ -251,20 +259,15 @@ function PrevisoesPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="p-4 lg:col-span-2">
-          <div className="text-sm font-semibold mb-3">Previsão D+7 por produto</div>
+          <div className="text-sm font-semibold mb-1">Previsão diária (D+1 a D+7)</div>
+          <div className="text-xs text-muted-foreground mb-3">
+            Volume esperado por dia — série agregada, não quebrada por produto
+          </div>
           <div className="h-72">
             <ResponsiveContainer>
-              <BarChart data={porProduto} margin={{ top: 24 }}>
+              <BarChart data={previsaoDiaria} margin={{ top: 24 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="produto"
-                  stroke="var(--muted-foreground)"
-                  fontSize={11}
-                  interval={0}
-                  angle={-20}
-                  textAnchor="end"
-                  height={80}
-                />
+                <XAxis dataKey="horizonte" stroke="var(--muted-foreground)" fontSize={11} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} />
                 <Tooltip
                   contentStyle={{
@@ -273,6 +276,10 @@ function PrevisoesPage() {
                     borderRadius: 8,
                     fontSize: 12,
                   }}
+                  formatter={(value, _name, item) => [
+                    value,
+                    `Volume (${(item.payload as { data: string }).data})`,
+                  ]}
                 />
                 <Bar dataKey="volume" fill="var(--accent-orange)" radius={[6, 6, 0, 0]}>
                   <LabelList

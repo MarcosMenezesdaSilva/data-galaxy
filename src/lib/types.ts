@@ -42,7 +42,10 @@ export interface Previsao extends RegistroBase {
   id_previsao: string;
   data_execucao: string;
   data_prevista: string;
-  horizonte: "D+1" | "D+7";
+  // "D+1".."D+7" nos dados demo/Databricks (a tabela real ml.previsao_futuro
+  // traz previsão diária pros 7 dias seguintes, não só D+1/D+7) — string
+  // largo em vez de união fechada pra não travar em só dois valores.
+  horizonte: string;
   produto: string;
   categoria?: string;
   prioridade?: Prioridade;
