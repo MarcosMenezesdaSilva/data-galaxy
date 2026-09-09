@@ -2,6 +2,7 @@ import { KPICard } from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, ShieldAlert, CheckCircle2, Activity, Gauge } from "lucide-react";
 import { fmtNumber, pct } from "@/lib/format";
+import { VolumeRealVsPrevistoCard } from "@/components/VolumeRealVsPrevistoCard";
 import {
   ResponsiveContainer,
   BarChart,
@@ -14,7 +15,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   Brush,
 } from "recharts";
 
@@ -35,6 +35,7 @@ export interface DashboardExecutivoProps {
   serieMensal: { mes: string; total: number }[];
   gruposRisco: { grupo: string; total: number }[];
   porPrio: { name: string; value: number }[];
+  serieVolumeSeasonalNaive: { data: string; real: number; previsto: number }[];
 }
 
 const PIE_COLORS = [
@@ -57,6 +58,7 @@ export function DashboardExecutivo({
   serieMensal,
   gruposRisco,
   porPrio,
+  serieVolumeSeasonalNaive,
 }: DashboardExecutivoProps) {
   return (
     <div className="space-y-6">
@@ -198,9 +200,19 @@ export function DashboardExecutivo({
                   data={porPrio}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={55}
-                  outerRadius={90}
+                  innerRadius={45}
+                  outerRadius={75}
                   paddingAngle={2}
+                  label={({
+                    name,
+                    value,
+                    percent,
+                  }: {
+                    name?: string;
+                    value?: number;
+                    percent?: number;
+                  }) => `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`}
+                  labelLine
                 >
                   {porPrio.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -214,12 +226,15 @@ export function DashboardExecutivo({
                     fontSize: 12,
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </Card>
       </div>
+
+      {/* Em destaque: real vs previsto — mesmo gráfico interativo (área /
+          barras / linha) já usado na visão operacional. */}
+      <VolumeRealVsPrevistoCard serie={serieVolumeSeasonalNaive} />
 
       {/* Grupos com maior risco acumulado */}
       <Card className="p-4">
@@ -234,7 +249,7 @@ export function DashboardExecutivo({
         ) : (
           <div className="h-80">
             <ResponsiveContainer>
-              <BarChart data={gruposRisco} layout="vertical" margin={{ left: 20, right: 32 }}>
+              <BarChart data={gruposRisco} layout="vertical" margin={{ left: 20, right: 48 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
                 <YAxis

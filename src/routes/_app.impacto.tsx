@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
 import { KPICard } from "@/components/KPICard";
 import { useIncidentes, useRiscos, useAcoes, usePrevisoes } from "@/lib/hooks";
-import { fmtNumber, pct } from "@/lib/format";
+import { fmtNumber, pct, fmtDuracaoMin } from "@/lib/format";
 import {
   AlertTriangle,
   ShieldAlert,
@@ -51,13 +51,22 @@ function ImpactoPage() {
     () => riscos.filter((r) => r.faixa_risco === "Crítico" && r.status === "Ativo"),
     [riscos],
   );
+  // Antecedência média = só entre os riscos que ainda não estouraram o SLA
+  // (tempo_restante_minutos > 0). Um risco já atrasado não tem "antecedência"
+  // — misturar esses valores negativos na média distorceria (ou até
+  // inverteria o sinal de) essa métrica, que é justamente sobre pegar o
+  // problema antes de virar violação.
+  const riscosCriticosDentroDoPrazo = useMemo(
+    () => riscosCriticosAtivos.filter((r) => r.tempo_restante_minutos > 0),
+    [riscosCriticosAtivos],
+  );
   const tempoMedioAntecedencia = useMemo(() => {
-    if (!riscosCriticosAtivos.length) return 0;
+    if (!riscosCriticosDentroDoPrazo.length) return 0;
     return Math.round(
-      riscosCriticosAtivos.reduce((s, r) => s + r.tempo_restante_minutos, 0) /
-        riscosCriticosAtivos.length,
+      riscosCriticosDentroDoPrazo.reduce((s, r) => s + r.tempo_restante_minutos, 0) /
+        riscosCriticosDentroDoPrazo.length,
     );
-  }, [riscosCriticosAtivos]);
+  }, [riscosCriticosDentroDoPrazo]);
 
   const prev1 = useMemo(
     () => previsoes.filter((p) => p.horizonte === "D+1").reduce((s, p) => s + p.volume_previsto, 0),
@@ -88,8 +97,15 @@ function ImpactoPage() {
             Hoje, <b>{fmtNumber(semIntervencao)}</b> incidentes na base carregada tiveram status{" "}
             <b>&ldquo;Sem Intervenção&rdquo;</b> — o problema aconteceu e ninguém agiu antes. O Data
             Galaxy já identifica <b>{fmtNumber(riscosCriticosAtivos.length)}</b> riscos críticos{" "}
-            <b>ainda ativos, antes de virarem violação</b>, com uma antecedência média de{" "}
-            <b>{fmtNumber(tempoMedioAntecedencia)} minutos</b> para a equipe agir.
+            <b>ainda ativos, antes de virarem violação</b>
+            {riscosCriticosDentroDoPrazo.length > 0 && (
+              <>
+                , com uma antecedência média de <b>{fmtDuracaoMin(tempoMedioAntecedencia)}</b> para
+                a equipe agir ({riscosCriticosDentroDoPrazo.length} de {riscosCriticosAtivos.length}{" "}
+                ainda dentro do prazo de SLA)
+              </>
+            )}
+            .
           </p>
         </div>
       </Card>
@@ -145,7 +161,11 @@ function ImpactoPage() {
               label="Riscos pegos a tempo"
               value={fmtNumber(riscosCriticosAtivos.length)}
               accent="success"
-              hint={`~${fmtNumber(tempoMedioAntecedencia)} min de antecedência`}
+              hint={
+                riscosCriticosDentroDoPrazo.length > 0
+                  ? `~${fmtDuracaoMin(tempoMedioAntecedencia)} de antecedência`
+                  : "nenhum ainda dentro do prazo de SLA"
+              }
               icon={<ShieldAlert className="h-4 w-4" />}
             />
             <KPICard

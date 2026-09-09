@@ -6,7 +6,7 @@
 // nossos dados" sem margem de invenção.
 import type { AcaoCorretiva, Alerta, Incidente, Previsao, RiscoOla } from "./types";
 import type { Perfil } from "./store";
-import { fmtNumber, pct } from "./format";
+import { fmtNumber, pct, fmtTempoRestanteSla } from "./format";
 import { TELAS, type Tela } from "./telas";
 import { podeAcessar } from "./permissions";
 
@@ -324,7 +324,7 @@ export function responder(
           ? `Existem ${fmtNumber(riscosCriticos.length)} riscos críticos ativos agora, ainda não violados.`
           : "Não há riscos críticos ativos no momento.",
         detalhe: top
-          ? `O mais urgente é o incidente ${top.numero_incidente} (${top.produto} · grupo ${top.grupo}), com ${pct(top.probabilidade_violacao)} de probabilidade de violação e ${fmtNumber(top.tempo_restante_minutos)} minutos restantes.`
+          ? `O mais urgente é o incidente ${top.numero_incidente} (${top.produto} · grupo ${top.grupo}), com ${pct(top.probabilidade_violacao)} de probabilidade de violação e ${fmtTempoRestanteSla(top.tempo_restante_minutos).texto} de SLA.`
           : undefined,
         recomendacao: riscosCriticos.length
           ? "Acesse Riscos de OLA e acione o grupo responsável do topo da lista antes que o tempo restante se esgote."
@@ -545,7 +545,7 @@ export function montarResumoDados(dados: DadosAssistente): string {
     `- Incidentes carregados na base: ${incidentes.length} (${semIntervencao} ficaram com status "Sem Intervenção").`,
     `- Riscos de OLA ativos: ${riscosAtivos.length}, sendo ${riscosCriticos.length} críticos.`,
     topRisco
-      ? `- Risco mais urgente: incidente ${topRisco.numero_incidente}, produto ${topRisco.produto}, grupo ${topRisco.grupo}, ${topRisco.probabilidade_violacao}% de probabilidade de violação, ${topRisco.tempo_restante_minutos} min restantes.`
+      ? `- Risco mais urgente: incidente ${topRisco.numero_incidente}, produto ${topRisco.produto}, grupo ${topRisco.grupo}, ${topRisco.probabilidade_violacao}% de probabilidade de violação, ${fmtTempoRestanteSla(topRisco.tempo_restante_minutos).texto} de SLA.`
       : "- Nenhum risco crítico ativo no momento.",
     `- Alertas: ${alertasNovos} novo(s), ${alertasPendentes} ainda pendente(s) de tratamento (de um total de ${alertas.length}).`,
     `- Cumprimento de OLA: ${cumprimentoOla.toFixed(1)}% (${elegiveis.length} incidentes elegíveis para o KPI).`,

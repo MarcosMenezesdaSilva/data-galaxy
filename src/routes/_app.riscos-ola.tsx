@@ -52,6 +52,8 @@ import {
   type Canal,
   type StatusCanais,
 } from "@/lib/notify";
+import { fmtTempoRestanteSla } from "@/lib/format";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_app/riscos-ola")({
   head: () => ({ meta: [{ title: "Riscos de OLA — Data Galaxy" }] }),
@@ -160,6 +162,7 @@ function RiscosPage() {
   // fica em texto puro (asterisco apareceria literal).
   function montarNotificacao(r: RiscoOla): { titulo: string; mensagem: string } {
     const minutosAcao = Math.max(15, Math.round(r.tempo_restante_minutos * 0.3));
+    const tempoSla = fmtTempoRestanteSla(r.tempo_restante_minutos).texto;
     const link = "https://data-galaxy-nexusops.netlify.app";
 
     if (canalEscolhido === "whatsapp") {
@@ -171,7 +174,7 @@ function RiscosPage() {
           `👥 Grupo: ${r.grupo}`,
           "",
           `📊 Probabilidade de violação: *${r.probabilidade_violacao}%*`,
-          `⏱️ Tempo restante: ${r.tempo_restante_minutos} min`,
+          `⏱️ SLA: ${tempoSla}`,
           `⚠️ Fatores: ${r.fatores_risco.join(", ")}`,
           "",
           `✅ *Recomendação:*`,
@@ -192,7 +195,7 @@ function RiscosPage() {
       // sobram pro conteúdo).
       return {
         titulo: `Data Galaxy - Risco ${r.faixa_risco.normalize("NFD").replace(/[̀-ͯ]/g, "")}`,
-        mensagem: `INC ${r.numero_incidente} (${r.produto}): ${r.probabilidade_violacao}% em ${r.tempo_restante_minutos}min. Acionar ${r.grupo}.`,
+        mensagem: `INC ${r.numero_incidente} (${r.produto}): ${r.probabilidade_violacao}%, SLA ${tempoSla.normalize("NFD").replace(/[̀-ͯ]/g, "")}. Acionar ${r.grupo}.`,
       };
     }
 
@@ -208,7 +211,7 @@ function RiscosPage() {
         "",
         `📊 Probabilidade de violação: **${r.probabilidade_violacao}%**`,
         "",
-        `⏱️ Tempo restante: ${r.tempo_restante_minutos} min`,
+        `⏱️ SLA: ${tempoSla}`,
         "",
         `⚠️ Fatores: ${r.fatores_risco.join(", ")}`,
         "",
@@ -348,7 +351,7 @@ function RiscosPage() {
                   <TableHead className="text-right">Prob.</TableHead>
                   <TableHead>Faixa</TableHead>
                   <TableHead>Grupo</TableHead>
-                  <TableHead className="text-right">Tempo</TableHead>
+                  <TableHead className="text-right">SLA</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -383,8 +386,15 @@ function RiscosPage() {
                       <RiscoBadge f={r.faixa_risco} />
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{r.grupo}</TableCell>
-                    <TableCell className="text-right text-xs">
-                      {r.tempo_restante_minutos} min
+                    <TableCell
+                      className="text-right text-xs whitespace-nowrap"
+                      style={{
+                        color: fmtTempoRestanteSla(r.tempo_restante_minutos).estourado
+                          ? "var(--critical)"
+                          : undefined,
+                      }}
+                    >
+                      {fmtTempoRestanteSla(r.tempo_restante_minutos).texto}
                     </TableCell>
                     <TableCell className="text-xs">{r.status}</TableCell>
                   </TableRow>
@@ -414,10 +424,28 @@ function RiscosPage() {
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-md border border-border p-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" /> Tempo restante
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help w-fit">
+                      <Clock className="h-3 w-3" /> SLA
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-64">
+                    Tempo até o limite de SLA da prioridade ser atingido, calculado a partir de
+                    quanto tempo o incidente já está em aberto. Quando já passou do limite, mostra
+                    há quanto tempo está atrasado.
+                  </TooltipContent>
+                </Tooltip>
+                <div
+                  className="text-lg font-semibold"
+                  style={{
+                    color: fmtTempoRestanteSla(atual.tempo_restante_minutos).estourado
+                      ? "var(--critical)"
+                      : undefined,
+                  }}
+                >
+                  {fmtTempoRestanteSla(atual.tempo_restante_minutos).texto}
                 </div>
-                <div className="text-lg font-semibold">{atual.tempo_restante_minutos} min</div>
               </div>
               <div className="rounded-md border border-border p-3">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

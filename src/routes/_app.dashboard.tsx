@@ -283,6 +283,7 @@ function DashboardPage() {
           serieMensal={serieMensalCompleta}
           gruposRisco={gruposRisco}
           porPrio={porPrio}
+          serieVolumeSeasonalNaive={serieVolumeSeasonalNaive}
         />
       )}
     </div>
