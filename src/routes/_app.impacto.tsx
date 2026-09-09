@@ -97,15 +97,21 @@ function ImpactoPage() {
             Hoje, <b>{fmtNumber(semIntervencao)}</b> incidentes na base carregada tiveram status{" "}
             <b>&ldquo;Sem Intervenção&rdquo;</b> — o problema aconteceu e ninguém agiu antes. O Data
             Galaxy já identifica <b>{fmtNumber(riscosCriticosAtivos.length)}</b> riscos críticos{" "}
-            <b>ainda ativos, antes de virarem violação</b>
-            {riscosCriticosDentroDoPrazo.length > 0 && (
+            <b>ainda ativos</b>
+            {riscosCriticosDentroDoPrazo.length > 0 ? (
               <>
-                , com uma antecedência média de <b>{fmtDuracaoMin(tempoMedioAntecedencia)}</b> para
-                a equipe agir ({riscosCriticosDentroDoPrazo.length} de {riscosCriticosAtivos.length}{" "}
-                ainda dentro do prazo de SLA)
+                , dos quais <b>{riscosCriticosDentroDoPrazo.length}</b> ainda podem ser resolvidos{" "}
+                <b>antes de virarem violação</b> (antecedência média de{" "}
+                <b>{fmtDuracaoMin(tempoMedioAntecedencia)}</b>).
+              </>
+            ) : (
+              <>
+                {" "}
+                — nenhum deles dentro do prazo de SLA no momento, o que também é um sinal: são
+                situações que o monitoramento tradicional nunca teria sinalizado, e que agora ficam
+                visíveis e priorizáveis em vez de invisíveis.
               </>
             )}
-            .
           </p>
         </div>
       </Card>
@@ -141,10 +147,6 @@ function ImpactoPage() {
             monitoramento automático — o modelo atual avisa quando o problema{" "}
             <b className="text-foreground">já aconteceu</b>, não antes disso.
           </div>
-          <div className="text-[11px] text-muted-foreground pt-1 border-t border-border">
-            248 violações de OLA · 94,8% monitoramento automático — indicador da análise
-            exploratória (último trimestre)
-          </div>
         </Card>
 
         {/* Preditivo */}
@@ -159,12 +161,12 @@ function ImpactoPage() {
           <div className="grid grid-cols-2 gap-3">
             <KPICard
               label="Riscos pegos a tempo"
-              value={fmtNumber(riscosCriticosAtivos.length)}
+              value={fmtNumber(riscosCriticosDentroDoPrazo.length)}
               accent="success"
               hint={
                 riscosCriticosDentroDoPrazo.length > 0
                   ? `~${fmtDuracaoMin(tempoMedioAntecedencia)} de antecedência`
-                  : "nenhum ainda dentro do prazo de SLA"
+                  : `de ${fmtNumber(riscosCriticosAtivos.length)} críticos ativos identificados`
               }
               icon={<ShieldAlert className="h-4 w-4" />}
             />

@@ -16,6 +16,7 @@ import {
   Pie,
   Cell,
   Brush,
+  Legend,
 } from "recharts";
 
 export interface DashboardExecutivoProps {
@@ -155,7 +156,7 @@ export function DashboardExecutivo({
           </div>
           <div className="h-72">
             <ResponsiveContainer>
-              <BarChart data={serieMensal}>
+              <BarChart data={serieMensal} margin={{ top: 24 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} />
@@ -203,6 +204,10 @@ export function DashboardExecutivo({
                   innerRadius={45}
                   outerRadius={75}
                   paddingAngle={2}
+                  // Só rotula direto na fatia quando ela é grande o bastante
+                  // pra não colidir com a vizinha (ex.: P1/P5 quase
+                  // invisíveis no total) — fatias pequenas continuam
+                  // explicadas pela legenda e pelo tooltip ao passar o mouse.
                   label={({
                     name,
                     value,
@@ -211,13 +216,18 @@ export function DashboardExecutivo({
                     name?: string;
                     value?: number;
                     percent?: number;
-                  }) => `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`}
-                  labelLine
+                  }) =>
+                    (percent ?? 0) >= 0.05
+                      ? `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`
+                      : ""
+                  }
+                  labelLine={false}
                 >
                   {porPrio.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
                 </Pie>
+                <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
                     background: "var(--popover)",

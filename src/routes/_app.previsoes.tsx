@@ -19,6 +19,7 @@ import {
   BarChart,
   Bar,
   LabelList,
+  Brush,
 } from "recharts";
 import { PRODUTOS } from "@/lib/demo-data";
 import { Info, Brain, Layers, TrendingUp } from "lucide-react";
@@ -48,26 +49,55 @@ function PrevisoesPage() {
   const incidentes = useIncidentes();
   const modo = useApp((s) => s.modo);
 
-  // Histórico últimos 30 + previsão próximos 7
+  // Âncora temporal: a data mais recente presente na base carregada (mesmo
+  // padrão do Dashboard) — não o relógio da máquina. A base real vai até
+  // dez/2025; usar `new Date()` (hoje real) deixava a janela de "últimos 30
+  // dias" quase inteiramente vazia, porque não sobra nenhum incidente real
+  // depois da data mais recente da base.
+  const dataAncora = useMemo(() => {
+    if (!incidentes.length) return new Date();
+    return new Date(Math.max(...incidentes.map((i) => new Date(i.data_abertura).getTime())));
+  }, [incidentes]);
+
+  // Contagem por dia pré-computada numa única passada (em vez de filtrar os
+  // 122 mil incidentes uma vez por dia do período) — histórico vs. previsão
+  // agora cobre o período real inteiro (desde o primeiro incidente da base),
+  // não só uma janela fixa de 30 dias, com zoom/pan pra navegar.
+  const contagemPorDia = useMemo(() => {
+    const m = new Map<string, number>();
+    incidentes.forEach((i) => {
+      const key = new Date(i.data_abertura).toDateString();
+      m.set(key, (m.get(key) ?? 0) + 1);
+    });
+    return m;
+  }, [incidentes]);
+
   const serie = useMemo(() => {
+    if (!incidentes.length) return [];
+    const minTime = Math.min(...incidentes.map((i) => new Date(i.data_abertura).getTime()));
     const map = new Map<
       string,
       { data: string; real?: number; previsto?: number; inf?: number; sup?: number }
     >();
-    for (let d = 29; d >= 0; d--) {
-      const dt = new Date();
-      dt.setDate(dt.getDate() - d);
-      const label = dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      const real = incidentes.filter(
-        (i) => new Date(i.data_abertura).toDateString() === dt.toDateString(),
-      ).length;
-      map.set(label, { data: label, real });
+    const inicio = new Date(minTime);
+    const fim = new Date(dataAncora);
+    for (let dt = new Date(inicio); dt <= fim; dt.setDate(dt.getDate() + 1)) {
+      const label = dt.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
+      map.set(label, { data: label, real: contagemPorDia.get(dt.toDateString()) ?? 0 });
     }
-    // Aggregate forecast by day
+    // Agrega a previsão por dia e estende a série além da âncora com esses dias.
     const prevByDay = new Map<string, { volume: number; inf: number; sup: number }>();
     previsoes.forEach((p) => {
       const dt = new Date(p.data_prevista);
-      const label = dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      const label = dt.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
       const cur = prevByDay.get(label) ?? { volume: 0, inf: 0, sup: 0 };
       cur.volume += p.volume_previsto;
       cur.inf += p.limite_inferior;
@@ -79,7 +109,7 @@ function PrevisoesPage() {
       map.set(k, { ...existing, previsto: v.volume, inf: v.inf, sup: v.sup });
     });
     return Array.from(map.values());
-  }, [previsoes, incidentes]);
+  }, [previsoes, incidentes, contagemPorDia, dataAncora]);
 
   const porProduto = useMemo(() => {
     const map = new Map<string, number>();
@@ -152,7 +182,8 @@ function PrevisoesPage() {
           <div>
             <div className="text-sm font-semibold">Histórico vs. previsão</div>
             <div className="text-xs text-muted-foreground">
-              30 dias históricos + 7 dias projetados · com intervalos de confiança
+              Período completo desde o primeiro incidente da base ({serie.length} dias) + projeção ·
+              arraste as alças abaixo do gráfico pra navegar no tempo
             </div>
           </div>
         </div>
@@ -202,6 +233,17 @@ function PrevisoesPage() {
                 strokeDasharray="4 4"
                 dot={false}
               />
+              {serie.length > 40 && (
+                <Brush
+                  dataKey="data"
+                  height={22}
+                  stroke="var(--brand)"
+                  fill="var(--muted)"
+                  travellerWidth={8}
+                  startIndex={Math.max(0, serie.length - 40)}
+                  endIndex={serie.length - 1}
+                />
+              )}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -212,7 +254,7 @@ function PrevisoesPage() {
           <div className="text-sm font-semibold mb-3">Previsão D+7 por produto</div>
           <div className="h-72">
             <ResponsiveContainer>
-              <BarChart data={porProduto}>
+              <BarChart data={porProduto} margin={{ top: 24 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="produto"

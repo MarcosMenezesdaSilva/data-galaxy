@@ -259,7 +259,13 @@ function RiscosPage() {
         `Canal ${NOME_CANAL[canalEscolhido]} ainda não configurado. Configure em Configurações → Notificações.`,
       );
     } else {
-      toast.error(`Não foi possível enviar por ${NOME_CANAL[canalEscolhido]} agora.`);
+      // Mostra o motivo real que a Twilio devolveu (ex.: número não
+      // verificado numa conta trial) em vez de um erro genérico — é o que
+      // permite a pessoa entender e resolver sozinha na hora.
+      toast.error(
+        `Não foi possível enviar por ${NOME_CANAL[canalEscolhido]} agora.`,
+        resultado.detalhe ? { description: resultado.detalhe } : undefined,
+      );
     }
   }
 
@@ -597,6 +603,23 @@ function RiscosPage() {
                     Só DDD + número — o +55 é adicionado automaticamente. Em conta Twilio trial, o
                     número precisa estar verificado (SMS) ou ter entrado no sandbox (WhatsApp).
                   </p>
+                </div>
+              )}
+
+              {canalEscolhido === "sms" && (
+                <div className="space-y-1.5 rounded-md border border-amber-400/40 bg-amber-50/40 p-3 text-xs text-muted-foreground dark:bg-amber-950/10">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                    <span>
+                      Conta Twilio <b>trial</b> só envia SMS para números já <b>verificados</b> na
+                      conta — diferente do WhatsApp, não existe um passo de opt-in que a própria
+                      pessoa faça pelo celular. Para liberar um número novo, quem administra a conta
+                      Twilio precisa cadastrá-lo em{" "}
+                      <b>Console Twilio → Phone Numbers → Verified Caller IDs</b> (a Twilio liga ou
+                      manda um código pra confirmar). Isso deixa de ser necessário assim que a conta
+                      Twilio deixa de ser trial.
+                    </span>
+                  </div>
                 </div>
               )}
 

@@ -34,15 +34,22 @@ function RelatoriosPage() {
   const acoes = useAcoes();
   const alertas = useAlertas();
 
+  // A base real tem muitos códigos de produto distintos — sem limitar, o
+  // gráfico vertical vira uma pilha de barras minúsculas e ilegíveis. Mostra
+  // só os 10 maiores e soma o resto em "Outros" (mesmo padrão do "Grupos com
+  // maior risco acumulado" no Dashboard).
   const porProduto = useMemo(() => {
     const m = new Map<string, number>();
     incidentes.forEach((i) => {
       const p = i.produto ?? "Não informado";
       m.set(p, (m.get(p) ?? 0) + 1);
     });
-    return Array.from(m, ([produto, total]) => ({ produto, total })).sort(
+    const ordenado = Array.from(m, ([produto, total]) => ({ produto, total })).sort(
       (a, b) => b.total - a.total,
     );
+    const top = ordenado.slice(0, 10);
+    const resto = ordenado.slice(10).reduce((s, p) => s + p.total, 0);
+    return resto > 0 ? [...top, { produto: "Outros", total: resto }] : top;
   }, [incidentes]);
 
   const porPrio = useMemo(() => {
@@ -140,7 +147,7 @@ function RelatoriosPage() {
             </div>
             <div className="h-72">
               <ResponsiveContainer>
-                <BarChart data={porMes}>
+                <BarChart data={porMes} margin={{ top: 24 }}>
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
                   <YAxis stroke="var(--muted-foreground)" fontSize={11} />
@@ -190,7 +197,7 @@ function RelatoriosPage() {
               </div>
               <div className="h-72">
                 <ResponsiveContainer>
-                  <BarChart data={porProduto} layout="vertical" margin={{ left: 30, right: 32 }}>
+                  <BarChart data={porProduto} layout="vertical" margin={{ left: 20, right: 48 }}>
                     <CartesianGrid
                       stroke="var(--border)"
                       strokeDasharray="3 3"
@@ -202,7 +209,7 @@ function RelatoriosPage() {
                       dataKey="produto"
                       stroke="var(--muted-foreground)"
                       fontSize={11}
-                      width={130}
+                      width={110}
                     />
                     <Tooltip
                       contentStyle={{
@@ -234,9 +241,23 @@ function RelatoriosPage() {
                       data={porPrio}
                       dataKey="value"
                       nameKey="name"
-                      innerRadius={55}
-                      outerRadius={100}
+                      innerRadius={45}
+                      outerRadius={75}
                       paddingAngle={2}
+                      label={({
+                        name,
+                        value,
+                        percent,
+                      }: {
+                        name?: string;
+                        value?: number;
+                        percent?: number;
+                      }) =>
+                        (percent ?? 0) >= 0.05
+                          ? `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`
+                          : ""
+                      }
+                      labelLine={false}
                     >
                       {porPrio.map((_, i) => (
                         <Cell key={i} fill={PIE[i % PIE.length]} />
