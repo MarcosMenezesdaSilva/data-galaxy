@@ -222,9 +222,10 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
             )}
           </CardContent>
         </Card>
-        <Card className="border-amber-400/40 bg-amber-50/40 dark:bg-amber-950/10">
+        <Card className="border-[color:var(--warning)]/35 bg-[color:var(--warning)]/5">
           <CardContent className="p-3 text-[11px] text-muted-foreground">
-            <AlertTriangle className="mb-1 h-3 w-3 text-amber-600" /> Apoio à decisão — não
+            <AlertTriangle className="mb-1 h-3 w-3 text-[color:var(--warning)]" /> Apoio à decisão
+            — não
             substitui a análise do time operacional.
           </CardContent>
         </Card>

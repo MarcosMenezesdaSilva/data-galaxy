@@ -57,7 +57,7 @@ function ConhecimentoPage() {
         }
       />
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="flex items-center gap-2">
           <div className="relative flex-1 max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -71,7 +71,7 @@ function ConhecimentoPage() {
         </div>
       </Card>
 
-      <Card className="p-4 border-primary/30 bg-primary/5">
+      <Card className="p-6 border-primary/30 bg-primary/5">
         <div className="flex items-start gap-3">
           <Sparkles className="h-5 w-5 text-primary mt-0.5" />
           <div>

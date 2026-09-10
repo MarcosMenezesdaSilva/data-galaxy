@@ -203,7 +203,7 @@ function ConfigPage() {
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-5 space-y-4">
+        <Card className="p-6 space-y-4">
           <div className="text-sm font-semibold">Aparência e perfil</div>
           <div className="flex items-center justify-between">
             <Label>Tema escuro</Label>
@@ -240,7 +240,7 @@ function ConfigPage() {
           </div>
         </Card>
 
-        <Card className="p-5 space-y-3">
+        <Card className="p-6 space-y-3">
           <div className="text-sm font-semibold">Faixas de risco</div>
           <div className="text-xs text-muted-foreground">
             Ajuste os limites das faixas usadas em riscos de OLA.
@@ -271,7 +271,7 @@ function ConfigPage() {
           </Button>
         </Card>
 
-        <Card className="p-5 space-y-3">
+        <Card className="p-6 space-y-3">
           <div className="text-sm font-semibold">Regras demonstrativas de validação</div>
           <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-5">
             <li>
@@ -293,7 +293,7 @@ function ConfigPage() {
           </Button>
         </Card>
 
-        <Card className="p-5 space-y-3">
+        <Card className="p-6 space-y-3">
           <div className="text-sm font-semibold">Preferências de notificações</div>
           {["E-mail", "Microsoft Teams", "SMS", "API"].map((c) => (
             <div key={c} className="flex items-center justify-between">
@@ -304,7 +304,7 @@ function ConfigPage() {
         </Card>
       </div>
 
-      <Card className="p-5 space-y-4">
+      <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Canais de Notificação</div>
@@ -353,7 +353,7 @@ function ConfigPage() {
             {statusCanais?.whatsapp && (
               <div className="flex flex-col gap-2 text-[11px] text-muted-foreground sm:col-span-2">
                 <div className="flex items-start gap-1.5">
-                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-[color:var(--warning)]" />
                   <span>
                     Quem vai receber precisa mandar uma mensagem primeiro para o número do sandbox
                     do Twilio — sem esse passo, o envio é aceito mas nunca chega.
@@ -462,7 +462,7 @@ function ConfigPage() {
         </div>
       </Card>
 
-      <Card className="p-5 space-y-4">
+      <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Database className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Integração Databricks</div>
@@ -573,7 +573,7 @@ function ConfigPage() {
         </div>
       </Card>
 
-      <Card className="p-5 space-y-4">
+      <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">IA do Assistente (Claude)</div>
@@ -627,7 +627,7 @@ function ConfigPage() {
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="flex items-center justify-between mb-1">
           <div className="text-sm font-semibold">Regras de OLA cadastradas</div>
         </div>
@@ -691,7 +691,7 @@ function ConfigPage() {
         </Table>
       </Card>
 
-      <Card className="p-4 bg-muted/30">
+      <Card className="p-6 bg-muted/30">
         <div className="text-sm font-semibold mb-2">Produtos e grupos configurados</div>
         <div className="grid gap-3 md:grid-cols-2 text-xs">
           <div>

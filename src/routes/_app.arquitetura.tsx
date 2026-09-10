@@ -216,7 +216,7 @@ function ArqPage() {
         ))}
       </div>
 
-      <Card className="p-5 bg-muted/30">
+      <Card className="p-6 bg-muted/30">
         <div className="text-sm font-semibold mb-2">Nota sobre o disparo real de notificações</div>
         <p className="text-xs leading-relaxed text-muted-foreground">
           WhatsApp/SMS (via Twilio) e Microsoft Teams (via webhook) agora são disparados de verdade
@@ -230,7 +230,7 @@ function ArqPage() {
         </p>
       </Card>
 
-      <Card className="p-5">
+      <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Rocket className="h-4 w-4 text-primary" />
           <div className="font-semibold text-sm">Roadmap</div>
@@ -250,7 +250,7 @@ function ArqPage() {
         </div>
       </Card>
 
-      <Card className="p-5 bg-muted/40">
+      <Card className="p-6 bg-muted/40">
         <div className="text-sm font-semibold mb-2">Legenda de status</div>
         <div className="flex flex-wrap gap-2">
           {(

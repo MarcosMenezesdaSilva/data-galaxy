@@ -130,7 +130,7 @@ function QualidadeDadosPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-4">
+        <Card className="p-6">
           <div className="text-sm font-semibold mb-3">Cobertura por campo-chave</div>
           <div className="space-y-2.5">
             <Coverage label="Produto" value={relatorio.coberturaProduto} />
@@ -141,7 +141,7 @@ function QualidadeDadosPage() {
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-6">
           <div className="text-sm font-semibold mb-3">Consistência e validade</div>
           <div className="space-y-2 text-sm">
             <Row label="Datas inválidas" value={fmtNumber(relatorio.datasInvalidas)} />
@@ -162,7 +162,7 @@ function QualidadeDadosPage() {
         </Card>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold">Distribuição de nulos por coluna</div>
         </div>
@@ -190,7 +190,7 @@ function QualidadeDadosPage() {
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold">Registros rejeitados / duplicados</div>
           <div className="flex gap-2">
@@ -261,7 +261,7 @@ function Stat({
     warning: "text-[color:var(--warning)]",
   } as const;
   return (
-    <Card className="p-4">
+    <Card className="p-6">
       <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground">
         {icon} {label}
       </div>

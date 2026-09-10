@@ -147,7 +147,7 @@ function ProblemasPage() {
           <TabsTrigger value="produto">Por produto</TabsTrigger>
         </TabsList>
         <TabsContent value="grupos">
-          <Card className="p-4">
+          <Card className="p-6">
             <div className="text-sm font-semibold mb-3">Top recorrências</div>
             <div className="space-y-2">
               {gruposTop.map((g) => (
@@ -178,7 +178,7 @@ function ProblemasPage() {
           </Card>
         </TabsContent>
         <TabsContent value="produto">
-          <Card className="p-4">
+          <Card className="p-6">
             <div className="text-sm font-semibold mb-3">Reincidência por produto</div>
             <div className="grid gap-2 md:grid-cols-2">
               {(() => {

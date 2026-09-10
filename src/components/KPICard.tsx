@@ -21,6 +21,11 @@ const accents: Record<NonNullable<KPICardProps["accent"]>, string> = {
   orange: "text-[color:var(--accent-orange)]",
 };
 
+/**
+ * Métrica: rótulo em label técnico, número em Geist Mono com tabular-nums
+ * (dado de sistema se distingue de interface) e o laranja entrando só no
+ * ícone — o card inteiro não vira bloco de cor.
+ */
 export function KPICard({
   label,
   value,
@@ -31,27 +36,27 @@ export function KPICard({
   className,
 }: KPICardProps) {
   return (
-    <Card className={cn("p-4 gap-2", className)}>
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </div>
+    <Card lit interactive className={cn("flex flex-col gap-3 p-6", className)}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="t-micro uppercase text-muted-foreground">{label}</div>
         {icon && <div className={cn("shrink-0", accents[accent])}>{icon}</div>}
       </div>
-      <div className="text-2xl font-semibold tracking-tight text-foreground">{value}</div>
-      <div className="flex items-center justify-between text-xs">
-        {hint && <span className="text-muted-foreground">{hint}</span>}
-        {trend && (
-          <span
-            className={cn(
-              trend.value >= 0 ? "text-[color:var(--critical)]" : "text-[color:var(--success)]",
-              "font-medium",
-            )}
-          >
-            {trend.value >= 0 ? "▲" : "▼"} {Math.abs(trend.value).toFixed(1)}% {trend.label}
-          </span>
-        )}
-      </div>
+      <div className="dg-mono t-h3 text-foreground">{value}</div>
+      {(hint || trend) && (
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+          {hint && <span className="text-muted-foreground">{hint}</span>}
+          {trend && (
+            <span
+              className={cn(
+                "dg-mono font-medium",
+                trend.value >= 0 ? "text-[color:var(--critical)]" : "text-[color:var(--success)]",
+              )}
+            >
+              {trend.value >= 0 ? "▲" : "▼"} {Math.abs(trend.value).toFixed(1)}% {trend.label}
+            </span>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

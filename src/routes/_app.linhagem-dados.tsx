@@ -123,7 +123,7 @@ function LinhagemDadosPage() {
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="text-sm font-semibold mb-3">Histórico real de importações (por camada)</div>
         {imports.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-6">
@@ -148,7 +148,7 @@ function LinhagemDadosPage() {
         )}
       </Card>
 
-      <Card className="p-4 bg-muted/30">
+      <Card className="p-6 bg-muted/30">
         <p className="text-xs text-muted-foreground leading-relaxed">
           As três primeiras etapas (Raw, Staging, Processed) descrevem o pipeline de tratamento
           realizado fora do navegador, antes da importação. As datas de processamento de cada camada

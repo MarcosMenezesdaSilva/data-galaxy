@@ -17,13 +17,19 @@ export function EmptyState({
 }) {
   return (
     <Card
-      className={cn("flex flex-col items-center justify-center gap-3 p-10 text-center", className)}
+      className={cn(
+        "flex flex-col items-center justify-center gap-4 p-12 text-center",
+        // Vazio não é erro: superfície um passo abaixo do card e sem borda
+        // acesa, para não pedir atenção que não merece.
+        "border-dashed bg-transparent shadow-none",
+        className,
+      )}
     >
-      {icon && <div className="text-muted-foreground">{icon}</div>}
-      <div>
-        <div className="text-base font-semibold text-foreground">{title}</div>
+      {icon && <div className="text-[color:var(--text-disabled)]">{icon}</div>}
+      <div className="space-y-2">
+        <div className="t-h4 text-foreground">{title}</div>
         {description && (
-          <p className="mt-1 text-sm text-muted-foreground max-w-sm">{description}</p>
+          <p className="t-body-sm mx-auto max-w-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {action}
