@@ -15,7 +15,7 @@ import {
 } from "@/lib/hooks";
 import { responder, type Resposta } from "@/lib/assistente";
 import { perguntarIA, iaConfigurada } from "@/lib/assistente-ia";
-import { Bot, Send, Sparkles, AlertTriangle } from "lucide-react";
+import { Bot, Send, Sparkles, Sparkle, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/assistente")({
   head: () => ({ meta: [{ title: "Assistente — Data Galaxy" }] }),
@@ -233,25 +233,25 @@ function AssistenteConversa({ perfil }: { perfil: string | null }) {
   );
 }
 
+// Troquei os 3 pontinhos clássicos por um sparkle girando/pulsando — uma
+// homenagem discreta ao Claude, que é quem de fato responde aqui quando a
+// IA está configurada.
 function ThinkingBubble() {
   return (
     <Card>
       <CardContent className="p-5">
-        <div className="flex items-center gap-1.5">
-          <Bot className="h-4 w-4 text-primary" />
-          <div className="ml-1 flex items-center gap-1">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="h-2 w-2 rounded-full bg-primary/60"
-                style={{ animation: `dg-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
-              />
-            ))}
-          </div>
+        <div className="flex items-center gap-2.5">
+          <Sparkle
+            className="h-4 w-4 text-primary"
+            style={{ animation: "dg-thinking-spin 1.6s ease-in-out infinite" }}
+            fill="currentColor"
+          />
+          <span className="text-sm text-muted-foreground">Pensando...</span>
           <style>{`
-            @keyframes dg-bounce {
-              0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
-              30% { transform: translateY(-6px); opacity: 1; }
+            @keyframes dg-thinking-spin {
+              0% { transform: rotate(0deg) scale(0.85); opacity: 0.6; }
+              50% { transform: rotate(180deg) scale(1.15); opacity: 1; }
+              100% { transform: rotate(360deg) scale(0.85); opacity: 0.6; }
             }
           `}</style>
         </div>
