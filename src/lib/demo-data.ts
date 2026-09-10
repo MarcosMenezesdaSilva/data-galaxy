@@ -15,6 +15,7 @@ import type {
   ProdutoServico,
   CriticidadeProduto,
 } from "./types";
+import { TELAS } from "./telas";
 
 export const PRODUTOS = [
   "Hosting",
@@ -630,10 +631,39 @@ export function gerarArtigos(): Artigo[] {
     },
   ];
 
-  return artigos.map((a) => ({
-    ...a,
-    origem_dado: "IMPORTADO" as const,
-    gerado_para_mvp: false,
+  return [
+    ...artigos.map((a) => ({
+      ...a,
+      origem_dado: "IMPORTADO" as const,
+      gerado_para_mvp: false,
+    })),
+    ...gerarArtigosDasTelas(),
+  ];
+}
+
+// Um artigo por tela do produto (catálogo em telas.ts) — assim o Assistente
+// consegue responder "o que tem na tela de X" citando um artigo de verdade
+// da Base de Conhecimento (via RAG léxico), em vez de depender só do texto
+// fixo do motor de regras. Diferente dos artigos KB6000-6007 (vindos do
+// Dicionário de Dados real da Locaweb), estes documentam o próprio produto
+// — por isso ficam marcados como DEMONSTRACAO, não IMPORTADO.
+const AUTOR_GUIA_PRODUTO = "Data Galaxy — Documentação do produto";
+const DATA_GUIA_PRODUTO = "2026-09-09T00:00:00.000Z";
+
+function gerarArtigosDasTelas(): Artigo[] {
+  return TELAS.map((tela, i) => ({
+    id_artigo: `KB-TELA-${String(i + 1).padStart(2, "0")}`,
+    titulo: `Tela: ${tela.nome}`,
+    categoria: "Guia do Produto",
+    produto: "Data Galaxy",
+    causa_raiz: "Documentação do produto",
+    solucao: `${tela.descricao} Também é conhecida como: ${tela.apelidos.join(", ")}.`,
+    data_criacao: DATA_GUIA_PRODUTO,
+    autor: AUTOR_GUIA_PRODUTO,
+    favorito: false,
+    tags: [tela.nome, ...tela.apelidos.slice(0, 3), "guia da tela"],
+    origem_dado: "DEMONSTRACAO",
+    gerado_para_mvp: true,
   }));
 }
 

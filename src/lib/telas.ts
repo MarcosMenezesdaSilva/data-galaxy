@@ -111,6 +111,13 @@ export const TELAS: Tela[] = [
       "Preferências visuais, troca de perfil, faixas de risco, regras de OLA, o painel de teste dos canais de notificação (WhatsApp, SMS, Teams), a integração com o Databricks e a configuração da IA (Claude) que dá poder ao Assistente.",
     apelidos: ["configurações", "config", "ajustes"],
   },
+  {
+    rota: "/usuarios",
+    nome: "Usuários",
+    descricao:
+      "Exclusiva do Administrador. Cria usuários demonstrativos (sem senha — mesmo modelo dos perfis fixos) e escolhe exatamente quais telas cada um pode acessar. Também lista os 3 perfis fixos (Gestora de Operações, Operações/Técnico, Administrador) com o acesso de cada um.",
+    apelidos: ["usuários", "gestão de usuários", "controle de acesso", "permissões"],
+  },
 ];
 
 /** Filtra o catálogo pelas rotas já resolvidas (ver useRotasPermitidas em usuarios.ts). */
