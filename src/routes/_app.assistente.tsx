@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useApp, type Perfil } from "@/lib/store";
+import { useApp } from "@/lib/store";
+import { useRotasPermitidas } from "@/lib/usuarios";
 import {
   useIncidentes,
   useRiscos,
@@ -62,13 +63,14 @@ function AssistentePage() {
   return <AssistenteConversa key={perfil ?? "sem-perfil"} perfil={perfil} />;
 }
 
-function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
+function AssistenteConversa({ perfil }: { perfil: string | null }) {
   const incidentes = useIncidentes();
   const riscos = useRiscos();
   const alertas = useAlertas();
   const acoes = useAcoes();
   const previsoes = usePrevisoes();
   const artigos = useArtigos();
+  const rotasPermitidas = useRotasPermitidas(perfil);
   const [iaDisponivel, setIaDisponivel] = useState<boolean | null>(null);
   useEffect(() => {
     iaConfigurada().then(setIaDisponivel);
@@ -114,10 +116,10 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
       } else {
         // IA falhou (sem rede, key inválida, etc.) — cai pro motor de regras
         // local em vez de deixar a conversa travada.
-        resposta = responder(t, dados, perfil);
+        resposta = responder(t, dados, rotasPermitidas);
       }
     } else {
-      resposta = responder(t, dados, perfil);
+      resposta = responder(t, dados, rotasPermitidas);
     }
 
     const faltam = atrasoMinimo - (Date.now() - inicio);

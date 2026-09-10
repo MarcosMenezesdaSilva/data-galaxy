@@ -225,3 +225,17 @@ export interface ProdutoServico extends RegistroBase {
   grupo_responsavel: string;
   ativo: boolean;
 }
+
+// Usuário demonstrativo criado pelo Admin (sem senha — mesmo modelo dos 3
+// perfis fixos, só que com a lista de telas configurável). `id` é a chave
+// primária e é o mesmo valor usado como "perfil" no resto do app depois do
+// login.
+export interface UsuarioCustom {
+  id: string;
+  nome: string;
+  cargo: string;
+  iniciais: string;
+  // Lista de rotas (ex.: "/dashboard") que este usuário pode acessar.
+  rotas: string[];
+  criadoEm: string;
+}

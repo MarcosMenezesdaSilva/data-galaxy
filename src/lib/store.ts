@@ -37,12 +37,16 @@ export const FAIXAS_RISCO_PADRAO: FaixasRisco = {
 
 interface AppState {
   theme: "light" | "dark";
-  perfil: Perfil | null;
+  // Guarda o id de um dos 3 perfis fixos (Perfil) OU o id de um usuário
+  // customizado criado pelo Admin (tabela `usuarios` do IndexedDB) — por
+  // isso é `string`, mais largo que `Perfil`. Resolvido pra um dos dois
+  // significados via useRotasPermitidas()/useUsuarioAtual() (src/lib/usuarios.ts).
+  perfil: string | null;
   modo: "demo" | "importado";
   faixasRisco: FaixasRisco;
   setTheme: (t: "light" | "dark") => void;
   toggleTheme: () => void;
-  setPerfil: (p: Perfil | null) => void;
+  setPerfil: (p: string | null) => void;
   setModo: (m: "demo" | "importado") => void;
   setFaixasRisco: (f: FaixasRisco) => void;
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type CSSProperties } from "react";
-import { useApp, USUARIOS, type Perfil } from "@/lib/store";
+import { useApp, USUARIOS } from "@/lib/store";
+import { useUsuariosCustom } from "@/lib/usuarios";
 import { BrandMark, BrandWordmark, Eyebrow } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,16 +33,19 @@ const atraso = (ms: number) => ({ "--dg-delay": `${ms}ms` }) as CSSProperties;
 
 function LoginPage() {
   const { theme, toggleTheme, setPerfil } = useApp();
+  const usuariosCustom = useUsuariosCustom();
   const nav = useNavigate();
   const [pedirSenhaAdmin, setPedirSenhaAdmin] = useState(false);
 
-  function entrar(p: Perfil) {
+  const todosUsuarios = [...Object.values(USUARIOS), ...(usuariosCustom ?? [])];
+
+  function entrar(p: string, nome: string) {
     if (p === "admin" && !adminAutenticadoNestaSessao()) {
       setPedirSenhaAdmin(true);
       return;
     }
     setPerfil(p);
-    toast.success(`Bem-vindo(a), ${USUARIOS[p].nome.split(" ")[0]}!`);
+    toast.success(`Bem-vindo(a), ${nome.split(" ")[0]}!`);
     nav({ to: "/dashboard" });
   }
 
@@ -133,13 +137,13 @@ function LoginPage() {
             </div>
 
             <div className="dg-stagger space-y-3">
-              {Object.values(USUARIOS).map((u) => (
+              {todosUsuarios.map((u) => (
                 <Card
                   key={u.id}
                   lit
                   interactive
                   className="group cursor-pointer p-5"
-                  onClick={() => entrar(u.id)}
+                  onClick={() => entrar(u.id, u.nome)}
                 >
                   <div className="flex items-center gap-4">
                     <div
@@ -170,7 +174,7 @@ function LoginPage() {
       <AdminPasswordDialog
         open={pedirSenhaAdmin}
         onOpenChange={setPedirSenhaAdmin}
-        onSucesso={() => entrar("admin")}
+        onSucesso={() => entrar("admin", USUARIOS.admin.nome)}
       />
     </div>
   );

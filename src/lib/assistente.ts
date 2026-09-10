@@ -5,10 +5,9 @@
 // resolve contra os dados reais, exatamente para poder afirmar "baseado nos
 // nossos dados" sem margem de invenção.
 import type { AcaoCorretiva, Alerta, Incidente, Previsao, RiscoOla } from "./types";
-import type { Perfil } from "./store";
 import { fmtNumber, pct, fmtTempoRestanteSla } from "./format";
 import { TELAS, type Tela } from "./telas";
-import { podeAcessar } from "./permissions";
+import { rotaPermitida } from "./permissions";
 
 export type Intencao =
   | "resumo_hoje"
@@ -218,7 +217,7 @@ export interface DadosAssistente {
 export function responder(
   pergunta: string,
   dados: DadosAssistente,
-  perfil: Perfil | null = null,
+  rotasPermitidas?: string[] | "todas" | null,
 ): Resposta {
   const { incidentes, riscos, alertas, acoes, previsoes } = dados;
   const intencao = classificarIntencao(pergunta);
@@ -233,7 +232,7 @@ export function responder(
   if (intencao === "explicar_tela") {
     const telas = extrairTelas(pergunta);
     if (telas.length === 0) {
-      const disponiveis = TELAS.filter((t) => podeAcessar(perfil, t.rota));
+      const disponiveis = TELAS.filter((t) => rotaPermitida(rotasPermitidas, t.rota));
       return {
         intencao,
         foraEscopo: true,
@@ -245,7 +244,7 @@ export function responder(
     }
     if (telas.length === 1) {
       const tela = telas[0];
-      const noMenu = podeAcessar(perfil, tela.rota);
+      const noMenu = rotaPermitida(rotasPermitidas, tela.rota);
       return {
         intencao,
         resumo: `${tela.nome}: ${tela.descricao}`,

@@ -11,6 +11,7 @@ import type {
   ImportLog,
   Validacao,
   ProdutoServico,
+  UsuarioCustom,
 } from "./types";
 
 export class DataGalaxyDB extends Dexie {
@@ -25,6 +26,7 @@ export class DataGalaxyDB extends Dexie {
   imports!: Table<ImportLog, number>;
   validacoes!: Table<Validacao, number>;
   produtosServicos!: Table<ProdutoServico, number>;
+  usuarios!: Table<UsuarioCustom, string>;
 
   constructor() {
     super("data_galaxy");
@@ -59,6 +61,13 @@ export class DataGalaxyDB extends Dexie {
       imports: "++id,tipo,data,camada",
       validacoes: "++id,id_validacao,id_acao,numero_incidente,produto,janela_dias,origem_dado",
       produtosServicos: "++id,id_produto,nome,categoria,criticidade,origem_dado",
+    });
+
+    // v3: usuários demonstrativos criados pelo Admin, com controle de acesso
+    // por tela — chave primária é o próprio id gerado (usado como valor de
+    // "perfil" no resto do app), não um contador automático.
+    this.version(3).stores({
+      usuarios: "id,nome",
     });
   }
 }

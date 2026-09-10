@@ -1,18 +1,6 @@
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
-  AlertTriangle,
-  TrendingUp,
-  ShieldAlert,
-  Bell,
-  Wrench,
-  CheckCircle2,
-  GitBranch,
-  RefreshCcw,
-  BookOpen,
-  Database,
-  Settings as SettingsIcon,
   Sun,
   Moon,
   Search,
@@ -21,10 +9,11 @@ import {
   Menu,
   LogOut,
   User as UserIcon,
-  Bot,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useApp, USUARIOS, type Perfil } from "@/lib/store";
+import { NAV } from "@/lib/nav";
+import { useApp, USUARIOS } from "@/lib/store";
 import { BrandMark, BrandWordmark } from "@/components/Brand";
 import { ModoBadge } from "@/components/Badges";
 import { Button } from "@/components/ui/button";
@@ -44,27 +33,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { seedIfEmpty } from "@/lib/init";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
-import { podeAcessar } from "@/lib/permissions";
+import { rotaPermitida } from "@/lib/permissions";
+import { useRotasPermitidas, useUsuarioAtual, useUsuariosCustom } from "@/lib/usuarios";
 import { useAlertas } from "@/lib/hooks";
 import { SeveridadeBadge } from "@/components/Badges";
 import { fmtDateTime } from "@/lib/format";
 import { toast } from "sonner";
-
-const NAV = [
-  { to: "/dashboard", label: "Central de Operações", icon: LayoutDashboard },
-  { to: "/assistente", label: "Assistente", icon: Bot },
-  { to: "/incidentes", label: "Incidentes", icon: AlertTriangle },
-  { to: "/previsoes", label: "Previsões", icon: TrendingUp },
-  { to: "/riscos-ola", label: "Riscos de OLA", icon: ShieldAlert },
-  { to: "/alertas", label: "Alertas", icon: Bell },
-  { to: "/correcoes", label: "Ações Corretivas", icon: Wrench },
-  { to: "/validacao", label: "Validação de Correções", icon: CheckCircle2 },
-  { to: "/problemas", label: "Problemas", icon: GitBranch },
-  { to: "/mudancas", label: "Mudanças", icon: RefreshCcw },
-  { to: "/conhecimento", label: "Conhecimento", icon: BookOpen },
-  { to: "/dados", label: "Dados", icon: Database },
-  { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
-] as const;
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -85,19 +59,25 @@ export function AppLayout() {
     seedIfEmpty().then(() => setSeeded(true));
   }, []);
 
+  const rotasPermitidas = useRotasPermitidas(perfil);
+  const usuarioAtual = useUsuarioAtual(perfil);
+  const usuariosCustom = useUsuariosCustom();
+
   useEffect(() => {
     if (!perfil) navigate({ to: "/login" });
   }, [perfil, navigate]);
 
   // Bloqueia acesso direto por URL a rotas fora do perfil atual (não basta
   // esconder do menu — também vale para links digitados ou trocar de perfil
-  // estando numa tela restrita).
+  // estando numa tela restrita). `undefined` é "ainda não sabemos" (usuário
+  // customizado com a tabela carregando) — só bloqueia em `null`, que é
+  // "resolvido e sem acesso mesmo".
   useEffect(() => {
-    if (perfil && !podeAcessar(perfil, pathname)) {
+    if (perfil && rotasPermitidas !== undefined && !rotaPermitida(rotasPermitidas, pathname)) {
       toast.error("Este perfil não tem acesso a essa tela.");
       navigate({ to: "/dashboard" });
     }
-  }, [perfil, pathname, navigate]);
+  }, [perfil, rotasPermitidas, pathname, navigate]);
 
   // O perfil fica salvo em localStorage (persist do zustand) — alguém podia
   // editar isso direto no DevTools pra virar "admin" sem nunca passar pela
@@ -110,7 +90,7 @@ export function AppLayout() {
     }
   }, [perfil, navigate, setPerfil]);
 
-  function trocarPerfil(p: Perfil) {
+  function trocarPerfil(p: string) {
     if (p === "admin" && !adminAutenticadoNestaSessao()) {
       setPedirSenhaAdmin(true);
       return;
@@ -123,8 +103,8 @@ export function AppLayout() {
     setMobileOpen(false);
   }, [pathname]);
 
-  const user = perfil ? USUARIOS[perfil] : USUARIOS.admin;
-  const navVisivel = NAV.filter((item) => podeAcessar(perfil, item.to));
+  const user = usuarioAtual ?? USUARIOS.admin;
+  const navVisivel = NAV.filter((item) => rotaPermitida(rotasPermitidas, item.to));
 
   function voltarParaSelecaoDePerfil() {
     setPerfil(null);
@@ -317,6 +297,14 @@ export function AppLayout() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Trocar de perfil</DropdownMenuLabel>
                   {Object.values(USUARIOS).map((u) => (
+                    <DropdownMenuItem key={u.id} onClick={() => trocarPerfil(u.id)}>
+                      <UserIcon className="h-4 w-4 mr-2" /> {u.nome}
+                      <span className="ml-auto text-[10px] text-muted-foreground">
+                        {u.cargo.split("/")[0].trim()}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                  {(usuariosCustom ?? []).map((u) => (
                     <DropdownMenuItem key={u.id} onClick={() => trocarPerfil(u.id)}>
                       <UserIcon className="h-4 w-4 mr-2" /> {u.nome}
                       <span className="ml-auto text-[10px] text-muted-foreground">

@@ -2,7 +2,7 @@
 // que cada tela mostra sem inventar nada: descrição curta e fiel ao que a
 // tela realmente exibe, mais o rótulo e apelidos usados para casar com a
 // pergunta do usuário.
-import type { Perfil } from "./store";
+import { rotaPermitida } from "./permissions";
 
 export interface Tela {
   rota: string;
@@ -113,9 +113,7 @@ export const TELAS: Tela[] = [
   },
 ];
 
-export function telasDoPerfil(
-  perfil: Perfil | null,
-  podeAcessar: (p: Perfil | null, r: string) => boolean,
-): Tela[] {
-  return TELAS.filter((t) => podeAcessar(perfil, t.rota));
+/** Filtra o catálogo pelas rotas já resolvidas (ver useRotasPermitidas em usuarios.ts). */
+export function telasDoPerfil(rotas: string[] | "todas" | null | undefined): Tela[] {
+  return TELAS.filter((t) => rotaPermitida(rotas, t.rota));
 }

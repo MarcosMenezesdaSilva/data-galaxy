@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppValidacaoRouteImport } from './routes/_app.validacao'
+import { Route as AppUsuariosRouteImport } from './routes/_app.usuarios'
 import { Route as AppRiscosOlaRouteImport } from './routes/_app.riscos-ola'
 import { Route as AppProblemasRouteImport } from './routes/_app.problemas'
 import { Route as AppPrevisoesRouteImport } from './routes/_app.previsoes'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppValidacaoRoute = AppValidacaoRouteImport.update({
   id: '/validacao',
   path: '/validacao',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUsuariosRoute = AppUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRiscosOlaRoute = AppRiscosOlaRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/previsoes': typeof AppPrevisoesRoute
   '/problemas': typeof AppProblemasRoute
   '/riscos-ola': typeof AppRiscosOlaRoute
+  '/usuarios': typeof AppUsuariosRoute
   '/validacao': typeof AppValidacaoRoute
 }
 export interface FileRoutesByTo {
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/previsoes': typeof AppPrevisoesRoute
   '/problemas': typeof AppProblemasRoute
   '/riscos-ola': typeof AppRiscosOlaRoute
+  '/usuarios': typeof AppUsuariosRoute
   '/validacao': typeof AppValidacaoRoute
 }
 export interface FileRoutesById {
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_app/previsoes': typeof AppPrevisoesRoute
   '/_app/problemas': typeof AppProblemasRoute
   '/_app/riscos-ola': typeof AppRiscosOlaRoute
+  '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/validacao': typeof AppValidacaoRoute
 }
 export interface FileRouteTypes {
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/previsoes'
     | '/problemas'
     | '/riscos-ola'
+    | '/usuarios'
     | '/validacao'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/previsoes'
     | '/problemas'
     | '/riscos-ola'
+    | '/usuarios'
     | '/validacao'
   id:
     | '__root__'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_app/previsoes'
     | '/_app/problemas'
     | '/_app/riscos-ola'
+    | '/_app/usuarios'
     | '/_app/validacao'
   fileRoutesById: FileRoutesById
 }
@@ -248,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/validacao'
       fullPath: '/validacao'
       preLoaderRoute: typeof AppValidacaoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/usuarios': {
+      id: '/_app/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof AppUsuariosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/riscos-ola': {
@@ -350,6 +369,7 @@ interface AppRouteChildren {
   AppPrevisoesRoute: typeof AppPrevisoesRoute
   AppProblemasRoute: typeof AppProblemasRoute
   AppRiscosOlaRoute: typeof AppRiscosOlaRoute
+  AppUsuariosRoute: typeof AppUsuariosRoute
   AppValidacaoRoute: typeof AppValidacaoRoute
 }
 
@@ -366,6 +386,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPrevisoesRoute: AppPrevisoesRoute,
   AppProblemasRoute: AppProblemasRoute,
   AppRiscosOlaRoute: AppRiscosOlaRoute,
+  AppUsuariosRoute: AppUsuariosRoute,
   AppValidacaoRoute: AppValidacaoRoute,
 }
 
