@@ -17,7 +17,6 @@ import { Route as AppUsuariosRouteImport } from './routes/_app.usuarios'
 import { Route as AppRiscosOlaRouteImport } from './routes/_app.riscos-ola'
 import { Route as AppProblemasRouteImport } from './routes/_app.problemas'
 import { Route as AppPrevisoesRouteImport } from './routes/_app.previsoes'
-import { Route as AppMudancasRouteImport } from './routes/_app.mudancas'
 import { Route as AppIncidentesRouteImport } from './routes/_app.incidentes'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDadosRouteImport } from './routes/_app.dados'
@@ -64,11 +63,6 @@ const AppProblemasRoute = AppProblemasRouteImport.update({
 const AppPrevisoesRoute = AppPrevisoesRouteImport.update({
   id: '/previsoes',
   path: '/previsoes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMudancasRoute = AppMudancasRouteImport.update({
-  id: '/mudancas',
-  path: '/mudancas',
   getParentRoute: () => AppRoute,
 } as any)
 const AppIncidentesRoute = AppIncidentesRouteImport.update({
@@ -123,7 +117,6 @@ export interface FileRoutesByFullPath {
   '/dados': typeof AppDadosRoute
   '/dashboard': typeof AppDashboardRoute
   '/incidentes': typeof AppIncidentesRoute
-  '/mudancas': typeof AppMudancasRoute
   '/previsoes': typeof AppPrevisoesRoute
   '/problemas': typeof AppProblemasRoute
   '/riscos-ola': typeof AppRiscosOlaRoute
@@ -141,7 +134,6 @@ export interface FileRoutesByTo {
   '/dados': typeof AppDadosRoute
   '/dashboard': typeof AppDashboardRoute
   '/incidentes': typeof AppIncidentesRoute
-  '/mudancas': typeof AppMudancasRoute
   '/previsoes': typeof AppPrevisoesRoute
   '/problemas': typeof AppProblemasRoute
   '/riscos-ola': typeof AppRiscosOlaRoute
@@ -161,7 +153,6 @@ export interface FileRoutesById {
   '/_app/dados': typeof AppDadosRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/incidentes': typeof AppIncidentesRoute
-  '/_app/mudancas': typeof AppMudancasRoute
   '/_app/previsoes': typeof AppPrevisoesRoute
   '/_app/problemas': typeof AppProblemasRoute
   '/_app/riscos-ola': typeof AppRiscosOlaRoute
@@ -181,7 +172,6 @@ export interface FileRouteTypes {
     | '/dados'
     | '/dashboard'
     | '/incidentes'
-    | '/mudancas'
     | '/previsoes'
     | '/problemas'
     | '/riscos-ola'
@@ -199,7 +189,6 @@ export interface FileRouteTypes {
     | '/dados'
     | '/dashboard'
     | '/incidentes'
-    | '/mudancas'
     | '/previsoes'
     | '/problemas'
     | '/riscos-ola'
@@ -218,7 +207,6 @@ export interface FileRouteTypes {
     | '/_app/dados'
     | '/_app/dashboard'
     | '/_app/incidentes'
-    | '/_app/mudancas'
     | '/_app/previsoes'
     | '/_app/problemas'
     | '/_app/riscos-ola'
@@ -290,13 +278,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPrevisoesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/mudancas': {
-      id: '/_app/mudancas'
-      path: '/mudancas'
-      fullPath: '/mudancas'
-      preLoaderRoute: typeof AppMudancasRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/incidentes': {
       id: '/_app/incidentes'
       path: '/incidentes'
@@ -365,7 +346,6 @@ interface AppRouteChildren {
   AppDadosRoute: typeof AppDadosRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppIncidentesRoute: typeof AppIncidentesRoute
-  AppMudancasRoute: typeof AppMudancasRoute
   AppPrevisoesRoute: typeof AppPrevisoesRoute
   AppProblemasRoute: typeof AppProblemasRoute
   AppRiscosOlaRoute: typeof AppRiscosOlaRoute
@@ -382,7 +362,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppDadosRoute: AppDadosRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppIncidentesRoute: AppIncidentesRoute,
-  AppMudancasRoute: AppMudancasRoute,
   AppPrevisoesRoute: AppPrevisoesRoute,
   AppProblemasRoute: AppProblemasRoute,
   AppRiscosOlaRoute: AppRiscosOlaRoute,

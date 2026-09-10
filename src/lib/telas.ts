@@ -76,13 +76,6 @@ export const TELAS: Tela[] = [
     apelidos: ["problemas", "recorrências", "problemas e recorrências"],
   },
   {
-    rota: "/mudancas",
-    nome: "Mudanças",
-    descricao:
-      "Cadastro de deploys, releases, expansões e configurações, correlacionando cada mudança com o volume de incidentes antes e depois dela.",
-    apelidos: ["mudanças", "deploys", "releases"],
-  },
-  {
     rota: "/conhecimento",
     nome: "Base de Conhecimento",
     descricao: "Runbooks, postmortems e recomendações técnicas por produto e causa raiz.",
