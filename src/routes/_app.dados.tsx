@@ -377,7 +377,7 @@ function DadosPage() {
         }
       />
 
-      <Card className="p-5">
+      <Card className="p-6">
         <div className="grid gap-4 md:grid-cols-[240px_1fr]">
           <div className="space-y-2">
             <div className="text-xs uppercase text-muted-foreground">Tipo de base</div>
@@ -427,7 +427,7 @@ function DadosPage() {
         </div>
       </Card>
 
-      <Card className="p-5 space-y-3">
+      <Card className="p-6 space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Sincronizar com Databricks</div>
@@ -463,7 +463,7 @@ function DadosPage() {
       </Card>
 
       {qualidade && incidentesMapeados && arquivo && (
-        <Card className="p-4 space-y-4">
+        <Card className="p-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <ShieldCheck className="h-5 w-5 text-primary" />
             <div className="flex-1 min-w-0">
@@ -530,7 +530,7 @@ function DadosPage() {
       )}
 
       {preview && arquivo && !incidentesMapeados && (
-        <Card className="p-4 space-y-3">
+        <Card className="p-6 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <FileText className="h-5 w-5 text-primary" />
             <div className="flex-1 min-w-0">
@@ -581,7 +581,7 @@ function DadosPage() {
         </Card>
       )}
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="flex items-center gap-2 mb-3">
           <DBIcon className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Histórico de importações</div>

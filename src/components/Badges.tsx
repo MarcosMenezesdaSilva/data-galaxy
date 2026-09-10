@@ -7,7 +7,10 @@ import type {
   StatusAlerta,
 } from "@/lib/types";
 
-const base = "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium";
+// Pill é a linguagem de rótulo do DS — raio total, tipografia micro e a cor
+// entrando só como tinta + fundo sutil, nunca como bloco saturado.
+const base =
+  "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-0.5 text-[11px] font-medium leading-5 tracking-[0.02em] whitespace-nowrap";
 
 export function PrioridadeBadge({ p }: { p: Prioridade }) {
   const map: Record<Prioridade, string> = {

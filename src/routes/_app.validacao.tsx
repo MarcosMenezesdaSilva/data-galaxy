@@ -34,6 +34,14 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import {
+  axisProps,
+  chartColors,
+  gridProps,
+  labelListProps,
+  legendProps,
+  tooltipProps,
+} from "@/lib/chart-theme";
 import type { AcaoCorretiva } from "@/lib/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -118,46 +126,32 @@ function ValidacaoPage() {
       </Alert>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-sm font-semibold">Previsto vs. real após a correção</div>
-              <div className="text-xs text-muted-foreground">
-                Pontos reais de validação por janela de observação (7, 15 e 30 dias após a ação)
-              </div>
+        <Card lit className="p-6">
+          <div className="mb-6">
+            <div className="t-h4">Previsto vs. real após a correção</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Pontos reais de validação por janela de observação (7, 15 e 30 dias após a ação)
             </div>
           </div>
           <div className="h-80">
             {serie.length > 0 ? (
               <ResponsiveContainer>
                 <BarChart data={serie}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="dia" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--popover)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="previsto" name="Previsto" fill="var(--info)" radius={4}>
-                    <LabelList
-                      dataKey="previsto"
-                      position="top"
-                      fontSize={11}
-                      fill="var(--foreground)"
-                    />
+                  <CartesianGrid {...gridProps} vertical={false} />
+                  <XAxis dataKey="dia" {...axisProps} />
+                  <YAxis {...axisProps} />
+                  <Tooltip {...tooltipProps} />
+                  <Legend {...legendProps} />
+                  <Bar
+                    dataKey="previsto"
+                    name="Previsto"
+                    fill={chartColors.neutroRecuado}
+                    radius={4}
+                  >
+                    <LabelList dataKey="previsto" position="top" {...labelListProps} />
                   </Bar>
-                  <Bar dataKey="real" name="Real" fill="var(--brand)" radius={4}>
-                    <LabelList
-                      dataKey="real"
-                      position="top"
-                      fontSize={11}
-                      fill="var(--foreground)"
-                    />
+                  <Bar dataKey="real" name="Real" fill={chartColors.destaque} radius={4}>
+                    <LabelList dataKey="real" position="top" {...labelListProps} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -207,7 +201,7 @@ function ValidacaoPage() {
         </Card>
 
         {atual && (
-          <Card className="p-5 space-y-5 h-fit sticky top-20">
+          <Card className="p-6 space-y-5 h-fit sticky top-20">
             <div>
               <div className="text-xs uppercase text-muted-foreground">Caso selecionado</div>
               <div className="flex items-center gap-2 mt-1">

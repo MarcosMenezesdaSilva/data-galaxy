@@ -18,6 +18,16 @@ import {
   Brush,
   Legend,
 } from "recharts";
+import {
+  axisProps,
+  brushProps,
+  chartCategorical,
+  chartColors,
+  gridProps,
+  labelListProps,
+  legendProps,
+  tooltipProps,
+} from "@/lib/chart-theme";
 
 export interface DashboardExecutivoProps {
   /** Volume total previsto para D+1, somado entre produtos/categorias (previsões demonstrativas). */
@@ -39,13 +49,9 @@ export interface DashboardExecutivoProps {
   serieVolumeSeasonalNaive: { data: string; real: number; previsto: number }[];
 }
 
-const PIE_COLORS = [
-  "var(--critical)",
-  "var(--accent-orange)",
-  "var(--warning)",
-  "var(--info)",
-  "var(--muted-foreground)",
-];
+// Prioridades em rampa do sistema: P1 no laranja da marca e o resto recuando
+// para neutros — a hierarquia se lê antes da legenda.
+const PIE_COLORS = chartCategorical;
 
 export function DashboardExecutivo({
   prev1,
@@ -62,31 +68,33 @@ export function DashboardExecutivo({
   serieVolumeSeasonalNaive,
 }: DashboardExecutivoProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Banner de atenção — calculado a partir dos incidentes carregados (sem valores fictícios) */}
       <Card
-        className={`p-4 ${variacaoSemanal.pct > 15 ? "border-[color:var(--critical)]/40 bg-[color:var(--critical)]/5" : "border-border"}`}
+        lit={variacaoSemanal.pct <= 15}
+        className={`dg-enter p-6 ${variacaoSemanal.pct > 15 ? "border-[color:var(--critical)]/40 bg-[color:var(--critical)]/5" : ""}`}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <div
-            className={`mt-0.5 rounded-full p-2 ${variacaoSemanal.pct > 15 ? "bg-[color:var(--critical)]/15" : "bg-primary/10"}`}
+            className={`mt-0.5 rounded-pill p-2 ${variacaoSemanal.pct > 15 ? "bg-[color:var(--critical)]/15" : "bg-[color:var(--brand-orange-soft)]"}`}
           >
             <Activity
               className={`h-4 w-4 ${variacaoSemanal.pct > 15 ? "text-[color:var(--critical)]" : "text-primary"}`}
             />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-semibold text-foreground">
+            <div className="t-body-sm font-medium text-foreground">
               {variacaoSemanal.pct > 15
                 ? `Atenção: volume de incidentes subiu ${variacaoSemanal.pct.toFixed(0)}% na última semana em relação à anterior.`
                 : variacaoSemanal.pct < -15
                   ? `Volume de incidentes caiu ${Math.abs(variacaoSemanal.pct).toFixed(0)}% na última semana em relação à anterior.`
                   : "Volume de incidentes estável — sem variação relevante na última semana."}
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {fmtNumber(variacaoSemanal.semanaAtual)} incidentes nos últimos 7 dias vs.{" "}
-              {fmtNumber(variacaoSemanal.semanaAnterior)} na semana anterior · cálculo direto sobre
-              a base carregada (filtro atual).
+            <div className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              <span className="dg-mono">{fmtNumber(variacaoSemanal.semanaAtual)}</span> incidentes
+              nos últimos 7 dias vs.{" "}
+              <span className="dg-mono">{fmtNumber(variacaoSemanal.semanaAnterior)}</span> na semana
+              anterior · cálculo direto sobre a base carregada (filtro atual).
             </div>
           </div>
         </div>
@@ -94,7 +102,7 @@ export function DashboardExecutivo({
 
       {/* KPIs de negócio — previsão D+1/D+7 primeiro: é a capacidade de
           antecipação exigida pelo edital do desafio. */}
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="dg-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KPICard
           label="Previsão D+1"
           value={fmtNumber(prev1)}
@@ -146,43 +154,26 @@ export function DashboardExecutivo({
       </div>
 
       {/* Tendência de 6 meses + prioridades */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-4 lg:col-span-2">
-          <div className="text-sm font-semibold mb-1">
-            Tendência de incidentes (período completo)
-          </div>
-          <div className="text-xs text-muted-foreground mb-3">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card lit className="p-6 lg:col-span-2">
+          <div className="t-h4 mb-1.5">Tendência de incidentes (período completo)</div>
+          <div className="mb-6 text-xs text-muted-foreground">
             {serieMensal.length} meses · arraste as alças abaixo do gráfico pra navegar no tempo
           </div>
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={serieMensal} margin={{ top: 24 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="total" fill="var(--brand)" radius={[6, 6, 0, 0]}>
-                  <LabelList
-                    dataKey="total"
-                    position="top"
-                    fontSize={11}
-                    fill="var(--foreground)"
-                  />
+                <CartesianGrid {...gridProps} vertical={false} />
+                <XAxis dataKey="mes" {...axisProps} />
+                <YAxis {...axisProps} />
+                <Tooltip {...tooltipProps} />
+                <Bar dataKey="total" fill={chartColors.destaque} radius={[6, 6, 0, 0]}>
+                  <LabelList dataKey="total" position="top" {...labelListProps} />
                 </Bar>
                 {serieMensal.length > 6 && (
                   <Brush
                     dataKey="mes"
-                    height={22}
-                    stroke="var(--brand)"
-                    fill="var(--muted)"
-                    travellerWidth={8}
+                    {...brushProps}
                     startIndex={Math.max(0, serieMensal.length - 6)}
                     endIndex={serieMensal.length - 1}
                   />
@@ -192,8 +183,8 @@ export function DashboardExecutivo({
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="text-sm font-semibold mb-3">Prioridades</div>
+        <Card lit className="p-6">
+          <div className="t-h4 mb-6">Prioridades</div>
           <div className="h-72">
             <ResponsiveContainer>
               <PieChart>
@@ -227,15 +218,8 @@ export function DashboardExecutivo({
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
+                <Legend {...legendProps} />
+                <Tooltip {...tooltipProps} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -247,9 +231,9 @@ export function DashboardExecutivo({
       <VolumeRealVsPrevistoCard serie={serieVolumeSeasonalNaive} />
 
       {/* Grupos com maior risco acumulado */}
-      <Card className="p-4">
-        <div className="text-sm font-semibold mb-1">Grupos com maior risco acumulado</div>
-        <div className="text-xs text-muted-foreground mb-3">
+      <Card lit className="p-6">
+        <div className="t-h4 mb-1.5">Grupos com maior risco acumulado</div>
+        <div className="mb-6 text-xs text-muted-foreground">
           Soma da probabilidade de violação (%) dos riscos ativos de cada grupo
         </div>
         {gruposRisco.length === 0 ? (
@@ -260,30 +244,12 @@ export function DashboardExecutivo({
           <div className="h-80">
             <ResponsiveContainer>
               <BarChart data={gruposRisco} layout="vertical" margin={{ left: 20, right: 48 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis
-                  type="category"
-                  dataKey="grupo"
-                  stroke="var(--muted-foreground)"
-                  fontSize={11}
-                  width={130}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="total" fill="var(--accent-orange)" radius={[0, 6, 6, 0]}>
-                  <LabelList
-                    dataKey="total"
-                    position="right"
-                    fontSize={11}
-                    fill="var(--foreground)"
-                  />
+                <CartesianGrid {...gridProps} horizontal={false} />
+                <XAxis type="number" {...axisProps} />
+                <YAxis type="category" dataKey="grupo" {...axisProps} width={130} />
+                <Tooltip {...tooltipProps} />
+                <Bar dataKey="total" fill={chartColors.destaqueSecundario} radius={[0, 6, 6, 0]}>
+                  <LabelList dataKey="total" position="right" {...labelListProps} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

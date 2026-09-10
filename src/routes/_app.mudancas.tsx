@@ -23,6 +23,14 @@ import {
   Legend,
   LabelList,
 } from "recharts";
+import {
+  axisProps,
+  chartColors,
+  gridProps,
+  labelListProps,
+  legendProps,
+  tooltipProps,
+} from "@/lib/chart-theme";
 
 export const Route = createFileRoute("/_app/mudancas")({
   head: () => ({ meta: [{ title: "Mudanças — Data Galaxy" }] }),
@@ -39,39 +47,40 @@ function MudancasPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
+        eyebrow="Correlação"
         title="Mudanças"
         subtitle="Cadastro de deploys, releases, expansões e sua correlação com incidentes"
       />
 
-      <Card className="p-4">
-        <div className="text-sm font-semibold mb-3">Incidentes antes e depois da mudança</div>
+      <Card lit className="p-6">
+        <div className="t-h4 mb-6">Incidentes antes e depois da mudança</div>
         <div className="h-72">
           <ResponsiveContainer>
             <BarChart data={chartData}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="id" stroke="var(--muted-foreground)" fontSize={11} />
-              <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <CartesianGrid {...gridProps} vertical={false} />
+              <XAxis dataKey="id" {...axisProps} />
+              <YAxis {...axisProps} />
+              <Tooltip {...tooltipProps} />
+              <Legend {...legendProps} />
+              {/* "Antes" é contexto (neutro recuado); "depois" é o resultado
+                  que a tela quer mostrar, então leva o laranja. */}
               <Bar
                 dataKey="antes"
                 name="Antes"
-                fill="var(--muted-foreground)"
+                fill={chartColors.neutroRecuado}
                 radius={[6, 6, 0, 0]}
               >
-                <LabelList dataKey="antes" position="top" fontSize={10} fill="var(--foreground)" />
+                <LabelList dataKey="antes" position="top" {...labelListProps} />
               </Bar>
-              <Bar dataKey="depois" name="Depois" fill="var(--brand)" radius={[6, 6, 0, 0]}>
-                <LabelList dataKey="depois" position="top" fontSize={10} fill="var(--foreground)" />
+              <Bar
+                dataKey="depois"
+                name="Depois"
+                fill={chartColors.destaque}
+                radius={[6, 6, 0, 0]}
+              >
+                <LabelList dataKey="depois" position="top" {...labelListProps} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

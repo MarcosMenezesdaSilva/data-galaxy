@@ -21,6 +21,15 @@ import {
   LabelList,
   Brush,
 } from "recharts";
+import {
+  axisProps,
+  brushProps,
+  chartColors,
+  gridProps,
+  labelListProps,
+  legendProps,
+  tooltipProps,
+} from "@/lib/chart-theme";
 import { Info, Brain, Layers, TrendingUp } from "lucide-react";
 import {
   Table,
@@ -185,69 +194,60 @@ function PrevisoesPage() {
         />
       </div>
 
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-sm font-semibold">Histórico vs. previsão</div>
-            <div className="text-xs text-muted-foreground">
-              Período completo desde o primeiro incidente da base ({serie.length} dias) + projeção ·
-              arraste as alças abaixo do gráfico pra navegar no tempo
-            </div>
+      <Card lit className="p-6">
+        <div className="mb-6">
+          <div className="t-h4">Histórico vs. previsão</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Período completo desde o primeiro incidente da base ({serie.length} dias) + projeção ·
+            arraste as alças abaixo do gráfico pra navegar no tempo
           </div>
         </div>
         <div className="h-80">
           <ResponsiveContainer>
             <ComposedChart data={serie}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="data" stroke="var(--muted-foreground)" fontSize={11} />
-              <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <CartesianGrid {...gridProps} vertical={false} />
+              <XAxis dataKey="data" {...axisProps} />
+              <YAxis {...axisProps} />
+              <Tooltip {...tooltipProps} />
+              <Legend {...legendProps} />
+              {/* Banda de confiança em neutro: é incerteza, não é o dado. */}
               <Area
                 dataKey="sup"
                 name="Limite superior"
                 stroke="none"
-                fill="var(--info)"
-                fillOpacity={0.1}
+                fill={chartColors.neutro}
+                fillOpacity={0.12}
               />
               <Area
                 dataKey="inf"
                 name="Limite inferior"
                 stroke="none"
-                fill="var(--info)"
-                fillOpacity={0.1}
+                fill={chartColors.neutro}
+                fillOpacity={0.12}
               />
               <Line
                 type="monotone"
                 dataKey="real"
                 name="Real"
-                stroke="var(--brand)"
+                stroke={chartColors.destaque}
                 strokeWidth={2.5}
                 dot={false}
               />
+              {/* Previsto: mesma família, tom claro e traço tracejado —
+                  diferenciação por tom e espessura, não por matiz nova. */}
               <Line
                 type="monotone"
                 dataKey="previsto"
                 name="Previsto"
-                stroke="var(--info)"
-                strokeWidth={2.5}
+                stroke={chartColors.destaqueSecundario}
+                strokeWidth={2}
                 strokeDasharray="4 4"
                 dot={false}
               />
               {serie.length > 40 && (
                 <Brush
                   dataKey="data"
-                  height={22}
-                  stroke="var(--brand)"
-                  fill="var(--muted)"
-                  travellerWidth={8}
+                  {...brushProps}
                   startIndex={Math.max(0, serie.length - 40)}
                   endIndex={serie.length - 1}
                 />
@@ -257,44 +257,34 @@ function PrevisoesPage() {
         </div>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-4 lg:col-span-2">
-          <div className="text-sm font-semibold mb-1">Previsão diária (D+1 a D+7)</div>
-          <div className="text-xs text-muted-foreground mb-3">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card lit className="p-6 lg:col-span-2">
+          <div className="t-h4 mb-1.5">Previsão diária (D+1 a D+7)</div>
+          <div className="mb-6 text-xs text-muted-foreground">
             Volume esperado por dia — série agregada, não quebrada por produto
           </div>
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={previsaoDiaria} margin={{ top: 24 }}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="horizonte" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
+                <CartesianGrid {...gridProps} vertical={false} />
+                <XAxis dataKey="horizonte" {...axisProps} />
+                <YAxis {...axisProps} />
                 <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
+                  {...tooltipProps}
                   formatter={(value, _name, item) => [
                     value,
                     `Volume (${(item.payload as { data: string }).data})`,
                   ]}
                 />
-                <Bar dataKey="volume" fill="var(--accent-orange)" radius={[6, 6, 0, 0]}>
-                  <LabelList
-                    dataKey="volume"
-                    position="top"
-                    fontSize={11}
-                    fill="var(--foreground)"
-                  />
+                <Bar dataKey="volume" fill={chartColors.destaque} radius={[6, 6, 0, 0]}>
+                  <LabelList dataKey="volume" position="top" {...labelListProps} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-6">
           <div className="flex items-center gap-2 mb-3">
             <Brain className="h-4 w-4 text-primary" />
             <div className="text-sm font-semibold">Modelos planejados</div>
@@ -322,7 +312,7 @@ function PrevisoesPage() {
         </Card>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-6">
         <div className="flex items-center gap-2 mb-3">
           <Layers className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Tabela diária de previsões</div>
@@ -386,7 +376,7 @@ function StatCard({
     success: "text-[color:var(--success)]",
   };
   return (
-    <Card className="p-4">
+    <Card className="p-6">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-2xl font-semibold mt-1 ${map[accent]}`}>{value}</div>
     </Card>

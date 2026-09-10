@@ -156,7 +156,8 @@ export function AppLayout() {
         {/* Sidebar — vira gaveta (drawer) em telas pequenas, fixa a partir de md (tablets/notebooks) */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200",
+            "fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-sidebar-border bg-sidebar",
+            "transition-transform duration-[var(--motion-default)] ease-[var(--ease-out-expo)]",
             mobileOpen ? "translate-x-0" : "-translate-x-full",
             "md:sticky md:top-0 md:h-screen md:translate-x-0 md:shrink-0 md:transition-[width]",
             collapsed ? "md:w-[68px]" : "md:w-[248px]",
@@ -169,7 +170,8 @@ export function AppLayout() {
                 onClick={voltarParaSelecaoDePerfil}
                 aria-label="Voltar para seleção de perfil"
                 className={cn(
-                  "flex items-center h-16 px-3 border-b border-sidebar-border w-full cursor-pointer hover:bg-sidebar-accent transition-colors",
+                  "flex h-16 w-full cursor-pointer items-center border-b border-sidebar-border px-3",
+                  "transition-colors duration-[var(--motion-fast)] hover:bg-sidebar-accent",
                   collapsed && "justify-center px-0",
                 )}
               >
@@ -187,17 +189,23 @@ export function AppLayout() {
                 <Link
                   to={item.to}
                   className={cn(
-                    "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
+                    "transition-colors duration-[var(--motion-fast)]",
                     active
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent",
+                      ? "bg-[color:var(--brand-orange-soft)] font-medium text-primary"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
                     collapsed && "justify-center",
                   )}
                 >
                   <Icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
                   {!collapsed && <span className="truncate">{item.label}</span>}
+                  {/* Node laranja marcando a tela ativa — a mesma metáfora de
+                      rede do símbolo, aplicada à navegação. */}
                   {active && !collapsed && (
-                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                    <span
+                      className="ml-auto h-1.5 w-1.5 rounded-pill bg-primary"
+                      style={{ boxShadow: "0 0 8px var(--brand-orange-glow)" }}
+                    />
                   )}
                 </Link>
               );
@@ -231,7 +239,7 @@ export function AppLayout() {
         {/* Main */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Topbar */}
-          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 backdrop-blur px-4 md:px-6">
+          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[color:var(--border-subtle)] bg-background/80 px-4 backdrop-blur-xl md:px-6">
             <Button
               variant="ghost"
               size="icon"
@@ -243,7 +251,7 @@ export function AppLayout() {
             </Button>
             <div className="relative hidden w-full max-w-md sm:block">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar incidente, produto, grupo..." className="pl-9 h-9" />
+              <Input placeholder="Buscar incidente, produto, grupo..." className="h-10 pl-9" />
             </div>
             <div className="ml-auto flex items-center gap-2">
               <ModoBadge modo={modo} count={modo === "importado" ? totalIncidentes : undefined} />
@@ -335,12 +343,15 @@ export function AppLayout() {
             </div>
           </header>
 
-          <main className="flex-1 min-w-0 p-4 md:p-6 space-y-6">
+          {/* Áreas negativas generosas fazem parte da estética — o conteúdo
+              não preenche todo o espaço disponível. */}
+          <main className="min-w-0 flex-1 space-y-8 p-5 md:p-8">
             {seeded ? (
               <Outlet />
             ) : (
-              <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                Carregando dados...
+              <div className="flex h-64 flex-col items-center justify-center gap-4">
+                <BrandMark size={40} animated glow />
+                <div className="t-micro uppercase text-muted-foreground">Carregando dados</div>
               </div>
             )}
           </main>

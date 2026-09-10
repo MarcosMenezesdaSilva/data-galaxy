@@ -272,7 +272,7 @@ function CorrecoesPage() {
         </Table>
       </Card>
 
-      <Card className="p-5">
+      <Card className="p-6">
         <div className="text-sm font-semibold mb-4">Timeline de uma ação típica</div>
         <div className="grid gap-4 md:grid-cols-5">
           {[
@@ -317,7 +317,7 @@ function MiniStat({
   accent?: string;
 }) {
   return (
-    <Card className="p-4 flex items-center gap-3">
+    <Card className="p-6 flex items-center gap-3">
       <div className={`rounded-md bg-muted p-2 ${accent ?? "text-primary"}`}>{icon}</div>
       <div>
         <div className="text-xs text-muted-foreground">{label}</div>

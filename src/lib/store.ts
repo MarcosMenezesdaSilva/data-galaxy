@@ -50,7 +50,10 @@ interface AppState {
 export const useApp = create<AppState>()(
   persist(
     (set, get) => ({
-      theme: "light",
+      // Escuro é a leitura fiel da identidade ("preto como espaço"); o tema
+      // claro continua disponível pelo toggle. Quem já tem preferência salva
+      // mantém a dele — o persist do zustand sobrescreve este default.
+      theme: "dark",
       perfil: null,
       modo: "importado",
       faixasRisco: FAIXAS_RISCO_PADRAO,

@@ -22,6 +22,16 @@ import {
   Cell,
   Brush,
 } from "recharts";
+import {
+  axisProps,
+  brushProps,
+  chartCategorical,
+  chartColors,
+  gridProps,
+  labelListProps,
+  legendProps,
+  tooltipProps,
+} from "@/lib/chart-theme";
 import Papa from "papaparse";
 
 export const Route = createFileRoute("/_app/relatorios")({
@@ -86,13 +96,9 @@ function RelatoriosPage() {
     Math.max(1, alertas.filter((a) => a.data_reconhecimento).length) /
     60000;
 
-  const PIE = [
-    "var(--critical)",
-    "var(--accent-orange)",
-    "var(--warning)",
-    "var(--info)",
-    "var(--muted-foreground)",
-  ];
+  // Rampa do sistema, não arco-íris: laranja na fatia que importa e neutros
+  // recuando conforme a prioridade cai.
+  const PIE = chartCategorical;
 
   function exportar(nome: string, data: Record<string, unknown>[]) {
     const csv = Papa.unparse(data);
@@ -134,7 +140,7 @@ function RelatoriosPage() {
         </TabsList>
 
         <TabsContent value="incidentes" className="space-y-4">
-          <Card className="p-4">
+          <Card className="p-6">
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-semibold">Incidentes por período</div>
               <Button
@@ -148,32 +154,17 @@ function RelatoriosPage() {
             <div className="h-72">
               <ResponsiveContainer>
                 <BarChart data={porMes} margin={{ top: 24 }}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--popover)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Bar dataKey="total" fill="var(--brand)" radius={[6, 6, 0, 0]}>
-                    <LabelList
-                      dataKey="total"
-                      position="top"
-                      fontSize={11}
-                      fill="var(--foreground)"
-                    />
+                  <CartesianGrid {...gridProps} vertical={false} />
+                  <XAxis dataKey="mes" {...axisProps} />
+                  <YAxis {...axisProps} />
+                  <Tooltip {...tooltipProps} />
+                  <Bar dataKey="total" fill={chartColors.destaque} radius={[6, 6, 0, 0]}>
+                    <LabelList dataKey="total" position="top" {...labelListProps} />
                   </Bar>
                   {porMes.length > 6 && (
                     <Brush
                       dataKey="mes"
-                      height={22}
-                      stroke="var(--brand)"
-                      fill="var(--muted)"
-                      travellerWidth={8}
+                      {...brushProps}
                       startIndex={Math.max(0, porMes.length - 6)}
                       endIndex={porMes.length - 1}
                     />
@@ -184,7 +175,7 @@ function RelatoriosPage() {
           </Card>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="p-4">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm font-semibold">Por produto</div>
                 <Button
@@ -198,42 +189,24 @@ function RelatoriosPage() {
               <div className="h-72">
                 <ResponsiveContainer>
                   <BarChart data={porProduto} layout="vertical" margin={{ left: 20, right: 48 }}>
-                    <CartesianGrid
-                      stroke="var(--border)"
-                      strokeDasharray="3 3"
-                      horizontal={false}
-                    />
-                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
-                    <YAxis
-                      type="category"
-                      dataKey="produto"
-                      stroke="var(--muted-foreground)"
-                      fontSize={11}
-                      width={110}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--popover)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                    />
-                    <Bar dataKey="total" fill="var(--accent-orange)" radius={[0, 6, 6, 0]}>
-                      <LabelList
-                        dataKey="total"
-                        position="right"
-                        fontSize={11}
-                        fill="var(--foreground)"
-                      />
+                    <CartesianGrid {...gridProps} horizontal={false} />
+                    <XAxis type="number" {...axisProps} />
+                    <YAxis type="category" dataKey="produto" {...axisProps} width={110} />
+                    <Tooltip {...tooltipProps} />
+                    <Bar
+                      dataKey="total"
+                      fill={chartColors.destaqueSecundario}
+                      radius={[0, 6, 6, 0]}
+                    >
+                      <LabelList dataKey="total" position="right" {...labelListProps} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
 
-            <Card className="p-4">
-              <div className="text-sm font-semibold mb-3">Por prioridade</div>
+            <Card lit className="p-6">
+              <div className="t-h4 mb-6">Por prioridade</div>
               <div className="h-72">
                 <ResponsiveContainer>
                   <PieChart>
@@ -263,15 +236,8 @@ function RelatoriosPage() {
                         <Cell key={i} fill={PIE[i % PIE.length]} />
                       ))}
                     </Pie>
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--popover)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                    />
+                    <Legend {...legendProps} />
+                    <Tooltip {...tooltipProps} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -296,7 +262,7 @@ function RelatoriosPage() {
         </TabsContent>
 
         <TabsContent value="previsoes">
-          <Card className="p-4">
+          <Card className="p-6">
             <div className="text-sm font-semibold mb-2">Precisão das previsões</div>
             <div className="text-xs text-muted-foreground mb-3">
               MAPE médio simulado por modelo (dados demonstrativos)
@@ -339,7 +305,7 @@ function MetricCard({
     warning: "text-[color:var(--warning)]",
   } as const;
   return (
-    <Card className="p-4">
+    <Card className="p-6">
       <div className="text-xs uppercase text-muted-foreground">{label}</div>
       <div className={`text-2xl font-semibold mt-1 ${accent ? map[accent] : ""}`}>{value}</div>
     </Card>

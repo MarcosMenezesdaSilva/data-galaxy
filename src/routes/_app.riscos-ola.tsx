@@ -411,7 +411,7 @@ function RiscosPage() {
         </Card>
 
         {atual && (
-          <Card className="p-5 space-y-5 h-fit sticky top-20">
+          <Card className="p-6 space-y-5 h-fit sticky top-20">
             <div>
               <div className="text-xs uppercase text-muted-foreground">Risco selecionado</div>
               <div className="flex items-center gap-2 mt-1">
@@ -607,9 +607,9 @@ function RiscosPage() {
               )}
 
               {canalEscolhido === "sms" && (
-                <div className="space-y-1.5 rounded-md border border-amber-400/40 bg-amber-50/40 p-3 text-xs text-muted-foreground dark:bg-amber-950/10">
+                <div className="space-y-1.5 rounded-md border border-[color:var(--warning)]/35 bg-[color:var(--warning)]/5 p-3 text-xs text-muted-foreground">
                   <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-[color:var(--warning)]" />
                     <span>
                       Conta Twilio <b>trial</b> só envia SMS para números já <b>verificados</b> na
                       conta — diferente do WhatsApp, não existe um passo de opt-in que a própria
@@ -624,9 +624,9 @@ function RiscosPage() {
               )}
 
               {canalEscolhido === "whatsapp" && (
-                <div className="space-y-2 rounded-md border border-amber-400/40 bg-amber-50/40 p-3 text-xs text-muted-foreground dark:bg-amber-950/10">
+                <div className="space-y-2 rounded-md border border-[color:var(--warning)]/35 bg-[color:var(--warning)]/5 p-3 text-xs text-muted-foreground">
                   <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-[color:var(--warning)]" />
                     <span>
                       Antes do primeiro envio, quem vai receber precisa mandar uma mensagem para o
                       número do sandbox do Twilio. Sem esse passo único, a Twilio aceita o envio mas

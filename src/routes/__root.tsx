@@ -113,7 +113,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -124,11 +124,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+// Aplica o tema antes da primeira pintura. Sem isso, o `.dark` só entra no
+// efeito do ThemeInit e o usuário vê um flash claro — bem visível agora que
+// escuro é o padrão. Lê a mesma chave do persist do zustand.
+const THEME_BOOTSTRAP = `
+try {
+  var s = localStorage.getItem("data-galaxy-app");
+  var t = s ? (JSON.parse(s).state || {}).theme : null;
+  if (t !== "light") { t = "dark"; }
+  document.documentElement.classList.toggle("dark", t === "dark");
+  document.documentElement.style.colorScheme = t;
+} catch (e) {
+  document.documentElement.classList.add("dark");
+  document.documentElement.style.colorScheme = "dark";
+}
+`.trim();
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
       <body>
         {children}
@@ -146,7 +163,9 @@ function RootComponent() {
       <ThemeInit />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <Toaster position="top-right" richColors closeButton />
+      {/* Sem `richColors`: os blocos saturados do sonner brigam com a paleta
+          dessaturada do DS. O status continua legível pelo ícone. */}
+      <Toaster position="top-right" closeButton />
     </QueryClientProvider>
   );
 }

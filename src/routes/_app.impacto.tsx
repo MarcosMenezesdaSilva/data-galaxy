@@ -90,7 +90,7 @@ function ImpactoPage() {
         subtitle="O que muda para a Locaweb do cenário reativo para o preditivo"
       />
 
-      <Card className="p-4 border-primary/30 bg-primary/5">
+      <Card className="p-6 border-primary/30 bg-primary/5">
         <div className="flex items-start gap-3">
           <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
           <p className="text-sm leading-relaxed">
@@ -118,7 +118,7 @@ function ImpactoPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Reativo */}
-        <Card className="p-5 space-y-4 border-[color:var(--critical)]/20">
+        <Card className="p-6 space-y-4 border-[color:var(--critical)]/20">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-[color:var(--critical)]" />
             <div>
@@ -150,7 +150,7 @@ function ImpactoPage() {
         </Card>
 
         {/* Preditivo */}
-        <Card className="p-5 space-y-4 border-[color:var(--success)]/20">
+        <Card className="p-6 space-y-4 border-[color:var(--success)]/20">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 text-[color:var(--success)]" />
             <div>
