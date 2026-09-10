@@ -35,6 +35,13 @@ const LOTE_SEGUNDO_PLANO = 8000;
 
 let seedPromise: Promise<void> | null = null;
 let cargaSegundoPlanoEmAndamento = false;
+let cargaSegundoPlanoPromise: Promise<void> | null = null;
+
+// Incrementada a cada resetSeed() — permite que uma carga em segundo plano
+// já em andamento (de uma sessão/seed anterior) perceba que foi invalidada
+// e pare sozinha, em vez de continuar escrevendo por cima de uma base que
+// acabou de ser limpa por "Restaurar dados padrão"/"Limpar base".
+let geracaoAtual = 0;
 
 // Baixa (só quando chamado — import dinâmico) e insere o restante dos
 // incidentes reais em lotes, cedendo o event loop entre um lote e outro pra
@@ -42,27 +49,34 @@ let cargaSegundoPlanoEmAndamento = false;
 // da tabela com o total esperado (amostra + resto), então funciona tanto na
 // primeira carga quanto ao continuar de onde parou depois de um reload no
 // meio do processo.
-async function continuarCargaEmSegundoPlano() {
-  if (cargaSegundoPlanoEmAndamento) return;
+function continuarCargaEmSegundoPlano(): Promise<void> {
+  if (cargaSegundoPlanoEmAndamento) return cargaSegundoPlanoPromise ?? Promise.resolve();
   cargaSegundoPlanoEmAndamento = true;
-  try {
-    const { default: snapshotResto } = await import("./databricks-snapshot-resto.json");
-    const incidentesResto = snapshotResto.incidentes as Incidente[];
+  const geracao = geracaoAtual;
+  cargaSegundoPlanoPromise = (async () => {
+    try {
+      const { default: snapshotResto } = await import("./databricks-snapshot-resto.json");
+      const incidentesResto = snapshotResto.incidentes as Incidente[];
 
-    // O quanto já foi inserido além da amostra inicial (0 na primeira carga;
-    // >0 se está retomando depois de um reload no meio do processo).
-    let offsetResto = Math.max(0, (await db.incidentes.count()) - incidentesAmostra.length);
-    while (offsetResto < incidentesResto.length) {
-      const lote = incidentesResto.slice(offsetResto, offsetResto + LOTE_SEGUNDO_PLANO);
-      await db.incidentes.bulkAdd(lote);
-      offsetResto += lote.length;
-      await new Promise((r) => setTimeout(r, 0));
+      // O quanto já foi inserido além da amostra inicial (0 na primeira carga;
+      // >0 se está retomando depois de um reload no meio do processo).
+      let offsetResto = Math.max(0, (await db.incidentes.count()) - incidentesAmostra.length);
+      while (offsetResto < incidentesResto.length) {
+        // A base foi limpa/reiniciada (resetSeed) enquanto este loop rodava —
+        // aborta em vez de continuar inserindo por cima da base nova.
+        if (geracao !== geracaoAtual) return;
+        const lote = incidentesResto.slice(offsetResto, offsetResto + LOTE_SEGUNDO_PLANO);
+        await db.incidentes.bulkAdd(lote);
+        offsetResto += lote.length;
+        await new Promise((r) => setTimeout(r, 0));
+      }
+    } catch (err) {
+      console.error("[init] Falha ao completar carga em segundo plano de incidentes:", err);
+    } finally {
+      cargaSegundoPlanoEmAndamento = false;
     }
-  } catch (err) {
-    console.error("[init] Falha ao completar carga em segundo plano de incidentes:", err);
-  } finally {
-    cargaSegundoPlanoEmAndamento = false;
-  }
+  })();
+  return cargaSegundoPlanoPromise;
 }
 
 export function seedIfEmpty(): Promise<void> {
@@ -88,6 +102,14 @@ export function seedIfEmpty(): Promise<void> {
   return seedPromise;
 }
 
-export function resetSeed() {
+// Invalida a carga atual (perfil/base sendo trocada) e espera qualquer carga
+// em segundo plano já em andamento realmente parar antes de devolver —
+// assim quem chamar isso pode fazer clearAllData() logo em seguida com
+// garantia de que nada mais vai escrever na base antiga por baixo dos panos.
+export async function resetSeed() {
+  geracaoAtual += 1;
   seedPromise = null;
+  if (cargaSegundoPlanoPromise) {
+    await cargaSegundoPlanoPromise;
+  }
 }

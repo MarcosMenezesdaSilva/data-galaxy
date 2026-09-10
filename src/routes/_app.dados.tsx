@@ -379,8 +379,12 @@ function DadosPage() {
   }
 
   async function recarregarDemo() {
+    // resetSeed() primeiro: para qualquer carga em segundo plano ainda em
+    // andamento antes de limpar a base, senão ela pode continuar inserindo
+    // incidentes por cima da base recém-limpa e a contagem da nova carga
+    // nunca bate zero (artigos/previsões/riscos ficam vazios).
+    await resetSeed();
     await clearAllData();
-    resetSeed();
     await seedIfEmpty();
     setModo("importado");
     toast.success("Dados padrão (Databricks) restaurados");
@@ -408,8 +412,8 @@ function DadosPage() {
   }
 
   async function limparTudo() {
+    await resetSeed();
     await clearAllData();
-    resetSeed();
     setModo("demo");
     toast.message("Base local limpa");
   }
