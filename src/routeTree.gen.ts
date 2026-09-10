@@ -14,21 +14,16 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppValidacaoRouteImport } from './routes/_app.validacao'
 import { Route as AppRiscosOlaRouteImport } from './routes/_app.riscos-ola'
-import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
-import { Route as AppQualidadeDadosRouteImport } from './routes/_app.qualidade-dados'
 import { Route as AppProblemasRouteImport } from './routes/_app.problemas'
 import { Route as AppPrevisoesRouteImport } from './routes/_app.previsoes'
 import { Route as AppMudancasRouteImport } from './routes/_app.mudancas'
-import { Route as AppLinhagemDadosRouteImport } from './routes/_app.linhagem-dados'
 import { Route as AppIncidentesRouteImport } from './routes/_app.incidentes'
-import { Route as AppImpactoRouteImport } from './routes/_app.impacto'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDadosRouteImport } from './routes/_app.dados'
 import { Route as AppCorrecoesRouteImport } from './routes/_app.correcoes'
 import { Route as AppConhecimentoRouteImport } from './routes/_app.conhecimento'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
 import { Route as AppAssistenteRouteImport } from './routes/_app.assistente'
-import { Route as AppArquiteturaRouteImport } from './routes/_app.arquitetura'
 import { Route as AppAlertasRouteImport } from './routes/_app.alertas'
 
 const LoginRoute = LoginRouteImport.update({
@@ -55,16 +50,6 @@ const AppRiscosOlaRoute = AppRiscosOlaRouteImport.update({
   path: '/riscos-ola',
   getParentRoute: () => AppRoute,
 } as any)
-const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppQualidadeDadosRoute = AppQualidadeDadosRouteImport.update({
-  id: '/qualidade-dados',
-  path: '/qualidade-dados',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppProblemasRoute = AppProblemasRouteImport.update({
   id: '/problemas',
   path: '/problemas',
@@ -80,19 +65,9 @@ const AppMudancasRoute = AppMudancasRouteImport.update({
   path: '/mudancas',
   getParentRoute: () => AppRoute,
 } as any)
-const AppLinhagemDadosRoute = AppLinhagemDadosRouteImport.update({
-  id: '/linhagem-dados',
-  path: '/linhagem-dados',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppIncidentesRoute = AppIncidentesRouteImport.update({
   id: '/incidentes',
   path: '/incidentes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppImpactoRoute = AppImpactoRouteImport.update({
-  id: '/impacto',
-  path: '/impacto',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -125,11 +100,6 @@ const AppAssistenteRoute = AppAssistenteRouteImport.update({
   path: '/assistente',
   getParentRoute: () => AppRoute,
 } as any)
-const AppArquiteturaRoute = AppArquiteturaRouteImport.update({
-  id: '/arquitetura',
-  path: '/arquitetura',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAlertasRoute = AppAlertasRouteImport.update({
   id: '/alertas',
   path: '/alertas',
@@ -140,21 +110,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/alertas': typeof AppAlertasRoute
-  '/arquitetura': typeof AppArquiteturaRoute
   '/assistente': typeof AppAssistenteRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/conhecimento': typeof AppConhecimentoRoute
   '/correcoes': typeof AppCorrecoesRoute
   '/dados': typeof AppDadosRoute
   '/dashboard': typeof AppDashboardRoute
-  '/impacto': typeof AppImpactoRoute
   '/incidentes': typeof AppIncidentesRoute
-  '/linhagem-dados': typeof AppLinhagemDadosRoute
   '/mudancas': typeof AppMudancasRoute
   '/previsoes': typeof AppPrevisoesRoute
   '/problemas': typeof AppProblemasRoute
-  '/qualidade-dados': typeof AppQualidadeDadosRoute
-  '/relatorios': typeof AppRelatoriosRoute
   '/riscos-ola': typeof AppRiscosOlaRoute
   '/validacao': typeof AppValidacaoRoute
 }
@@ -162,21 +127,16 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/alertas': typeof AppAlertasRoute
-  '/arquitetura': typeof AppArquiteturaRoute
   '/assistente': typeof AppAssistenteRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/conhecimento': typeof AppConhecimentoRoute
   '/correcoes': typeof AppCorrecoesRoute
   '/dados': typeof AppDadosRoute
   '/dashboard': typeof AppDashboardRoute
-  '/impacto': typeof AppImpactoRoute
   '/incidentes': typeof AppIncidentesRoute
-  '/linhagem-dados': typeof AppLinhagemDadosRoute
   '/mudancas': typeof AppMudancasRoute
   '/previsoes': typeof AppPrevisoesRoute
   '/problemas': typeof AppProblemasRoute
-  '/qualidade-dados': typeof AppQualidadeDadosRoute
-  '/relatorios': typeof AppRelatoriosRoute
   '/riscos-ola': typeof AppRiscosOlaRoute
   '/validacao': typeof AppValidacaoRoute
 }
@@ -186,21 +146,16 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/alertas': typeof AppAlertasRoute
-  '/_app/arquitetura': typeof AppArquiteturaRoute
   '/_app/assistente': typeof AppAssistenteRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/conhecimento': typeof AppConhecimentoRoute
   '/_app/correcoes': typeof AppCorrecoesRoute
   '/_app/dados': typeof AppDadosRoute
   '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/impacto': typeof AppImpactoRoute
   '/_app/incidentes': typeof AppIncidentesRoute
-  '/_app/linhagem-dados': typeof AppLinhagemDadosRoute
   '/_app/mudancas': typeof AppMudancasRoute
   '/_app/previsoes': typeof AppPrevisoesRoute
   '/_app/problemas': typeof AppProblemasRoute
-  '/_app/qualidade-dados': typeof AppQualidadeDadosRoute
-  '/_app/relatorios': typeof AppRelatoriosRoute
   '/_app/riscos-ola': typeof AppRiscosOlaRoute
   '/_app/validacao': typeof AppValidacaoRoute
 }
@@ -210,21 +165,16 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/alertas'
-    | '/arquitetura'
     | '/assistente'
     | '/configuracoes'
     | '/conhecimento'
     | '/correcoes'
     | '/dados'
     | '/dashboard'
-    | '/impacto'
     | '/incidentes'
-    | '/linhagem-dados'
     | '/mudancas'
     | '/previsoes'
     | '/problemas'
-    | '/qualidade-dados'
-    | '/relatorios'
     | '/riscos-ola'
     | '/validacao'
   fileRoutesByTo: FileRoutesByTo
@@ -232,21 +182,16 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/alertas'
-    | '/arquitetura'
     | '/assistente'
     | '/configuracoes'
     | '/conhecimento'
     | '/correcoes'
     | '/dados'
     | '/dashboard'
-    | '/impacto'
     | '/incidentes'
-    | '/linhagem-dados'
     | '/mudancas'
     | '/previsoes'
     | '/problemas'
-    | '/qualidade-dados'
-    | '/relatorios'
     | '/riscos-ola'
     | '/validacao'
   id:
@@ -255,21 +200,16 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/alertas'
-    | '/_app/arquitetura'
     | '/_app/assistente'
     | '/_app/configuracoes'
     | '/_app/conhecimento'
     | '/_app/correcoes'
     | '/_app/dados'
     | '/_app/dashboard'
-    | '/_app/impacto'
     | '/_app/incidentes'
-    | '/_app/linhagem-dados'
     | '/_app/mudancas'
     | '/_app/previsoes'
     | '/_app/problemas'
-    | '/_app/qualidade-dados'
-    | '/_app/relatorios'
     | '/_app/riscos-ola'
     | '/_app/validacao'
   fileRoutesById: FileRoutesById
@@ -317,20 +257,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRiscosOlaRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/relatorios': {
-      id: '/_app/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AppRelatoriosRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/qualidade-dados': {
-      id: '/_app/qualidade-dados'
-      path: '/qualidade-dados'
-      fullPath: '/qualidade-dados'
-      preLoaderRoute: typeof AppQualidadeDadosRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/problemas': {
       id: '/_app/problemas'
       path: '/problemas'
@@ -352,25 +278,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMudancasRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/linhagem-dados': {
-      id: '/_app/linhagem-dados'
-      path: '/linhagem-dados'
-      fullPath: '/linhagem-dados'
-      preLoaderRoute: typeof AppLinhagemDadosRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/incidentes': {
       id: '/_app/incidentes'
       path: '/incidentes'
       fullPath: '/incidentes'
       preLoaderRoute: typeof AppIncidentesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/impacto': {
-      id: '/_app/impacto'
-      path: '/impacto'
-      fullPath: '/impacto'
-      preLoaderRoute: typeof AppImpactoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -415,13 +327,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAssistenteRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/arquitetura': {
-      id: '/_app/arquitetura'
-      path: '/arquitetura'
-      fullPath: '/arquitetura'
-      preLoaderRoute: typeof AppArquiteturaRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/alertas': {
       id: '/_app/alertas'
       path: '/alertas'
@@ -434,42 +339,32 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAlertasRoute: typeof AppAlertasRoute
-  AppArquiteturaRoute: typeof AppArquiteturaRoute
   AppAssistenteRoute: typeof AppAssistenteRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppConhecimentoRoute: typeof AppConhecimentoRoute
   AppCorrecoesRoute: typeof AppCorrecoesRoute
   AppDadosRoute: typeof AppDadosRoute
   AppDashboardRoute: typeof AppDashboardRoute
-  AppImpactoRoute: typeof AppImpactoRoute
   AppIncidentesRoute: typeof AppIncidentesRoute
-  AppLinhagemDadosRoute: typeof AppLinhagemDadosRoute
   AppMudancasRoute: typeof AppMudancasRoute
   AppPrevisoesRoute: typeof AppPrevisoesRoute
   AppProblemasRoute: typeof AppProblemasRoute
-  AppQualidadeDadosRoute: typeof AppQualidadeDadosRoute
-  AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppRiscosOlaRoute: typeof AppRiscosOlaRoute
   AppValidacaoRoute: typeof AppValidacaoRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAlertasRoute: AppAlertasRoute,
-  AppArquiteturaRoute: AppArquiteturaRoute,
   AppAssistenteRoute: AppAssistenteRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppConhecimentoRoute: AppConhecimentoRoute,
   AppCorrecoesRoute: AppCorrecoesRoute,
   AppDadosRoute: AppDadosRoute,
   AppDashboardRoute: AppDashboardRoute,
-  AppImpactoRoute: AppImpactoRoute,
   AppIncidentesRoute: AppIncidentesRoute,
-  AppLinhagemDadosRoute: AppLinhagemDadosRoute,
   AppMudancasRoute: AppMudancasRoute,
   AppPrevisoesRoute: AppPrevisoesRoute,
   AppProblemasRoute: AppProblemasRoute,
-  AppQualidadeDadosRoute: AppQualidadeDadosRoute,
-  AppRelatoriosRoute: AppRelatoriosRoute,
   AppRiscosOlaRoute: AppRiscosOlaRoute,
   AppValidacaoRoute: AppValidacaoRoute,
 }

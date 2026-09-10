@@ -25,13 +25,7 @@ import {
   Tooltip,
   LabelList,
 } from "recharts";
-import {
-  axisProps,
-  chartColors,
-  gridProps,
-  labelListProps,
-  tooltipProps,
-} from "@/lib/chart-theme";
+import { axisProps, chartColors, gridProps, labelListProps, tooltipProps } from "@/lib/chart-theme";
 import type { Incidente, RiscoOla, Alerta } from "@/lib/types";
 
 export interface DashboardOperacionalProps {

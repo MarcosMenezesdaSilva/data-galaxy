@@ -130,8 +130,7 @@ function DashboardPage() {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [filtrados]);
 
-  // Agrupamento por mês (mesmo padrão usado em "Incidentes por período" na
-  // tela de Relatórios) — alimenta o gráfico de tendência e o KPI mensal.
+  // Agrupamento por mês — alimenta o gráfico de tendência e o KPI mensal.
   const porMes = useMemo(() => {
     const m = new Map<string, number>();
     filtrados.forEach((i) => {

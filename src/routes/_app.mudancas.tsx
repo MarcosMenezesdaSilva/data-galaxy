@@ -74,12 +74,7 @@ function MudancasPage() {
               >
                 <LabelList dataKey="antes" position="top" {...labelListProps} />
               </Bar>
-              <Bar
-                dataKey="depois"
-                name="Depois"
-                fill={chartColors.destaque}
-                radius={[6, 6, 0, 0]}
-              >
+              <Bar dataKey="depois" name="Depois" fill={chartColors.destaque} radius={[6, 6, 0, 0]}>
                 <LabelList dataKey="depois" position="top" {...labelListProps} />
               </Bar>
             </BarChart>

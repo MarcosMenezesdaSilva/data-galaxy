@@ -15,15 +15,7 @@ import type { Perfil } from "./store";
  */
 export const ROTAS_POR_PERFIL: Record<Perfil, string[] | "todas"> = {
   admin: "todas",
-  gestor: [
-    "/dashboard",
-    "/assistente",
-    "/previsoes",
-    "/riscos-ola",
-    "/alertas",
-    "/relatorios",
-    "/impacto",
-  ],
+  gestor: ["/dashboard", "/assistente", "/previsoes", "/riscos-ola", "/alertas"],
   tecnico: [
     "/dashboard",
     "/assistente",

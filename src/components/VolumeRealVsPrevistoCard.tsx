@@ -125,12 +125,7 @@ export function VolumeRealVsPrevistoCard({ serie, destaque }: VolumeRealVsPrevis
                 fill={chartColors.neutroRecuado}
                 radius={[4, 4, 0, 0]}
               />
-              <Bar
-                dataKey="real"
-                name="Real"
-                fill={chartColors.destaque}
-                radius={[4, 4, 0, 0]}
-              />
+              <Bar dataKey="real" name="Real" fill={chartColors.destaque} radius={[4, 4, 0, 0]} />
             </BarChart>
           ) : (
             <LineChart data={serie}>

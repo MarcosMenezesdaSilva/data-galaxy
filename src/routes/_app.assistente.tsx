@@ -36,21 +36,19 @@ const QUICK_QS_POR_PERFIL: Record<string, string[]> = {
     "Como está o cumprimento de OLA?",
     "Qual a previsão de volume D+7?",
     "As correções estão sendo efetivas?",
-    "O que tem na tela de Impacto?",
   ],
   tecnico: [
     "O que preciso saber agora?",
     "Quais riscos críticos estão ativos?",
     "Qual grupo está mais sobrecarregado?",
     "Tem alerta pendente?",
-    "O que tem na tela de Gestão de Dados?",
+    "O que tem na tela de Dados?",
   ],
   admin: [
     "O que preciso saber agora?",
     "Quais riscos críticos estão ativos?",
     "As correções estão sendo efetivas?",
-    "O que tem na tela de Linhagem de Dados?",
-    "O que tem na tela de Arquitetura e Roadmap?",
+    "O que tem na tela de Dados?",
   ],
 };
 
@@ -224,9 +222,8 @@ function AssistenteConversa({ perfil }: { perfil: Perfil | null }) {
         </Card>
         <Card className="border-[color:var(--warning)]/35 bg-[color:var(--warning)]/5">
           <CardContent className="p-3 text-[11px] text-muted-foreground">
-            <AlertTriangle className="mb-1 h-3 w-3 text-[color:var(--warning)]" /> Apoio à decisão
-            — não
-            substitui a análise do time operacional.
+            <AlertTriangle className="mb-1 h-3 w-3 text-[color:var(--warning)]" /> Apoio à decisão —
+            não substitui a análise do time operacional.
           </CardContent>
         </Card>
       </aside>

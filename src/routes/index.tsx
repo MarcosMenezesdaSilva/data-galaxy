@@ -31,7 +31,11 @@ const CAPACIDADES = [
   { icon: LineChart, label: "Previsão D+1 e D+7", desc: "Modelos AutoETS e Seasonal Naive" },
   { icon: Shield, label: "Risco de violação de OLA", desc: "Fatores explicáveis, sem caixa-preta" },
   { icon: Wrench, label: "Ações corretivas", desc: "Registro e acompanhamento de tratativas" },
-  { icon: CheckCircle2, label: "Validação de efetividade", desc: "Comprova se a correção funcionou" },
+  {
+    icon: CheckCircle2,
+    label: "Validação de efetividade",
+    desc: "Comprova se a correção funcionou",
+  },
 ];
 
 const atraso = (ms: number) => ({ "--dg-delay": `${ms}ms` }) as CSSProperties;

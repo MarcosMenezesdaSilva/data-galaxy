@@ -110,11 +110,13 @@ export function computeQualityReport(rows: Partial<Incidente>[]): QualityReport 
     duracoesNegativas,
     prioridadesInvalidas,
     distribuicaoNulos: vaziosPorColuna,
-    coberturaProduto: 100 - percentualVazioPorColuna.produto,
-    coberturaCategoria: 100 - percentualVazioPorColuna.categoria,
-    coberturaSubcategoria: 100 - percentualVazioPorColuna.subcategoria,
-    coberturaSolucao: 100 - percentualVazioPorColuna.solucao,
-    coberturaDataResolucao: 100 - percentualVazioPorColuna.data_resolucao,
+    // Arredonda de novo depois da subtração — 100 - 97.9 já basta pra gerar
+    // ruído de ponto flutuante tipo 2.0999999999999943 em JS.
+    coberturaProduto: Math.round((100 - percentualVazioPorColuna.produto) * 10) / 10,
+    coberturaCategoria: Math.round((100 - percentualVazioPorColuna.categoria) * 10) / 10,
+    coberturaSubcategoria: Math.round((100 - percentualVazioPorColuna.subcategoria) * 10) / 10,
+    coberturaSolucao: Math.round((100 - percentualVazioPorColuna.solucao) * 10) / 10,
+    coberturaDataResolucao: Math.round((100 - percentualVazioPorColuna.data_resolucao) * 10) / 10,
     inconsistenciasDatas,
     registrosAptosPct,
     registrosRejeitados,

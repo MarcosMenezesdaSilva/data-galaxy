@@ -27,13 +27,6 @@ export const TELAS: Tela[] = [
     apelidos: ["assistente", "chat", "você mesmo"],
   },
   {
-    rota: "/impacto",
-    nome: "Impacto",
-    descricao:
-      "Compara o cenário reativo (sem o sistema, incidentes sem intervenção e violações já consumadas) com o cenário preditivo (riscos pegos a tempo, correções validadas, previsão D+1/D+7).",
-    apelidos: ["impacto", "antes e depois", "reativo vs preditivo", "comparativo"],
-  },
-  {
     rota: "/incidentes",
     nome: "Incidentes",
     descricao:
@@ -97,37 +90,19 @@ export const TELAS: Tela[] = [
   },
   {
     rota: "/dados",
-    nome: "Gestão de Dados",
+    nome: "Dados",
     descricao:
-      "Importação de arquivos CSV, TXT ou Excel para alimentar a base — os dados ficam salvos localmente no navegador (IndexedDB).",
-    apelidos: ["gestão de dados", "importar dados", "importação"],
-  },
-  {
-    rota: "/qualidade-dados",
-    nome: "Qualidade de Dados",
-    descricao:
-      "Análise de completude, duplicidade e consistência dos incidentes carregados, seja a base demo ou uma importada.",
-    apelidos: ["qualidade de dados", "qualidade"],
-  },
-  {
-    rota: "/linhagem-dados",
-    nome: "Linhagem de Dados",
-    descricao:
-      "Fluxo de origem até consumo dos dados — da base bruta da Locaweb até os dashboards do Data Galaxy.",
-    apelidos: ["linhagem de dados", "linhagem"],
-  },
-  {
-    rota: "/relatorios",
-    nome: "Relatórios",
-    descricao: "Indicadores operacionais e de qualidade consolidados, prontos para exportar.",
-    apelidos: ["relatórios", "relatorio"],
-  },
-  {
-    rota: "/arquitetura",
-    nome: "Arquitetura e Roadmap",
-    descricao:
-      "Componentes técnicos projetados no MVP, status atual de cada um e a evolução planejada.",
-    apelidos: ["arquitetura", "roadmap"],
+      "Tela única com três abas: Importação e Sincronização (arquivos CSV/TXT/Excel ou sincronização ao vivo com o Databricks, dados salvos localmente no navegador via IndexedDB), Qualidade (completude, duplicidade e consistência dos incidentes carregados) e Linhagem (fluxo de origem até consumo, da base bruta da Locaweb até os dashboards do Data Galaxy).",
+    apelidos: [
+      "gestão de dados",
+      "dados",
+      "importar dados",
+      "importação",
+      "qualidade de dados",
+      "qualidade",
+      "linhagem de dados",
+      "linhagem",
+    ],
   },
   {
     rota: "/configuracoes",

@@ -93,9 +93,7 @@ export function BrandMark({
           stroke={`url(#${gradId})`}
           strokeWidth="1.2"
           opacity="0.4"
-          style={
-            animated ? traco(DASH_RING, "dg-draw 420ms var(--ease-out-expo) both") : undefined
-          }
+          style={animated ? traco(DASH_RING, "dg-draw 420ms var(--ease-out-expo) both") : undefined}
         />
 
         {/* 03 — conexões desenhadas do núcleo até cada node */}
@@ -111,10 +109,7 @@ export function BrandMark({
             opacity="0.55"
             style={
               animated
-                ? traco(
-                    DASH_LINE,
-                    `dg-draw 380ms var(--ease-out-expo) ${350 + i * 40}ms both`,
-                  )
+                ? traco(DASH_LINE, `dg-draw 380ms var(--ease-out-expo) ${350 + i * 40}ms both`)
                 : undefined
             }
           />

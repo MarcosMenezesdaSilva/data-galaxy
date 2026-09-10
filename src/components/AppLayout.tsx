@@ -2,7 +2,6 @@ import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-route
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
-  Scale,
   AlertTriangle,
   TrendingUp,
   ShieldAlert,
@@ -13,8 +12,6 @@ import {
   RefreshCcw,
   BookOpen,
   Database,
-  FileBarChart2,
-  Network,
   Settings as SettingsIcon,
   Sun,
   Moon,
@@ -24,8 +21,6 @@ import {
   Menu,
   LogOut,
   User as UserIcon,
-  ClipboardCheck,
-  Waypoints,
   Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -58,7 +53,6 @@ import { toast } from "sonner";
 const NAV = [
   { to: "/dashboard", label: "Central de Operações", icon: LayoutDashboard },
   { to: "/assistente", label: "Assistente", icon: Bot },
-  { to: "/impacto", label: "Impacto", icon: Scale },
   { to: "/incidentes", label: "Incidentes", icon: AlertTriangle },
   { to: "/previsoes", label: "Previsões", icon: TrendingUp },
   { to: "/riscos-ola", label: "Riscos de OLA", icon: ShieldAlert },
@@ -68,11 +62,7 @@ const NAV = [
   { to: "/problemas", label: "Problemas", icon: GitBranch },
   { to: "/mudancas", label: "Mudanças", icon: RefreshCcw },
   { to: "/conhecimento", label: "Conhecimento", icon: BookOpen },
-  { to: "/dados", label: "Gestão de Dados", icon: Database },
-  { to: "/qualidade-dados", label: "Qualidade de Dados", icon: ClipboardCheck },
-  { to: "/linhagem-dados", label: "Linhagem de Dados", icon: Waypoints },
-  { to: "/relatorios", label: "Relatórios", icon: FileBarChart2 },
-  { to: "/arquitetura", label: "Arquitetura", icon: Network },
+  { to: "/dados", label: "Dados", icon: Database },
   { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
 ] as const;
 

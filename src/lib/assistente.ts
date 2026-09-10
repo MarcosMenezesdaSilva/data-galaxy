@@ -485,8 +485,7 @@ export function responder(
         intencao,
         resumo: `Sem o Data Galaxy, ${fmtNumber(semIntervencao)} incidentes na base ficaram como "Sem Intervenção" — ninguém agiu antes do problema acontecer.`,
         detalhe: `Hoje o sistema já identifica ${fmtNumber(riscosCriticos.length)} riscos críticos ativos antes de virarem violação.`,
-        recomendacao:
-          "Veja a tela Impacto para o comparativo completo entre o cenário reativo e o preditivo.",
+        recomendacao: "Veja a tela Riscos de OLA para agir nos riscos ativos identificados agora.",
         numeros: [
           { label: '"Sem Intervenção" na base', valor: fmtNumber(semIntervencao) },
           { label: "Riscos críticos pegos a tempo", valor: fmtNumber(riscosCriticos.length) },
