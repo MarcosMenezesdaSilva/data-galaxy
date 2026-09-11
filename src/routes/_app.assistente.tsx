@@ -1,10 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/lib/store";
 import { useRotasPermitidas } from "@/lib/usuarios";
+import { rotaPermitida } from "@/lib/permissions";
 import {
   useIncidentes,
   useRiscos,
@@ -15,7 +17,26 @@ import {
 } from "@/lib/hooks";
 import { responder, type Resposta } from "@/lib/assistente";
 import { perguntarIA, iaConfigurada } from "@/lib/assistente-ia";
-import { Bot, Send, Sparkles, Sparkle, AlertTriangle } from "lucide-react";
+import {
+  Send,
+  Sparkles,
+  Sparkle,
+  AlertTriangle,
+  BarChart3,
+  GitCompare,
+  Info,
+  ShieldAlert,
+  Lightbulb,
+  Clock,
+  MessageSquare,
+  Zap,
+  ShieldCheck,
+  Bell,
+  TrendingUp,
+  Database,
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/assistente")({
   head: () => ({ meta: [{ title: "Assistente — Data Galaxy" }] }),
@@ -29,6 +50,127 @@ type Msg = {
   ts: number;
   isStreaming?: boolean;
 };
+
+// Chips de destaque do cabeçalho — só reforçam o que o restante da tela já
+// prova (dados reais, IA com contexto, nunca inventa), não afirmam nada novo.
+const CHIPS_DESTAQUE: { icon: LucideIcon; label: string }[] = [
+  { icon: Clock, label: "Dados em tempo real" },
+  { icon: MessageSquare, label: "Respostas com contexto" },
+  { icon: Zap, label: "Mais produtividade" },
+  { icon: ShieldCheck, label: "Nunca inventa dado" },
+];
+
+// Ações em destaque — cada uma dispara uma pergunta real, resolvida pelo
+// mesmo motor (regras locais ou Claude) usado no resto do chat. Nenhuma
+// promete algo que o produto não tem (sem gerador de relatório, sem SQL).
+const ACOES_DESTAQUE: {
+  icon: LucideIcon;
+  label: string;
+  desc: string;
+  prompt: string;
+  accent: string;
+}[] = [
+  {
+    icon: BarChart3,
+    label: "Entender dados da operação",
+    desc: "Tire dúvidas sobre incidentes, previsões, riscos e alertas.",
+    prompt: "O que preciso saber agora?",
+    accent: "text-primary bg-primary/12",
+  },
+  {
+    icon: GitCompare,
+    label: "Analisar e comparar",
+    desc: "Compare grupos, produtos e indicadores da operação.",
+    prompt: "Qual grupo está mais sobrecarregado?",
+    accent: "text-[color:var(--info)] bg-[color:var(--info)]/12",
+  },
+  {
+    icon: Info,
+    label: "Explicar uma tela",
+    desc: "Entenda o que cada tela do painel mostra e pra que serve.",
+    prompt: "O que tem na tela de Riscos de OLA?",
+    accent: "text-[color:var(--warning)] bg-[color:var(--warning)]/12",
+  },
+  {
+    icon: ShieldAlert,
+    label: "Ver riscos críticos",
+    desc: "Priorize os riscos de OLA com maior chance de violação.",
+    prompt: "Quais riscos críticos estão ativos?",
+    accent: "text-[color:var(--critical)] bg-[color:var(--critical)]/12",
+  },
+  {
+    icon: Lightbulb,
+    label: "Explorar insights",
+    desc: "Receba um resumo do que mais precisa de atenção agora.",
+    prompt: "As correções estão sendo efetivas?",
+    accent: "text-[color:var(--violet)] bg-[color:var(--violet)]/12",
+  },
+];
+
+// "Navegue por contexto" — atalhos pras telas mais consultadas a partir do
+// Assistente. Filtrados por rotaPermitida antes de renderizar, então um
+// perfil sem acesso a uma tela nunca vê o atalho pra ela.
+const NAV_CONTEXTO: {
+  icon: LucideIcon;
+  to: string;
+  label: string;
+  desc: string;
+  accent: string;
+}[] = [
+  {
+    icon: AlertTriangle,
+    to: "/incidentes",
+    label: "Incidentes",
+    desc: "Lista, filtros e linha do tempo",
+    accent: "text-primary bg-primary/12",
+  },
+  {
+    icon: TrendingUp,
+    to: "/previsoes",
+    label: "Previsões",
+    desc: "Volume D+1/D+7 e histórico",
+    accent: "text-[color:var(--warning)] bg-[color:var(--warning)]/12",
+  },
+  {
+    icon: ShieldAlert,
+    to: "/riscos-ola",
+    label: "Riscos de OLA",
+    desc: "Fila de risco e simulador",
+    accent: "text-[color:var(--violet)] bg-[color:var(--violet)]/12",
+  },
+  {
+    icon: Bell,
+    to: "/alertas",
+    label: "Alertas",
+    desc: "Reconhecer e priorizar",
+    accent: "text-[color:var(--info)] bg-[color:var(--info)]/12",
+  },
+  {
+    icon: Database,
+    to: "/dados",
+    label: "Dados",
+    desc: "Importação, qualidade e linhagem",
+    accent: "text-[color:var(--success)] bg-[color:var(--success)]/12",
+  },
+];
+
+const DICAS_ORBI: { icon: LucideIcon; label: string; desc: string }[] = [
+  {
+    icon: Zap,
+    label: "Seja específico",
+    desc: "Inclua período, produto ou grupo pra respostas mais precisas.",
+  },
+  {
+    icon: Database,
+    label: "Use o contexto",
+    desc: "Em cada tela, a Orbi flutuante já parte dos dados daquela página.",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Valide informações",
+    desc: "As respostas se baseiam nos dados reais — confira o que for crítico.",
+  },
+];
 
 const QUICK_QS_POR_PERFIL: Record<string, string[]> = {
   gestor: [
@@ -64,6 +206,7 @@ function AssistentePage() {
 }
 
 function AssistenteConversa({ perfil }: { perfil: string | null }) {
+  const navigate = useNavigate();
   const incidentes = useIncidentes();
   const riscos = useRiscos();
   const alertas = useAlertas();
@@ -77,6 +220,7 @@ function AssistenteConversa({ perfil }: { perfil: string | null }) {
   }, []);
 
   const quickQs = QUICK_QS_POR_PERFIL[perfil ?? "admin"] ?? QUICK_QS_POR_PERFIL.admin;
+  const navContexto = NAV_CONTEXTO.filter((item) => rotaPermitida(rotasPermitidas, item.to));
 
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -133,40 +277,154 @@ function AssistenteConversa({ perfil }: { perfil: string | null }) {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-5 p-0 lg:grid-cols-[1fr_280px]">
-      <div className="space-y-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Bot className="h-3.5 w-3.5" /> Assistente Data Galaxy
+    <div className="mx-auto max-w-6xl space-y-8 p-0">
+      {/* Hero — mascote, identidade e chips de destaque */}
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+        <div
+          className="h-32 w-32 shrink-0 overflow-hidden rounded-2xl border border-[color:var(--border-brand)] sm:h-40 sm:w-40"
+          style={{ boxShadow: "0 0 60px var(--brand-orange-glow)" }}
+        >
+          <img
+            src="/orbi-mascote.png"
+            alt="Mascote da Orbi"
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="min-w-0 flex-1 pt-1">
+          <span className="mb-2 inline-block rounded-full border border-[color:var(--border-strong)] bg-[color:var(--brand-orange-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+            Beta
+          </span>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Orbi</h1>
+          <div className="mt-0.5 text-sm font-medium text-muted-foreground">
+            Assistente Data Galaxy
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Orbi</h1>
-          <p className="text-sm text-muted-foreground">
-            Pergunte sobre incidentes, riscos de OLA, alertas e previsões — as respostas vêm só dos
-            dados carregados nesta base.
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Pergunte sobre incidentes, riscos de OLA, alertas e previsões — as respostas vêm dos
+            dados reais carregados nesta base.
           </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {CHIPS_DESTAQUE.map((c) => (
+              <span
+                key={c.label}
+                className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-foreground"
+              >
+                <c.icon className="h-3.5 w-3.5 text-primary" /> {c.label}
+              </span>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <div className="flex flex-wrap gap-2">
-          {quickQs.map((q) => (
-            <button
-              key={q}
-              onClick={() => enviar(q)}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted"
-            >
-              {q}
-            </button>
-          ))}
+      {msgs.length === 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-semibold text-foreground">Como posso te ajudar hoje?</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {ACOES_DESTAQUE.map((a) => (
+              <button
+                key={a.label}
+                onClick={() => enviar(a.prompt)}
+                className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-[color:var(--border-strong)] hover:bg-muted/40"
+              >
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${a.accent}`}
+                >
+                  <a.icon className="h-4.5 w-4.5" />
+                </div>
+                <div className="flex items-center justify-between gap-2 text-sm font-medium text-foreground">
+                  {a.label}
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">{a.desc}</p>
+              </button>
+            ))}
+          </div>
         </div>
+      )}
 
+      {/* Campo de pergunta — fica na mesma posição sempre, com ou sem conversa em andamento */}
+      <div>
+        <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border-strong)] bg-card p-2 shadow-sm">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") enviar();
+            }}
+            placeholder="Pergunte algo para o Orbi..."
+            className="flex-1 border-0 shadow-none focus-visible:ring-0"
+          />
+          <Button onClick={() => enviar()} size="sm" className="gap-1.5">
+            <Send className="h-3.5 w-3.5" /> Enviar
+          </Button>
+        </div>
+        <div className="mt-2 flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
+          <AlertTriangle className="h-3 w-3 shrink-0" /> O Orbi pode cometer erros. Sempre confira
+          as informações importantes.
+        </div>
+      </div>
+
+      {msgs.length === 0 ? (
+        <div className="grid gap-4 lg:grid-cols-3">
+          <PainelInfo icon={MessageSquare} titulo="Exemplos de perguntas">
+            <div className="space-y-0.5">
+              {quickQs.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => enviar(q)}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-xs text-foreground/90 hover:bg-muted"
+                >
+                  {q}
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+          </PainelInfo>
+
+          <PainelInfo icon={GitCompare} titulo="Navegue por contexto">
+            <p className="mb-2 text-[11px] text-muted-foreground">
+              A Orbi flutuante entende a tela em que você está. Acesse rapidamente:
+            </p>
+            <div className="space-y-0.5">
+              {navContexto.map((item) => (
+                <button
+                  key={item.to}
+                  onClick={() => navigate({ to: item.to })}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-muted"
+                >
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] ${item.accent}`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium text-foreground">{item.label}</div>
+                    <div className="truncate text-[11px] text-muted-foreground">{item.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </PainelInfo>
+
+          <PainelInfo icon={Lightbulb} titulo="Dicas do Orbi">
+            <div className="space-y-3">
+              {DICAS_ORBI.map((d) => (
+                <div key={d.label} className="flex gap-2.5">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-primary/10 text-primary">
+                    <d.icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-foreground">{d.label}</div>
+                    <div className="text-[11px] leading-relaxed text-muted-foreground">
+                      {d.desc}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </PainelInfo>
+        </div>
+      ) : (
         <div className="space-y-4">
-          {msgs.length === 0 && (
-            <Card className="border-dashed">
-              <CardContent className="p-5 text-sm text-muted-foreground">
-                Faça uma pergunta ou use uma sugestão acima. Toda resposta é calculada em tempo real
-                sobre os incidentes, riscos, alertas, ações e previsões desta base.
-              </CardContent>
-            </Card>
-          )}
           {msgs.map((m, i) =>
             m.role === "user" ? (
               <div key={i} className="flex justify-end">
@@ -181,53 +439,27 @@ function AssistenteConversa({ perfil }: { perfil: string | null }) {
           {isThinking && <ThinkingBubble />}
           <div ref={endRef} />
         </div>
-
-        <div className="sticky bottom-3 mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-sm">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") enviar();
-            }}
-            placeholder="Pergunte sobre riscos, OLA, alertas ou previsões..."
-            className="flex-1 border-0 shadow-none focus-visible:ring-0"
-          />
-          <Button onClick={() => enviar()} size="sm" className="gap-1.5">
-            <Send className="h-3.5 w-3.5" /> Enviar
-          </Button>
-        </div>
-      </div>
-
-      <aside className="space-y-3">
-        <Card>
-          <CardContent className="space-y-2 p-4 text-sm">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-              <Sparkles className="h-3 w-3" /> Como funciona
-            </div>
-            {iaDisponivel ? (
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                As respostas vêm do Claude (Anthropic), com os dados operacionais em tempo real e os
-                artigos relevantes da Base de Conhecimento passados como contexto — o modelo é
-                instruído a nunca afirmar um número ou uma causa que não esteja nesse contexto.
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                O assistente não usa um modelo de linguagem externo: ele interpreta a pergunta e
-                calcula a resposta direto sobre os dados desta base (incidentes, riscos, alertas,
-                ações e previsões). Se a pergunta não puder ser respondida com esses dados, ele diz
-                isso em vez de inventar.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-[color:var(--warning)]/35 bg-[color:var(--warning)]/5">
-          <CardContent className="p-3 text-[11px] text-muted-foreground">
-            <AlertTriangle className="mb-1 h-3 w-3 text-[color:var(--warning)]" /> Apoio à decisão —
-            não substitui a análise do time operacional.
-          </CardContent>
-        </Card>
-      </aside>
+      )}
     </div>
+  );
+}
+
+function PainelInfo({
+  icon: Icon,
+  titulo,
+  children,
+}: {
+  icon: LucideIcon;
+  titulo: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card className="p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon className="h-4 w-4 text-primary" /> {titulo}
+      </div>
+      {children}
+    </Card>
   );
 }
 
