@@ -37,7 +37,10 @@ function VisualPrevisao() {
         fill="var(--brand-orange)"
         opacity="0.1"
       />
-      <path d="M0 60 L24 54 L48 62 L72 46 L96 52 L120 40 L120 84 L0 84 Z" fill={`url(#${fillId})`} />
+      <path
+        d="M0 60 L24 54 L48 62 L72 46 L96 52 L120 40 L120 84 L0 84 Z"
+        fill={`url(#${fillId})`}
+      />
       <path
         d="M0 60 L24 54 L48 62 L72 46 L96 52 L120 40"
         fill="none"

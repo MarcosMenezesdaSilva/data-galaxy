@@ -26,10 +26,19 @@ type ArtigoContexto = {
   solucao: string;
 };
 
+type TelaContexto = {
+  nome: string;
+  descricao: string;
+};
+
 type PedidoIA = {
   pergunta?: string;
   fatos?: string;
   artigos?: ArtigoContexto[];
+  // Presente só nas chamadas do agente flutuante "Órbita IA" (um por tela) —
+  // ausente aqui significa a chamada do Assistente geral (tela /assistente),
+  // que mantém a persona original.
+  tela?: TelaContexto;
 };
 
 type RespostaIA = { ok: true; resposta: string } | { ok: false; motivo: string; detalhe?: string };
@@ -41,9 +50,7 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-const SYSTEM_PROMPT = `Você é o Assistente do Data Galaxy, uma plataforma de AIOps preditivo para incidentes e OLA da Locaweb (Challenge FIAP x Locaweb).
-
-Regras rígidas:
+const REGRAS_COMUNS = `Regras rígidas:
 - Responda SOMENTE com base nos FATOS (dados operacionais em tempo real) e nos ARTIGOS (Base de Conhecimento) fornecidos na mensagem do usuário. Nunca invente números, nomes de grupo/produto, causas raiz ou recomendações que não estejam explicitamente ali.
 - Se a pergunta não puder ser respondida com o que foi fornecido, diga isso em UMA frase clara e pare por aí — não compense citando outros FATOS que não foram perguntados.
 - Se um ARTIGO for usado na resposta, cite o título dele entre aspas.
@@ -51,6 +58,17 @@ Regras rígidas:
 - Máximo 3 frases no total. Direto ao ponto, sem rodeios nem ressalvas longas.
 - Responda em português do Brasil, sem markdown (não use asteriscos, listas ou títulos).
 - Você é uma camada de apoio à decisão — não afirme certezas absolutas sobre o futuro, fale em termos de risco e probabilidade quando for o caso.`;
+
+// Sem `tela`: persona original do Assistente geral (tela /assistente). Com
+// `tela`: persona da Órbita IA, o agente flutuante que aparece em cima de
+// cada tela do painel — mesmo motor e mesmas regras de grounding, só muda a
+// apresentação e o escopo preferencial de resposta.
+function montarSystemPrompt(tela?: TelaContexto): string {
+  const intro = tela
+    ? `Você é a Órbita IA, a assistente de IA do Data Galaxy (plataforma de AIOps preditivo para incidentes e OLA da Locaweb, Challenge FIAP x Locaweb) que aparece flutuando sobre cada tela do painel para tirar dúvidas sobre ela. Agora você está sobre a tela "${tela.nome}": ${tela.descricao} Priorize responder sobre o que essa tela mostra; se a pergunta for sobre outro assunto do produto, responda normalmente com os FATOS fornecidos, sem recusar.`
+    : `Você é o Assistente do Data Galaxy, uma plataforma de AIOps preditivo para incidentes e OLA da Locaweb (Challenge FIAP x Locaweb).`;
+  return `${intro}\n\n${REGRAS_COMUNS}`;
+}
 
 function montarMensagem(pergunta: string, fatos: string, artigos: ArtigoContexto[]): string {
   const blocoArtigos = artigos.length
@@ -88,6 +106,7 @@ export default async (req: Request): Promise<Response> => {
   const pergunta = body.pergunta?.trim();
   const fatos = body.fatos?.trim() || "Nenhum dado disponível.";
   const artigos = body.artigos ?? [];
+  const tela = body.tela;
 
   if (!apiKey) {
     return jsonResponse({ ok: false, motivo: "nao_configurado" } satisfies RespostaIA);
@@ -110,7 +129,7 @@ export default async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         model,
         max_tokens: 400,
-        system: SYSTEM_PROMPT,
+        system: montarSystemPrompt(tela),
         messages: [{ role: "user", content: montarMensagem(pergunta, fatos, artigos) }],
       }),
     });

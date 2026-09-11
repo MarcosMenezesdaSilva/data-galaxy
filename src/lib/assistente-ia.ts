@@ -27,6 +27,9 @@ export async function perguntarIA(
   pergunta: string,
   dados: DadosAssistente,
   artigos: Artigo[],
+  // Só passado pela Órbita IA (o agente flutuante de cada tela) — ausente
+  // aqui mantém a persona original do Assistente geral.
+  tela?: { nome: string; descricao: string },
 ): Promise<RespostaIA> {
   const fatos = montarResumoDados(dados);
   const relevantes = buscarArtigosRelevantes(pergunta, artigos);
@@ -45,6 +48,7 @@ export async function perguntarIA(
           causa_raiz: a.causa_raiz,
           solucao: a.solucao,
         })),
+        tela,
       }),
     });
     const dadosResp = (await resp.json()) as
