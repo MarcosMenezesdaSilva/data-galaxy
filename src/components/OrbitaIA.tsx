@@ -76,27 +76,18 @@ export function OrbitaIA() {
   );
 }
 
-// Núcleo + um único ponto orbitando — versão compacta do visual da landing
-// (GalaxyVisual), reaproveitando os mesmos tokens de cor e a keyframe
-// `dg-orbit` já definida globalmente em styles.css.
+// Mascote oficial da Orbi, recortado do banner original (mascote + logotipo)
+// e enquadrado como avatar circular. Fica em public/ (não em src/) porque é
+// servido como está, sem passar pelo bundler — mesmo padrão do favicon.
 function OrbitaIcon({ size = 28 }: { size?: number }) {
   return (
-    <svg viewBox="0 0 40 40" style={{ width: size, height: size }} aria-hidden="true">
-      <circle
-        cx="20"
-        cy="20"
-        r="14"
-        fill="none"
-        stroke="var(--border-strong)"
-        strokeWidth="1"
-        strokeDasharray="2 4"
-      />
-      <g style={{ animation: "dg-orbit 6s linear infinite", transformOrigin: "20px 20px" }}>
-        <circle cx="34" cy="20" r="2.5" fill="var(--brand-orange)" />
-      </g>
-      <circle cx="20" cy="20" r="7" fill="var(--brand-orange)" />
-      <circle cx="20" cy="20" r="2.5" fill="#ffffff" opacity="0.92" />
-    </svg>
+    <img
+      src="/orbi-mascote.png"
+      alt=""
+      aria-hidden="true"
+      className="rounded-full object-cover"
+      style={{ width: size, height: size }}
+    />
   );
 }
 
@@ -203,9 +194,7 @@ function OrbitaPainel({
         {msgs.length === 0 ? (
           <>
             <div className="flex gap-3 rounded-2xl border border-border bg-background/60 p-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12">
-                <OrbitaIcon size={22} />
-              </div>
+              <OrbitaIcon size={36} />
               <p className="text-xs leading-relaxed text-foreground/90">
                 {primeiroNome ? `Olá, ${primeiroNome}! ` : "Olá! "}
                 {tela
