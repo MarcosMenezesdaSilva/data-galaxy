@@ -9,8 +9,8 @@ import type { Perfil } from "./store";
  * outros dois perfis). Gestora de Operações fica só com a visão executiva
  * essencial: dashboard, previsão (capacidade de antecipação), riscos e
  * alertas. Operações/Técnico fica com a fila de trabalho do dia a dia:
- * dashboard, incidentes, riscos, alertas e ações corretivas, mais dados (é
- * quem importa/mantém a base).
+ * dashboard, incidentes, riscos, alertas e ações corretivas — Dados saiu do
+ * menu dele a pedido do time (fica só com o Admin).
  *
  * Usuários criados pelo Admin (ver src/lib/usuarios.ts) não entram aqui —
  * a lista de rotas deles fica salva por usuário no IndexedDB (tabela
@@ -19,15 +19,7 @@ import type { Perfil } from "./store";
 export const ROTAS_POR_PERFIL: Record<Perfil, string[] | "todas"> = {
   admin: "todas",
   gestor: ["/dashboard", "/assistente", "/previsoes", "/riscos-ola", "/alertas"],
-  tecnico: [
-    "/dashboard",
-    "/assistente",
-    "/incidentes",
-    "/riscos-ola",
-    "/alertas",
-    "/correcoes",
-    "/dados",
-  ],
+  tecnico: ["/dashboard", "/assistente", "/incidentes", "/riscos-ola", "/alertas", "/correcoes"],
 };
 
 /**
