@@ -21,11 +21,11 @@ import {
 import {
   axisProps,
   brushProps,
-  chartCategorical,
   chartColors,
   gridProps,
   labelListProps,
   legendProps,
+  prioridadeColors,
   tooltipProps,
 } from "@/lib/chart-theme";
 
@@ -48,10 +48,6 @@ export interface DashboardExecutivoProps {
   porPrio: { name: string; value: number }[];
   serieVolumeSeasonalNaive: { data: string; real: number; previsto: number }[];
 }
-
-// Prioridades em rampa do sistema: P1 no laranja da marca e o resto recuando
-// para neutros — a hierarquia se lê antes da legenda.
-const PIE_COLORS = chartCategorical;
 
 export function DashboardExecutivo({
   prev1,
@@ -214,8 +210,8 @@ export function DashboardExecutivo({
                   }
                   labelLine={false}
                 >
-                  {porPrio.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  {porPrio.map((p) => (
+                    <Cell key={p.name} fill={prioridadeColors[p.name] ?? chartColors.neutro} />
                   ))}
                 </Pie>
                 <Legend {...legendProps} />
@@ -248,7 +244,7 @@ export function DashboardExecutivo({
                 <XAxis type="number" {...axisProps} />
                 <YAxis type="category" dataKey="grupo" {...axisProps} width={130} />
                 <Tooltip {...tooltipProps} />
-                <Bar dataKey="total" fill={chartColors.destaqueSecundario} radius={[0, 6, 6, 0]}>
+                <Bar dataKey="total" fill={chartColors.destaque} radius={[0, 6, 6, 0]}>
                   <LabelList dataKey="total" position="right" {...labelListProps} />
                 </Bar>
               </BarChart>

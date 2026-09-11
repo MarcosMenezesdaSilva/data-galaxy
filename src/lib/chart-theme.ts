@@ -43,6 +43,22 @@ export const chartCategorical = [
   "var(--chart-6)",
 ] as const;
 
+/**
+ * Cor por prioridade de incidente (P1–P5) — degradê de severidade usando os
+ * tokens semânticos que já existem no DS (crítico → laranja da marca →
+ * neutro), em vez da rampa categórica genérica. P1 sendo a prioridade mais
+ * urgente lê como vermelho por convenção de ITSM; P5 recua pro neutro.
+ * Evita o gráfico de Prioridades saindo majoritariamente cinza — cada fatia
+ * agora carrega sua própria identidade visual.
+ */
+export const prioridadeColors: Record<string, string> = {
+  P1: "var(--critical)",
+  P2: "var(--warning)",
+  P3: "var(--chart-1)",
+  P4: "var(--info)",
+  P5: "var(--chart-4)",
+};
+
 /** Eixos: label discreto, sem linha de eixo competindo com o dado. */
 export const axisProps = {
   stroke: chartColors.label,
