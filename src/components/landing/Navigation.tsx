@@ -18,7 +18,7 @@ export function Navigation() {
     <header className="sticky top-0 z-50 border-b border-[color:var(--border-subtle)] bg-background/80 backdrop-blur-xl">
       <nav
         aria-label="Navegação principal"
-        className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 md:px-10"
+        className="mx-auto flex max-w-6xl h-[70px] items-center justify-between gap-6 px-6 md:px-10"
       >
         <BrandWordmark />
 
