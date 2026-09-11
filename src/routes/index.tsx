@@ -1,165 +1,116 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
-import type { CSSProperties } from "react";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+
 import { useApp } from "@/lib/store";
-import { BrandMark, BrandWordmark, Eyebrow } from "@/components/Brand";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  ArrowRight,
-  LineChart,
-  Shield,
-  Wrench,
-  CheckCircle2,
-  Info,
-  AlertTriangle,
-} from "lucide-react";
+import { BrandMark } from "@/components/Brand";
+import { Navigation } from "@/components/landing/Navigation";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { IntroductionSection } from "@/components/landing/IntroductionSection";
+import { CapabilitiesSection } from "@/components/landing/CapabilitiesSection";
+import { DevStackSection } from "@/components/landing/DevStackSection";
+
+const TITULO = "Data Galaxy — AIOps preditivo para incidentes e OLA";
+const DESCRICAO =
+  "Prevê o volume de incidentes em D+1 e D+7, calcula o risco de violação de OLA antes que ele aconteça e comprova com dados se cada correção foi efetiva.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Data Galaxy — AIOps preditivo para incidentes e OLA" }] }),
+  head: () => ({
+    meta: [
+      { title: TITULO },
+      { name: "description", content: DESCRICAO },
+      { property: "og:title", content: TITULO },
+      { property: "og:description", content: DESCRICAO },
+      { name: "twitter:title", content: TITULO },
+      { name: "twitter:description", content: DESCRICAO },
+    ],
+  }),
   component: Index,
 });
 
+/**
+ * Números da análise exploratória. São a credibilidade concreta da página —
+ * tudo o mais descreve capacidade, isto é medição — então ficam logo abaixo do
+ * hero, como faixa e não como grid, para não competir com o bento adiante.
+ */
 const INDICADORES = [
   { valor: "122.554", label: "Registros na carga final da base tratada" },
-  { valor: "94,8%", label: "Das aberturas ocorreram por monitoramento automático" },
-  { valor: "~76%", label: "Dos incidentes concentrados entre set-dez/2025" },
-  { valor: "248", label: "Violações de OLA identificadas na análise exploratória" },
+  { valor: "94,8%", label: "Das aberturas por monitoramento automático" },
+  { valor: "~76%", label: "Dos incidentes entre set e dez/2025" },
+  { valor: "248", label: "Violações de OLA identificadas" },
 ];
 
-const CAPACIDADES = [
-  { icon: LineChart, label: "Previsão D+1 e D+7", desc: "Modelos AutoETS e Seasonal Naive" },
-  { icon: Shield, label: "Risco de violação de OLA", desc: "Fatores explicáveis, sem caixa-preta" },
-  { icon: Wrench, label: "Ações corretivas", desc: "Registro e acompanhamento de tratativas" },
-  {
-    icon: CheckCircle2,
-    label: "Validação de efetividade",
-    desc: "Comprova se a correção funcionou",
-  },
-];
+function ProofStrip() {
+  return (
+    <section
+      aria-label="Indicadores da análise exploratória"
+      className="border-t border-[color:var(--border-subtle)]"
+    >
+      <div className="mx-auto max-w-6xl px-6 py-14 md:px-10">
+        <div className="dg-stagger grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {INDICADORES.map((ind) => (
+            <div key={ind.label} className="flex flex-col gap-2">
+              <span className="dg-mono t-h2 text-primary">{ind.valor}</span>
+              <span className="t-body-sm text-pretty text-muted-foreground">{ind.label}</span>
+            </div>
+          ))}
+        </div>
 
-const atraso = (ms: number) => ({ "--dg-delay": `${ms}ms` }) as CSSProperties;
+        <p className="t-micro mt-10 uppercase text-muted-foreground">
+          Análise exploratória da base tratada de incidentes
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-[color:var(--border-subtle)]">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:px-10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <span className="inline-flex items-center gap-2.5">
+            <BrandMark size={20} />
+            <span className="t-micro uppercase text-muted-foreground">Data Galaxy by Locaweb</span>
+          </span>
+          <span className="t-micro uppercase text-muted-foreground">
+            Challenge Locaweb 2026 · FIAP · Grupo NexusOps
+          </span>
+        </div>
+
+        {/* Ressalva acadêmica: permanece na página, em peso menor. Apresentar
+            base sintética como operação real seria overclaim. A discrição vem
+            do tamanho e da cor — baixar a opacidade levaria o texto a 2,8:1 no
+            tema claro, reprovando AA. */}
+        <p className="t-body-sm max-w-3xl text-pretty text-muted-foreground">
+          MVP acadêmico executado 100% no navegador, sem backend de aplicação. Inicia em modo
+          demonstração com dados sintéticos e permite importar a base real tratada de incidentes. Os
+          indicadores acima vêm da análise exploratória dessa base e não representam SLAs
+          contratuais.
+        </p>
+      </div>
+    </footer>
+  );
+}
 
 function Index() {
   const perfil = useApp((s) => s.perfil);
-  const navigate = useNavigate();
 
-  // Usuário com sessão demonstrativa ativa: pula a landing e vai direto ao produto.
+  // Sessão demonstrativa ativa: pula a landing e vai direto ao produto.
   if (perfil) return <Navigate to="/dashboard" />;
 
   return (
     <div className="min-h-screen w-full bg-background">
-      <header className="flex items-center justify-between px-6 py-6 md:px-12">
-        <BrandWordmark />
-        <Button size="sm" onClick={() => navigate({ to: "/login" })}>
-          Entrar <ArrowRight className="ml-1 h-4 w-4" />
-        </Button>
-      </header>
+      <Navigation />
 
-      <main className="px-6 md:px-12">
-        {/* Hero — o símbolo abre a página com a sequência da rede */}
-        <section className="relative mx-auto max-w-4xl py-24 text-center md:py-32">
-          <div
-            aria-hidden="true"
-            className="dg-breathe pointer-events-none absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/3 rounded-pill"
-            style={{
-              background: "radial-gradient(circle, var(--brand-orange-glow), transparent 62%)",
-              opacity: 0.55,
-            }}
-          />
-
-          <div className="relative flex flex-col items-center gap-8">
-            <BrandMark size={72} animated glow />
-
-            <Eyebrow className="dg-enter" style={atraso(60)}>
-              Challenge Locaweb × FIAP · NexusOps
-            </Eyebrow>
-
-            <h1 className="t-display-lg dg-enter text-foreground" style={atraso(140)}>
-              De incidentes <span className="text-muted-foreground">reativos</span>
-              <br />a operações <span className="text-primary">preditivas</span>.
-            </h1>
-
-            <p
-              className="t-body-lg dg-enter mx-auto max-w-2xl text-muted-foreground"
-              style={atraso(220)}
-            >
-              Data Galaxy antecipa picos de incidentes, calcula o risco de violação de OLA/SLA antes
-              que ele aconteça e comprova, com dados, se cada correção aplicada foi realmente
-              efetiva — tudo rodando localmente no seu navegador.
-            </p>
-
-            <div className="dg-enter" style={atraso(300)}>
-              <Button size="lg" onClick={() => navigate({ to: "/login" })}>
-                Acessar plataforma <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Indicadores da EDA */}
-        <section className="mx-auto max-w-5xl pb-24">
-          <TooltipProvider delayDuration={150}>
-            <div className="dg-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {INDICADORES.map((ind) => (
-                <Card key={ind.label} brand interactive className="space-y-4 p-6">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="dg-mono t-h2 text-primary">{ind.valor}</div>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="t-micro inline-flex cursor-help items-center gap-1 rounded-pill border border-[color:var(--border-default)] px-2 py-0.5 uppercase text-muted-foreground">
-                          <Info className="h-3 w-3" /> EDA
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs text-xs">
-                        Indicador da análise exploratória — calculado sobre a base tratada de
-                        incidentes durante a fase de EDA do projeto.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <p className="text-xs leading-relaxed text-muted-foreground">{ind.label}</p>
-                </Card>
-              ))}
-            </div>
-          </TooltipProvider>
-        </section>
-
-        {/* Capacidades */}
-        <section className="mx-auto max-w-5xl pb-24">
-          <div className="dg-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CAPACIDADES.map((f) => (
-              <Card key={f.label} lit interactive className="p-6">
-                <f.icon className="h-5 w-5 text-primary" />
-                <div className="mt-6 text-sm font-medium text-foreground">{f.label}</div>
-                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{f.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Ressalva acadêmica */}
-        <section className="mx-auto max-w-3xl pb-24">
-          <Card className="flex items-start gap-4 bg-transparent p-6 shadow-none">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--warning)]" />
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Este é um MVP acadêmico executado 100% no navegador (IndexedDB local, sem backend).
-              Ele inicia em modo demonstração com dados sintéticos e permite importar a base real
-              tratada de incidentes para análise. Os valores acima refletem a análise exploratória
-              da base tratada e não representam SLAs contratuais.
-            </p>
-          </Card>
-        </section>
+      {/* Impacto → entendimento → capacidade → credibilidade técnica. */}
+      <main>
+        <HeroSection />
+        <ProofStrip />
+        <IntroductionSection />
+        <CapabilitiesSection />
+        <DevStackSection />
       </main>
 
-      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--border-subtle)] px-6 py-8 md:px-12">
-        <span className="inline-flex items-center gap-2.5">
-          <BrandMark size={20} />
-          <span className="t-micro uppercase text-muted-foreground">Data Galaxy by Locaweb</span>
-        </span>
-        <span className="t-micro uppercase text-muted-foreground">
-          Challenge Locaweb 2026 · FIAP · Grupo NexusOps
-        </span>
-      </footer>
+      <Footer />
     </div>
   );
 }
