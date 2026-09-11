@@ -25,8 +25,8 @@ const CAMADAS: Camada[] = [
     papel: "A base vive no navegador; o Databricks entra quando há credencial.",
     itens: [
       "IndexedDB via Dexie",
-      "PapaParse — CSV/TXT",
-      "SheetJS — Excel",
+      "PapaParse para CSV e TXT",
+      "SheetJS para Excel",
       "Databricks SQL Warehouse",
       "Snapshot versionado em JSON",
     ],
@@ -40,7 +40,7 @@ const CAMADAS: Camada[] = [
       "Agrupamento de recorrências",
       "Claude (claude-sonnet-5)",
       "RAG na Base de Conhecimento",
-      "Motor de regras local — fallback sem IA",
+      "Motor de regras local, fallback sem IA",
     ],
   },
   {

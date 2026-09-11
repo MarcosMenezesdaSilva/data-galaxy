@@ -8,7 +8,7 @@ import { IntroductionSection } from "@/components/landing/IntroductionSection";
 import { CapabilitiesSection } from "@/components/landing/CapabilitiesSection";
 import { DevStackSection } from "@/components/landing/DevStackSection";
 
-const TITULO = "Data Galaxy — AIOps preditivo para incidentes e OLA";
+const TITULO = "Data Galaxy: AIOps preditivo para incidentes e OLA";
 const DESCRICAO =
   "Prevê o volume de incidentes em D+1 e D+7, calcula o risco de violação de OLA antes que ele aconteça e comprova com dados se cada correção foi efetiva.";
 
