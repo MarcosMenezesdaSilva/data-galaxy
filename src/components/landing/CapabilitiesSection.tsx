@@ -321,8 +321,7 @@ export function CapabilitiesSection() {
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-14 px-6 py-24 md:px-10 md:py-32">
         <SectionHeader
-          eyebrow="Capabilities"
-          title="What we provide"
+          title="O que oferecemos"
           description="Cinco capacidades que cobrem o ciclo da operação, da antecipação do volume até a prova de que a correção funcionou."
         />
 

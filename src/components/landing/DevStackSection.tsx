@@ -105,7 +105,6 @@ export function DevStackSection() {
     <section id="dev-stack" className="scroll-mt-24 border-t border-[color:var(--border-subtle)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-14 px-6 py-24 md:px-10 md:py-32">
         <SectionHeader
-          eyebrow="Architecture"
           title="Dev Stack"
           description="O produto inteiro roda no navegador do operador: a base fica em IndexedDB e cada integração externa passa por uma função serverless, sem servidor de aplicação no meio."
         />

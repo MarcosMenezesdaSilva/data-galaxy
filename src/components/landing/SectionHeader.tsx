@@ -17,7 +17,9 @@ export function SectionHeader({
   align = "center",
   className,
 }: {
-  eyebrow: string;
+  /** Opcional: o título já contextualiza a seção, e a pill acrescentava um
+      degrau de hierarquia sem informação. */
+  eyebrow?: string;
   title: string;
   description?: ReactNode;
   align?: "center" | "start";
@@ -33,9 +35,9 @@ export function SectionHeader({
         className,
       )}
     >
-      <Eyebrow>{eyebrow}</Eyebrow>
+      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
 
-      <h2 className="t-h1 text-balance text-foreground">{title}</h2>
+      <h2 className="t-display-lg text-balance text-foreground">{title}</h2>
 
       {description && (
         <p
