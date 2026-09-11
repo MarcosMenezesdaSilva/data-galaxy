@@ -8,17 +8,18 @@ export interface KPICardProps {
   hint?: string;
   trend?: { value: number; label?: string };
   icon?: ReactNode;
-  accent?: "brand" | "info" | "success" | "warning" | "critical" | "orange";
+  accent?: "brand" | "info" | "success" | "warning" | "critical" | "orange" | "violet";
   className?: string;
 }
 
 const accents: Record<NonNullable<KPICardProps["accent"]>, string> = {
-  brand: "text-primary",
-  info: "text-[color:var(--info)]",
-  success: "text-[color:var(--success)]",
-  warning: "text-[color:var(--warning)]",
-  critical: "text-[color:var(--critical)]",
-  orange: "text-[color:var(--accent-orange)]",
+  brand: "text-primary bg-primary/12",
+  info: "text-[color:var(--info)] bg-[color:var(--info)]/12",
+  success: "text-[color:var(--success)] bg-[color:var(--success)]/12",
+  warning: "text-[color:var(--warning)] bg-[color:var(--warning)]/12",
+  critical: "text-[color:var(--critical)] bg-[color:var(--critical)]/12",
+  orange: "text-[color:var(--accent-orange)] bg-[color:var(--accent-orange)]/12",
+  violet: "text-[color:var(--violet)] bg-[color:var(--violet)]/12",
 };
 
 /**
@@ -39,7 +40,16 @@ export function KPICard({
     <Card lit interactive className={cn("flex flex-col gap-3 p-6", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="t-micro uppercase text-muted-foreground">{label}</div>
-        {icon && <div className={cn("shrink-0", accents[accent])}>{icon}</div>}
+        {icon && (
+          <div
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]",
+              accents[accent],
+            )}
+          >
+            {icon}
+          </div>
+        )}
       </div>
       <div className="dg-mono t-h3 text-foreground">{value}</div>
       {(hint || trend) && (
