@@ -43,7 +43,7 @@ const QUICK_QS_POR_PERFIL: Record<string, string[]> = {
     "Quais riscos críticos estão ativos?",
     "Qual grupo está mais sobrecarregado?",
     "Tem alerta pendente?",
-    "O que tem na tela de Dados?",
+    "As correções estão sendo efetivas?",
   ],
   admin: [
     "O que preciso saber agora?",

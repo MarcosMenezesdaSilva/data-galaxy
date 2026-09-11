@@ -27,9 +27,33 @@ export async function perguntarIA(
   pergunta: string,
   dados: DadosAssistente,
   artigos: Artigo[],
+  // Só passado pela Orbi (o agente flutuante de cada tela) — ausente
+  // aqui mantém a persona original do Assistente geral.
+  tela?: { nome: string; descricao: string },
 ): Promise<RespostaIA> {
   const fatos = montarResumoDados(dados);
   const relevantes = buscarArtigosRelevantes(pergunta, artigos);
+
+  // O artigo "Tela: X" da tela atual entra sempre, mesmo que a busca lexical
+  // não bata com as palavras da pergunta (ex.: "e o histórico?" não cita
+  // "Previsões") — sem isso a Orbi fica sem grounding pra explicar a
+  // própria tela em perguntas curtas/indiretas.
+  const artigoDaTela = tela ? artigos.find((a) => a.titulo === `Tela: ${tela.nome}`) : undefined;
+  const jaIncluido = artigoDaTela && relevantes.some((a) => a.titulo === artigoDaTela.titulo);
+  const listaFinal =
+    artigoDaTela && !jaIncluido
+      ? [
+          {
+            titulo: artigoDaTela.titulo,
+            categoria: artigoDaTela.categoria,
+            produto: artigoDaTela.produto,
+            causa_raiz: artigoDaTela.causa_raiz,
+            solucao: artigoDaTela.solucao,
+            pontuacao: 0,
+          },
+          ...relevantes,
+        ]
+      : relevantes;
 
   try {
     const resp = await fetch("/api/assistente-ia", {
@@ -38,13 +62,14 @@ export async function perguntarIA(
       body: JSON.stringify({
         pergunta,
         fatos,
-        artigos: relevantes.map((a) => ({
+        artigos: listaFinal.map((a) => ({
           titulo: a.titulo,
           categoria: a.categoria,
           produto: a.produto,
           causa_raiz: a.causa_raiz,
           solucao: a.solucao,
         })),
+        tela,
       }),
     });
     const dadosResp = (await resp.json()) as
@@ -54,7 +79,7 @@ export async function perguntarIA(
     return {
       ok: true,
       resposta: dadosResp.resposta,
-      artigosUsados: relevantes.map((a) => a.titulo),
+      artigosUsados: listaFinal.map((a) => a.titulo),
     };
   } catch {
     return { ok: false, motivo: "erro_rede", detalhe: "Não foi possível contatar a function." };

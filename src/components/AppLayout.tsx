@@ -19,6 +19,7 @@ import { ModoBadge } from "@/components/Badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
+import { OrbitaIA } from "@/components/OrbitaIA";
 import { adminAutenticadoNestaSessao } from "@/lib/admin-auth";
 import {
   DropdownMenu,
@@ -341,6 +342,7 @@ export function AppLayout() {
         onOpenChange={setPedirSenhaAdmin}
         onSucesso={() => setPerfil("admin")}
       />
+      {seeded && <OrbitaIA />}
     </TooltipProvider>
   );
 }

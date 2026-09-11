@@ -416,7 +416,7 @@ export function responder(
             ? `São ${fmtNumber(efetivas)} ação(ões) efetiva(s) em ${fmtNumber(definidas.length)} avaliada(s) até agora.`
             : undefined,
         recomendacao:
-          "Veja Validação de Correções para o detalhe por janela (7/15/30 dias) e reincidências.",
+          "Veja Correções → aba Validação de Efetividade para o detalhe por janela (7/15/30 dias) e reincidências.",
         numeros: [
           { label: "Ações avaliadas", valor: fmtNumber(definidas.length) },
           { label: "Ações efetivas", valor: fmtNumber(efetivas) },

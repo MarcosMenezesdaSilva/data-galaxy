@@ -13,6 +13,7 @@ import { useApp } from "@/lib/store";
 import { PRODUTOS, GRUPOS } from "@/lib/demo-data";
 import { DashboardExecutivo } from "@/components/DashboardExecutivo";
 import { DashboardOperacional } from "@/components/DashboardOperacional";
+import { InsightAutomatico } from "@/components/InsightAutomatico";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Central de Operações — Data Galaxy" }] }),
@@ -252,6 +253,8 @@ function DashboardPage() {
           </div>
         }
       />
+
+      <InsightAutomatico riscos={riscos} incidentes={filtrados} />
 
       {perfil === "tecnico" ? (
         <DashboardOperacional
