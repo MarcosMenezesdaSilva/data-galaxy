@@ -37,7 +37,7 @@ export const TELAS: Tela[] = [
     rota: "/previsoes",
     nome: "Previsões",
     descricao:
-      "Previsão de volume de incidentes por produto nos horizontes D+1 e D+7, usando os modelos AutoETS e Seasonal Naive, com intervalo de confiança.",
+      "Previsão de volume de incidentes por produto nos horizontes D+1 e D+7, usando os modelos AutoETS e Seasonal Naive, com intervalo de confiança. Traz também o gráfico Histórico vs. Previsão, comparando o volume real registrado dia a dia com o previsto para o mesmo período, e o detalhamento da previsão diária de D+1 a D+7.",
     apelidos: ["previsões", "previsão", "d+1", "d+7", "forecast"],
   },
   {

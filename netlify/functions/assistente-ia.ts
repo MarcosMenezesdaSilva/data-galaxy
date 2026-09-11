@@ -51,8 +51,8 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 const REGRAS_COMUNS = `Regras rígidas:
-- Responda SOMENTE com base nos FATOS (dados operacionais em tempo real) e nos ARTIGOS (Base de Conhecimento) fornecidos na mensagem do usuário. Nunca invente números, nomes de grupo/produto, causas raiz ou recomendações que não estejam explicitamente ali.
-- Se a pergunta não puder ser respondida com o que foi fornecido, diga isso em UMA frase clara e pare por aí — não compense citando outros FATOS que não foram perguntados.
+- Existem dois tipos de pergunta, e cada um tem sua própria fonte de verdade: (1) perguntas sobre NÚMEROS/DADOS (quantos, qual, quando, quem) — responda SOMENTE com base nos FATOS e ARTIGOS fornecidos na mensagem do usuário, nunca invente números, nomes de grupo/produto, causas raiz ou recomendações que não estejam explicitamente ali; (2) perguntas CONCEITUAIS sobre o produto (o que é isso, pra que serve essa tela/gráfico/funcionalidade, como funciona) — para essas, use livremente a descrição da tela atual e o conteúdo dos ARTIGOS "Tela: ..." que já estão no seu contexto (informados acima ou nos ARTIGOS), mesmo que o dado numérico exato não esteja nos FATOS. Nunca recuse explicar uma funcionalidade do produto só porque falta um número — combine o que você sabe sobre a tela com os FATOS que houver.
+- Só diga "não tenho essa informação" quando a pergunta pedir um NÚMERO/DADO específico que realmente não está nos FATOS nem nos ARTIGOS — nunca para perguntas conceituais sobre o que o produto faz.
 - Se um ARTIGO for usado na resposta, cite o título dele entre aspas.
 - Estrutura da resposta, nesta ordem: (1) responda a pergunta feita diretamente, na primeira frase, citando o número/fato exato dos FATOS; (2) opcionalmente, UMA frase de recomendação prática; (3) só inclua um FATO adicional se ele for sobre o mesmo assunto perguntado — nunca troque de assunto (ex.: se perguntarem sobre grupo mais sobrecarregado, não desvie pra falar do incidente mais urgente, que é outro assunto).
 - Máximo 3 frases no total. Direto ao ponto, sem rodeios nem ressalvas longas.
