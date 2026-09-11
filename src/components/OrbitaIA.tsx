@@ -1,8 +1,10 @@
-// Órbita IA — o agente flutuante presente em cada tela do painel (exceto o
+// Orbi — o agente flutuante presente em cada tela do painel (exceto o
 // Assistente geral, onde já existe um chat inteiro). Mesmo motor de resposta
 // do Assistente (regras locais + Claude quando configurado), só que
-// contextualizado pela tela atual: a persona muda ("Órbita IA, focada na
+// contextualizado pela tela atual: a persona muda ("Orbi, focada na
 // tela X"), mas o grounding nos dados reais é o mesmo — nunca inventa nada.
+// (Nomes internos do componente/arquivo continuam "Orbita*" — só o nome
+// exibido pro usuário virou "Orbi".)
 //
 // O botão fica sempre montado (barato), mas o painel — com suas queries de
 // Dexie (inclusive `incidentes`, ~120 mil linhas) — só é montado quando
@@ -47,7 +49,7 @@ export function OrbitaIA() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Fechar Órbita IA" : "Abrir Órbita IA"}
+        aria-label={open ? "Fechar Orbi" : "Abrir Orbi"}
         className={cn(
           "fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full",
           "bg-card border border-border shadow-lg transition-transform duration-[var(--motion-fast)]",
@@ -174,7 +176,7 @@ function OrbitaPainel({
           <OrbitaIcon />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium">Órbita IA</div>
+          <div className="text-sm font-medium">Orbi</div>
           <div className="truncate text-[11px] text-muted-foreground">
             {tela ? tela.nome : "Data Galaxy"}
           </div>

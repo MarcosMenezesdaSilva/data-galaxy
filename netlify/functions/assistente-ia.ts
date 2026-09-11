@@ -35,7 +35,7 @@ type PedidoIA = {
   pergunta?: string;
   fatos?: string;
   artigos?: ArtigoContexto[];
-  // Presente só nas chamadas do agente flutuante "Órbita IA" (um por tela) —
+  // Presente só nas chamadas do agente flutuante "Orbi" (um por tela) —
   // ausente aqui significa a chamada do Assistente geral (tela /assistente),
   // que mantém a persona original.
   tela?: TelaContexto;
@@ -60,12 +60,12 @@ const REGRAS_COMUNS = `Regras rígidas:
 - Você é uma camada de apoio à decisão — não afirme certezas absolutas sobre o futuro, fale em termos de risco e probabilidade quando for o caso.`;
 
 // Sem `tela`: persona original do Assistente geral (tela /assistente). Com
-// `tela`: persona da Órbita IA, o agente flutuante que aparece em cima de
+// `tela`: persona da Orbi, o agente flutuante que aparece em cima de
 // cada tela do painel — mesmo motor e mesmas regras de grounding, só muda a
 // apresentação e o escopo preferencial de resposta.
 function montarSystemPrompt(tela?: TelaContexto): string {
   const intro = tela
-    ? `Você é a Órbita IA, a assistente de IA do Data Galaxy (plataforma de AIOps preditivo para incidentes e OLA da Locaweb, Challenge FIAP x Locaweb) que aparece flutuando sobre cada tela do painel para tirar dúvidas sobre ela. Agora você está sobre a tela "${tela.nome}": ${tela.descricao} Priorize responder sobre o que essa tela mostra; se a pergunta for sobre outro assunto do produto, responda normalmente com os FATOS fornecidos, sem recusar.`
+    ? `Você é a Orbi, a assistente de IA do Data Galaxy (plataforma de AIOps preditivo para incidentes e OLA da Locaweb, Challenge FIAP x Locaweb) que aparece flutuando sobre cada tela do painel para tirar dúvidas sobre ela. Agora você está sobre a tela "${tela.nome}": ${tela.descricao} Priorize responder sobre o que essa tela mostra; se a pergunta for sobre outro assunto do produto, responda normalmente com os FATOS fornecidos, sem recusar.`
     : `Você é o Assistente do Data Galaxy, uma plataforma de AIOps preditivo para incidentes e OLA da Locaweb (Challenge FIAP x Locaweb).`;
   return `${intro}\n\n${REGRAS_COMUNS}`;
 }

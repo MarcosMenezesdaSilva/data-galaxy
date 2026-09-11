@@ -1,5 +1,5 @@
 // Insight proativo — um card gerado automaticamente no Dashboard, sem
-// precisar abrir o Assistente/Órbita IA e perguntar. Puramente regra local
+// precisar abrir o Assistente/Orbi e perguntar. Puramente regra local
 // sobre os dados já carregados (sem custo de IA): pega o sinal mais
 // relevante do momento (concentração de risco crítico num grupo,
 // cumprimento de OLA abaixo do ideal, ou — na ausência de alerta — um

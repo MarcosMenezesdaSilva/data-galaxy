@@ -27,7 +27,7 @@ export async function perguntarIA(
   pergunta: string,
   dados: DadosAssistente,
   artigos: Artigo[],
-  // Só passado pela Órbita IA (o agente flutuante de cada tela) — ausente
+  // Só passado pela Orbi (o agente flutuante de cada tela) — ausente
   // aqui mantém a persona original do Assistente geral.
   tela?: { nome: string; descricao: string },
 ): Promise<RespostaIA> {
@@ -36,7 +36,7 @@ export async function perguntarIA(
 
   // O artigo "Tela: X" da tela atual entra sempre, mesmo que a busca lexical
   // não bata com as palavras da pergunta (ex.: "e o histórico?" não cita
-  // "Previsões") — sem isso a Órbita IA fica sem grounding pra explicar a
+  // "Previsões") — sem isso a Orbi fica sem grounding pra explicar a
   // própria tela em perguntas curtas/indiretas.
   const artigoDaTela = tela ? artigos.find((a) => a.titulo === `Tela: ${tela.nome}`) : undefined;
   const jaIncluido = artigoDaTela && relevantes.some((a) => a.titulo === artigoDaTela.titulo);
