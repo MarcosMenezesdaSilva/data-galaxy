@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PrioridadeBadge, OlaBadge } from "@/components/Badges";
+import { IncidenteTimeline } from "@/components/IncidenteTimeline";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Download, Filter, Eye, ChevronLeft, ChevronRight, SearchX } from "lucide-react";
@@ -348,29 +349,9 @@ function IncidentesPage() {
                 </div>
                 <div>
                   <div className="text-xs font-medium uppercase text-muted-foreground mb-2">
-                    Linha do tempo
+                    Linha do tempo — do incidente à validação
                   </div>
-                  <ol className="relative border-l border-border ml-2 space-y-3 pl-4">
-                    <li>
-                      <div className="absolute -left-1.5 h-3 w-3 rounded-full bg-primary" />
-                      <div className="text-xs text-muted-foreground">Abertura</div>
-                      <div className="text-sm">{fmtDateTime(sel.data_abertura)}</div>
-                    </li>
-                    {sel.data_resolucao && (
-                      <li>
-                        <div className="absolute -left-1.5 h-3 w-3 rounded-full bg-[color:var(--success)]" />
-                        <div className="text-xs text-muted-foreground">Resolução</div>
-                        <div className="text-sm">{fmtDateTime(sel.data_resolucao)}</div>
-                      </li>
-                    )}
-                    {sel.data_encerramento && (
-                      <li>
-                        <div className="absolute -left-1.5 h-3 w-3 rounded-full bg-muted-foreground" />
-                        <div className="text-xs text-muted-foreground">Encerramento</div>
-                        <div className="text-sm">{fmtDateTime(sel.data_encerramento)}</div>
-                      </li>
-                    )}
-                  </ol>
+                  <IncidenteTimeline numeroIncidente={sel.numero_incidente} />
                 </div>
                 {sel.solucao && (
                   <div>

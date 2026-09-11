@@ -16,7 +16,7 @@ export const TELAS: Tela[] = [
     rota: "/dashboard",
     nome: "Central de Operações",
     descricao:
-      "Visão integrada com KPIs do dia, previsão D+1/D+7, cumprimento de OLA, tendência mensal, incidentes por grupo/prioridade e a fila de riscos mais urgentes.",
+      "Visão integrada com KPIs do dia, previsão D+1/D+7, cumprimento de OLA, tendência mensal, incidentes por grupo/prioridade e a fila de riscos mais urgentes. Traz também um card de Insight automático — gerado por regra local sobre os dados carregados (sem IA), destacando o sinal mais relevante do momento: concentração de risco crítico num grupo, cumprimento de OLA abaixo do ideal, ou um resumo neutro quando nada está em alerta.",
     apelidos: ["central de operações", "dashboard", "home", "início", "painel principal"],
   },
   {
@@ -30,7 +30,7 @@ export const TELAS: Tela[] = [
     rota: "/incidentes",
     nome: "Incidentes",
     descricao:
-      "Lista completa de incidentes com filtros por prioridade, produto, grupo e status, e o detalhe de cada registro (duração, OLA, solução aplicada).",
+      "Lista completa de incidentes com filtros por prioridade, produto, grupo e status, e o detalhe de cada registro (duração, OLA, solução aplicada). Ao abrir um incidente, mostra a Linha do tempo unificada — a jornada cronológica completa dele: abertura, risco de OLA calculado, alertas disparados, ações corretivas tomadas, validação de efetividade e resolução/encerramento, tudo junto numa única ordem.",
     apelidos: ["incidentes", "lista de incidentes", "chamados"],
   },
   {
@@ -44,7 +44,7 @@ export const TELAS: Tela[] = [
     rota: "/riscos-ola",
     nome: "Riscos de OLA",
     descricao:
-      "Fila de riscos de violação de OLA ordenada por probabilidade, com os fatores explicáveis de cada um (pico de volume, grupo sobrecarregado, histórico) e as ações de notificar, criar alerta ou ação preventiva.",
+      "Fila de riscos de violação de OLA ordenada por probabilidade, com os fatores explicáveis de cada um (pico de volume, grupo sobrecarregado, histórico) e as ações de notificar, criar alerta ou ação preventiva. O risco selecionado tem um botão para ver a Linha do tempo completa do incidente. A tela também traz o Simulador de reforço de equipe — uma simulação ilustrativa (não é um modelo preditivo) de quanto a probabilidade média de violação de um grupo cairia ao adicionar pessoas a ele.",
     apelidos: ["riscos de ola", "riscos", "ola", "violação de ola"],
   },
   {
