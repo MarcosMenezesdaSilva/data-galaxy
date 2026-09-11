@@ -1,5 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ChartTooltip,
+  LabelList,
+} from "recharts";
+import { axisProps, chartColors, gridProps, labelListProps, tooltipProps } from "@/lib/chart-theme";
 import { QRCodeSVG } from "qrcode.react";
 import { PageHeader } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
@@ -100,6 +111,17 @@ function RiscosPage() {
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
   const riscosAtivos = todosRiscos.filter((r) => r.status === "Ativo");
   const riscos = mostrarHistorico ? todosRiscos : riscosAtivos;
+  // Visão agregada que faltava na tela: o Simulador de reforço e o Insight
+  // automático do Dashboard já raciocinam "por grupo", mas a tela nunca
+  // mostrava esse ranking — só a fila individual. Mesmo padrão visual do
+  // gráfico "Incidentes por grupo" do Dashboard.
+  const riscosPorGrupo = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of riscosAtivos) map.set(r.grupo, (map.get(r.grupo) ?? 0) + 1);
+    return Array.from(map, ([grupo, total]) => ({ grupo, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+  }, [riscosAtivos]);
   const [sel, setSel] = useState<RiscoOla | null>(null);
   const atual = sel ?? riscos[0] ?? null;
   const navigate = useNavigate();
@@ -559,6 +581,25 @@ function RiscosPage() {
           </Card>
         )}
       </div>
+
+      {riscosPorGrupo.length > 0 && (
+        <Card lit className="p-6">
+          <div className="t-h4 mb-6">Riscos ativos por grupo responsável</div>
+          <div className="h-64">
+            <ResponsiveContainer>
+              <BarChart data={riscosPorGrupo} layout="vertical" margin={{ left: 20, right: 48 }}>
+                <CartesianGrid {...gridProps} horizontal={false} />
+                <XAxis type="number" {...axisProps} allowDecimals={false} />
+                <YAxis type="category" dataKey="grupo" {...axisProps} width={110} />
+                <ChartTooltip {...tooltipProps} />
+                <Bar dataKey="total" fill={chartColors.destaque} radius={[0, 6, 6, 0]}>
+                  <LabelList dataKey="total" position="right" {...labelListProps} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      )}
 
       <SimuladorReforco riscosAtivos={riscosAtivos} />
 

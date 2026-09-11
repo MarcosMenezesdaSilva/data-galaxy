@@ -6,7 +6,7 @@ import { SectionHeader } from "./SectionHeader";
 /**
  * Os três pilares respondem juntos "por que isto é diferente de um
  * dashboard": prever → explicar → comprovar. Cada um corresponde a uma tela
- * real do produto (/previsoes, /riscos-ola, /validacao), e a descrição não
+ * real do produto (/previsoes, /riscos-ola, /correcoes → aba Validação), e a descrição não
  * afirma nada que aquela tela não faça.
  */
 const PILARES: { icon: LucideIcon; title: string; description: string }[] = [

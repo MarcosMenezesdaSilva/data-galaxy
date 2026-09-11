@@ -44,7 +44,7 @@ export const TELAS: Tela[] = [
     rota: "/riscos-ola",
     nome: "Riscos de OLA",
     descricao:
-      "Fila de riscos de violação de OLA ordenada por probabilidade, com os fatores explicáveis de cada um (pico de volume, grupo sobrecarregado, histórico) e as ações de notificar, criar alerta ou ação preventiva. O risco selecionado tem um botão para ver a Linha do tempo completa do incidente. A tela também traz o Simulador de reforço de equipe — uma simulação ilustrativa (não é um modelo preditivo) de quanto a probabilidade média de violação de um grupo cairia ao adicionar pessoas a ele.",
+      "Fila de riscos de violação de OLA ordenada por probabilidade, com os fatores explicáveis de cada um (pico de volume, grupo sobrecarregado, histórico) e as ações de notificar, criar alerta ou ação preventiva. O risco selecionado tem um botão para ver a Linha do tempo completa do incidente. Traz também um gráfico de Riscos ativos por grupo responsável, e o Simulador de reforço de equipe — uma simulação ilustrativa (não é um modelo preditivo) de quanto a probabilidade média de violação de um grupo cairia ao adicionar pessoas a ele.",
     apelidos: ["riscos de ola", "riscos", "ola", "violação de ola"],
   },
   {
@@ -56,17 +56,17 @@ export const TELAS: Tela[] = [
   },
   {
     rota: "/correcoes",
-    nome: "Ações Corretivas",
+    nome: "Correções",
     descricao:
-      "Registro do ciclo completo de correções aplicadas a incidentes e riscos, do planejamento até a conclusão, com a classificação de efetividade.",
-    apelidos: ["ações corretivas", "correções", "ações"],
-  },
-  {
-    rota: "/validacao",
-    nome: "Validação de Correções",
-    descricao:
-      "Compara o volume previsto com o volume real após uma correção, em janelas de 7/15/30 dias, para confirmar se ela foi realmente efetiva ou só paliativa.",
-    apelidos: ["validação de correções", "validação", "efetividade"],
+      "Tela com duas abas: Ações (registro do ciclo completo de correções aplicadas a incidentes e riscos, do planejamento até a conclusão) e Validação de Efetividade (compara o volume previsto com o volume real após uma correção, em janelas de 7/15/30 dias, pra confirmar se ela foi realmente efetiva ou só paliativa).",
+    apelidos: [
+      "ações corretivas",
+      "correções",
+      "ações",
+      "validação de correções",
+      "validação",
+      "efetividade",
+    ],
   },
   {
     rota: "/problemas",
