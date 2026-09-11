@@ -5,7 +5,6 @@ import { ArrowDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeatureMarkers } from "./FeatureMarkers";
 import { GalaxyScene } from "./GalaxyScene";
-import { TechStrip } from "./TechStrip";
 import { useMouseParallax } from "./useMouseParallax";
 
 /** Amplitude de parallax da camada. Mesmo padrão de custom property do DS. */
@@ -114,7 +113,7 @@ export function HeroSection() {
           para fora da viewport no desktop. Ocupa 70% e avança até ~38% da
           largura, então o disco alcança o centro como na referência — uma
           instância só, duplicar em dois breakpoints dobraria as animações. */}
-      <div className="relative z-[1] mt-4 w-full px-4 sm:px-10 lg:absolute lg:inset-y-0 lg:right-[-8%] lg:mt-0 lg:flex lg:w-[70%] lg:items-center lg:px-0">
+      <div className="relative z-[1] mt-4 w-full px-4 pb-16 sm:px-10 lg:absolute lg:pb-0 lg:inset-y-0 lg:right-[-8%] lg:mt-0 lg:flex lg:w-[70%] lg:items-center lg:px-0">
         <GalaxyScene className="mx-auto aspect-[1000/820] w-full max-w-[560px] lg:max-w-none" />
       </div>
 
@@ -168,8 +167,6 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-
-      <TechStrip className="dg-shell relative z-10 mt-14 pb-16 lg:absolute lg:bottom-[74px] lg:left-1/2 lg:mt-0 lg:-translate-x-1/2 lg:pb-0" />
 
       <ScrollHint />
 
