@@ -720,6 +720,137 @@
 }
 
 /* Reduced motion: sem parallax, sem órbita, sem loop — só fades curtos. */
+/* ---------------------------------------------------------------------------
+   Hero — cena orbital
+
+   Tudo anima por transform, offset-distance e opacity: nenhuma regra aqui
+   provoca reflow. Os corpos se deslocam por CSS Motion Path, então a mesma
+   string de path que desenha a órbita visível conduz o planeta — órbita e
+   corpo não saem de sincronia nem em resize.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* Corpo em órbita. A duração e a fase vêm inline, por corpo. O delay é
+     negativo: sem ele todos partiriam do mesmo ponto do path e a cena leria
+     como engrenagem única em vez de sistema. */
+  .dg-gx-travel {
+    offset-rotate: 0deg;
+    animation: dg-gx-orbit 30s linear infinite;
+    will-change: transform;
+  }
+
+  /* Pacote de dado: percorre a órbita e se apaga ao fechar o ciclo. */
+  .dg-gx-packet {
+    offset-rotate: 0deg;
+    animation: dg-gx-packet 20s linear infinite;
+    will-change: transform, opacity;
+  }
+
+  /* Respiração do núcleo — energia contínua, nunca pulso de alarme. */
+  .dg-gx-core {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: dg-gx-breathe 4.5s ease-in-out infinite;
+  }
+
+  .dg-gx-twinkle {
+    animation: dg-gx-twinkle 7s ease-in-out infinite;
+  }
+
+  .dg-gx-float {
+    animation: dg-gx-float 6s ease-in-out infinite;
+  }
+
+  /* Camada de parallax. O ponteiro só escreve --dg-mx/--dg-my no contêiner;
+     cada camada decide sua amplitude por --dg-depth. A transição amortece o
+     movimento para ele não ficar colado no cursor. */
+  .dg-parallax {
+    transform: translate3d(
+      calc(var(--dg-mx, 0) * var(--dg-depth, 6px)),
+      calc(var(--dg-my, 0) * var(--dg-depth, 6px)),
+      0
+    );
+    transition: transform 700ms var(--ease-out-expo);
+    will-change: transform;
+  }
+
+  .dg-scroll-hint {
+    animation: dg-gx-hint 2.6s ease-in-out infinite;
+  }
+}
+
+/* O `from` precisa ser explícito: com só o `to`, o valor inline de
+   offset-distance viraria o início e cada corpo percorreria um trecho
+   diferente da órbita. */
+@keyframes dg-gx-orbit {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes dg-gx-packet {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes dg-gx-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.88;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes dg-gx-twinkle {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes dg-gx-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes dg-gx-hint {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 0.9;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -739,5 +870,23 @@
   .dg-hover-card:hover,
   .dg-bento:hover {
     transform: none;
+  }
+
+  /* A cena orbital para de vez, em vez de saltar para o fim: `animation: none`
+     devolve cada corpo ao offset-distance declarado inline, então a
+     composição fica parada e distribuída — e não com todos os planetas
+     empilhados no ponto final do path, que é o que a regra global de
+     animation-duration acima causaria. */
+  .dg-gx-travel,
+  .dg-gx-packet,
+  .dg-gx-core,
+  .dg-gx-twinkle,
+  .dg-gx-float,
+  .dg-scroll-hint {
+    animation: none !important;
+  }
+
+  .dg-parallax {
+    transform: none !important;
   }
 }
