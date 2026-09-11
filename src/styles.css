@@ -172,6 +172,17 @@
   /* Elevação — no claro vem de sombra suave, não de iluminação */
   --shadow-card: 0 1px 2px rgba(10, 10, 11, 0.04), 0 8px 24px rgba(10, 10, 11, 0.05);
   --shadow-card-elevated: 0 2px 4px rgba(10, 10, 11, 0.05), 0 16px 48px rgba(10, 10, 11, 0.09);
+
+  /* Profundidade da landing — vidro, realce de aresta e luz ambiente.
+     No claro não há luz por trás da superfície, então a translucidez vem de
+     cima (branco lavado); puxar preto aqui só deixaria o card cinza sujo. */
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --border-highlight: rgba(10, 10, 11, 0.14);
+  --glow-sm: 0 0 16px rgba(255, 74, 31, 0.1);
+  --glow-md: 0 0 32px rgba(255, 74, 31, 0.14);
+  --glow-lg: 0 0 64px rgba(255, 74, 31, 0.18);
+  --blur-surface: 12px;
+  --blur-ambient: 72px;
   --glow-brand:
     0 0 20px rgba(255, 74, 31, 0.16), 0 0 60px rgba(255, 74, 31, 0.08),
     0 0 120px rgba(255, 74, 31, 0.04);
@@ -183,6 +194,10 @@
   /* Motion */
   --motion-fast: 180ms;
   --motion-default: 240ms;
+  /* Também declarado em @theme inline, que o expõe como utilitário (ease-*).
+     Repetido aqui porque `ease-[var(--ease-out-expo)]` e as transições em CSS
+     resolvem a variável em runtime e precisam dela na cascata, não só no tema. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --motion-enter: 600ms;
 }
 
@@ -254,6 +269,17 @@
   /* Elevação vem de borda + iluminação interna + diferença de superfície */
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 20px 60px rgba(0, 0, 0, 0.32);
   --shadow-card-elevated: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 80px rgba(0, 0, 0, 0.55);
+
+  /* Vidro sobre o preto: grafite translúcido, nunca branco com alpha — branco
+     aqui vira névoa cinza e quebra a profundidade. O realce de aresta é mais
+     forte que no claro porque é ele que separa o card do fundo. */
+  --surface-glass: rgba(21, 21, 22, 0.62);
+  --border-highlight: rgba(255, 255, 255, 0.22);
+  --glow-sm: 0 0 16px rgba(255, 74, 31, 0.18);
+  --glow-md: 0 0 36px rgba(255, 74, 31, 0.24);
+  --glow-lg: 0 0 80px rgba(255, 74, 31, 0.3);
+  --blur-surface: 14px;
+  --blur-ambient: 90px;
   --glow-brand:
     0 0 20px rgba(255, 74, 31, 0.22), 0 0 60px rgba(255, 74, 31, 0.1),
     0 0 120px rgba(255, 74, 31, 0.05);
@@ -476,6 +502,80 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
   }
+
+  /* -------------------------------------------------------------------------
+     Landing — camadas de profundidade
+
+     Vidro, malha e orbe não carregam informação nenhuma: existem só para dar
+     escala espacial. Por isso todos entram como aria-hidden no markup e
+     nenhum estado do produto é comunicado apenas por glow.
+  ------------------------------------------------------------------------- */
+
+  /* Superfície de vidro. O ::before desenha só a aresta de cima, e com fade
+     nas pontas: uma borda inteira mais clara achata o card, porque luz sem
+     direção lê como contorno, não como volume. */
+  .dg-glass {
+    position: relative;
+    border: 1px solid var(--border-default);
+    background: var(--surface-glass);
+    -webkit-backdrop-filter: blur(var(--blur-surface));
+    backdrop-filter: blur(var(--blur-surface));
+  }
+
+  .dg-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-highlight) 18%,
+      var(--border-highlight) 82%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Card do bento: vidro + resposta de elevação. O glow entra junto da sombra
+     e da borda, nunca sozinho — hover precisa ser legível sem enxergar cor. */
+  .dg-bento {
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    transition:
+      transform var(--motion-default) var(--ease-out-expo),
+      box-shadow var(--motion-default) var(--ease-out-expo),
+      border-color var(--motion-fast) linear;
+  }
+
+  @media (hover: hover) {
+    .dg-bento:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-strong);
+      box-shadow:
+        var(--shadow-card-elevated),
+        var(--glow-sm);
+    }
+  }
+
+  /* Malha de fundo de seção — dá grade espacial sem desenhar objeto. A máscara
+     apaga as bordas para a grade não terminar em linha reta no meio da tela. */
+  .dg-grid-field {
+    background-image:
+      linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+  }
+
+  /* Orbe de luz ambiente. Posição e cor ficam no componente. */
+  .dg-orb {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(var(--blur-ambient));
+    pointer-events: none;
+  }
 }
 
 @layer utilities {
@@ -636,7 +736,8 @@
     animation: dg-fade 150ms ease both !important;
   }
 
-  .dg-hover-card:hover {
+  .dg-hover-card:hover,
+  .dg-bento:hover {
     transform: none;
   }
 }
