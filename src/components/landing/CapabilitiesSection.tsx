@@ -177,16 +177,19 @@ function VisualDashboard() {
 
   return (
     <div aria-hidden="true" className="flex flex-col gap-4">
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-2">
         {KPIS.map((k) => (
           <div
             key={k.label}
-            className="rounded-sm border border-[color:var(--border-subtle)] bg-[color:var(--surface-02)] p-3"
+            className="rounded-sm border border-[color:var(--border-subtle)] bg-[color:var(--surface-02)] p-2.5"
           >
-            <div className="t-micro truncate text-muted-foreground">{k.label}</div>
+            {/* Sem truncate: o tile tem ~46px de texto e "Abertos hoje" pede
+                ~62px, então truncar cortava os três rótulos. Aqui ele quebra
+                em duas linhas, que é o que cabe de verdade. */}
+            <div className="t-micro leading-tight text-muted-foreground">{k.label}</div>
             <div
               className={cn(
-                "dg-mono mt-1.5 text-lg",
+                "dg-mono mt-1.5 text-[15px]",
                 k.destaque ? "text-primary" : "text-foreground",
               )}
             >
@@ -224,7 +227,7 @@ function VisualAssistente() {
       <div className="flex items-start gap-2.5 self-start rounded-lg rounded-bl-xs border border-[color:var(--border-brand)] bg-[color:var(--brand-orange-soft)] px-4 py-2.5">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <span className="t-body-sm text-pretty text-foreground">
-          Infraestrutura, com 41 dos 96 incidentes — concentrados em Cloud.
+          Infraestrutura, com 41 dos 96 incidentes, concentrados em Cloud.
         </span>
       </div>
     </div>
