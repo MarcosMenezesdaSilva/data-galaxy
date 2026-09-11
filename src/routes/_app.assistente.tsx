@@ -137,11 +137,9 @@ function AssistenteConversa({ perfil }: { perfil: string | null }) {
       <div className="space-y-4">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Bot className="h-3.5 w-3.5" /> Assistente
+            <Bot className="h-3.5 w-3.5" /> Assistente Data Galaxy
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-            Assistente Data Galaxy
-          </h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Orbi</h1>
           <p className="text-sm text-muted-foreground">
             Pergunte sobre incidentes, riscos de OLA, alertas e previsões — as respostas vêm só dos
             dados carregados nesta base.
