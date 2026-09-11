@@ -18,17 +18,20 @@ export function Navigation() {
     <header className="sticky top-0 z-50 border-b border-[color:var(--border-subtle)] bg-background/80 backdrop-blur-xl">
       <nav
         aria-label="Navegação principal"
-        className="mx-auto flex max-w-6xl h-[70px] items-center justify-between gap-6 px-6 md:px-10"
+        className="dg-shell relative flex h-[70px] items-center justify-between gap-6"
       >
         <BrandWordmark />
 
-        {/* As âncoras somem no mobile: lá a narrativa é o próprio scroll. */}
-        <ul className="hidden items-center gap-1 md:flex">
+        {/* Âncoras centradas na viewport, não no espaço que sobra: com
+            justify-between elas seguiriam a largura da logo e do botão, que
+            são diferentes, e o menu ficaria só aproximadamente no meio.
+            Somem no mobile, onde a narrativa é o próprio scroll. */}
+        <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex lg:gap-10">
           {SECOES.map((s) => (
             <li key={s.href}>
               <a
                 href={s.href}
-                className="t-body-sm rounded-pill px-3 py-2 text-muted-foreground transition-colors duration-[var(--motion-fast)] hover:bg-[color:var(--surface-02)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand-orange)]"
+                className="rounded-pill px-2 py-2 text-[15px] text-muted-foreground transition-colors duration-[var(--motion-fast)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand-orange)]"
               >
                 {s.label}
               </a>

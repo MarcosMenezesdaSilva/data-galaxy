@@ -26,11 +26,14 @@ const INTEGRACOES = [
 export function TechStrip({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 md:justify-start md:gap-x-14">
+      {/* justify-between no desktop: na referência os parceiros formam uma
+          faixa que atravessa a base inteira do hero, não um bloco agrupado
+          sob a coluna de texto. */}
+      <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 lg:flex-nowrap lg:justify-between lg:gap-x-6">
         {INTEGRACOES.map((nome) => (
           <li
             key={nome}
-            className="text-[15px] font-medium tracking-tight text-muted-foreground/70 transition-colors duration-[var(--motion-default)] hover:text-muted-foreground"
+            className="whitespace-nowrap text-[15px] font-medium tracking-tight text-foreground/45 transition-colors duration-[var(--motion-default)] hover:text-foreground/75"
           >
             {nome}
           </li>

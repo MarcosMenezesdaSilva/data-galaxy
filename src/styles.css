@@ -188,7 +188,7 @@
     0 0 120px rgba(255, 74, 31, 0.04);
 
   /* Textura — quase imperceptível no claro */
-  --texture-grid: rgba(10, 10, 11, 0.03);
+  --texture-grid: rgba(10, 10, 11, 0.018);
   --texture-glow: rgba(255, 74, 31, 0.05);
 
   /* Motion */
@@ -284,7 +284,7 @@
     0 0 20px rgba(255, 74, 31, 0.22), 0 0 60px rgba(255, 74, 31, 0.1),
     0 0 120px rgba(255, 74, 31, 0.05);
 
-  --texture-grid: rgba(255, 255, 255, 0.04);
+  --texture-grid: rgba(255, 255, 255, 0.022);
   --texture-glow: rgba(255, 74, 31, 0.09);
 }
 
@@ -375,6 +375,15 @@
     font-size: clamp(2.5rem, 5vw, 3.5rem);
     line-height: 1.05;
     letter-spacing: -0.035em;
+    font-weight: 600;
+  }
+  /* Display do hero. Existe separado do display-xl porque a segunda linha
+     precisa caber inteira: 26 caracteres a 66px pedem ~795px, e o display-xl
+     sobe a 6vw, estourando a linha antes de chegar ao teto. */
+  .t-hero {
+    font-size: clamp(2.55rem, 4.3vw, 4.15rem);
+    line-height: 0.99;
+    letter-spacing: -0.036em;
     font-weight: 600;
   }
 
@@ -729,6 +738,28 @@
    corpo não saem de sincronia nem em resize.
 --------------------------------------------------------------------------- */
 @layer components {
+  /* Casca de largura da primeira dobra.
+     Substitui o max-w-6xl (1152px), que em 1920px ocupava 60% da viewport e
+     deixava 384px de margem morta de cada lado — era o que empurrava título,
+     navbar e parceiros para o centro.
+
+     84vw, e não os 92vw pedidos, porque as duas medidas do briefing não
+     fecham entre si: 92vw põe o título a 4% da borda, e a meta declarada era
+     9–10%. Medindo a referência (logo começa em 9,4%, botão termina em
+     90,5%), a casca dela é ~82vw. 84vw mantém o título por volta de 8% em
+     todo o intervalo de 1366px a 1920px; o teto evita linha de leitura
+     absurda em ultrawide. */
+  .dg-shell {
+    width: min(100% - 2.5rem, 1620px);
+    margin-inline: auto;
+  }
+
+  @media (min-width: 768px) {
+    .dg-shell {
+      width: min(84vw, 1620px);
+    }
+  }
+
   /* Corpo em órbita. A duração e a fase vêm inline, por corpo. O delay é
      negativo: sem ele todos partiriam do mesmo ponto do path e a cena leria
      como engrenagem única em vez de sistema. */

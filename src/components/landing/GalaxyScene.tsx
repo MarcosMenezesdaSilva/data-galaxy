@@ -1,6 +1,4 @@
 import { useId, type CSSProperties } from "react";
-import type { LucideIcon } from "lucide-react";
-import { Activity, BarChart3, Database, Shield } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,19 +9,31 @@ import { cn } from "@/lib/utils";
  * ao núcleo e vira inteligência. Os pacotes luminosos são esse trânsito; o
  * núcleo respira porque está processando.
  *
- * Geometria: seis elipses concêntricas com ry/rx ≈ 0,38 e o sistema inteiro
- * inclinado, que é o que dá a sensação de plano orbital visto de ângulo. Cada
- * corpo anda por CSS Motion Path sobre a MESMA string que desenha sua órbita
- * visível, então nada precisa ser recalculado e nada sai de registro.
+ * Duas decisões carregam o visual:
  *
- * Coordenadas e fases são fixas: a app roda com SSR (@tanstack/react-start) e
- * qualquer valor aleatório divergiria entre servidor e cliente na hidratação.
+ * 1. POEIRA. Centenas de grãos no plano do disco. Oito elipses limpas,
+ *    sozinhas, leem como alvo — é a densidade que vira matéria. Por isso as
+ *    órbitas são discretas de propósito e o peso mora na poeira e no núcleo.
+ *
+ * 2. INCLINAÇÃO POR ÓRBITA. Cada anel tem rotação própria, então o conjunto
+ *    não é perfeitamente concêntrico. Anéis aninhados com o mesmo eixo leem
+ *    como alvo plano; desalinhados, leem como sistema em três dimensões.
+ *
+ * Cada corpo anda por CSS Motion Path sobre a MESMA string que desenha sua
+ * órbita, e mora dentro do mesmo grupo inclinado que ela — assim a inclinação
+ * se aplica aos dois e nada sai de registro.
+ *
+ * Coordenadas e fases são fixas: nada de Math.random em render, para servidor
+ * e cliente não divergirem na hidratação.
  */
 
 const CX = 500;
 const CY = 400;
 const VB_W = 1000;
 const VB_H = 820;
+
+/** Achatamento do disco. Mais baixo = plano visto mais de raspão. */
+const ACHATAMENTO = 0.34;
 
 /** Amplitude de parallax da camada. Mesmo padrão de custom property do DS. */
 const camada = (profundidade: string) => ({ "--dg-depth": profundidade }) as CSSProperties;
@@ -33,20 +43,80 @@ function orbitaPath(rx: number, ry: number) {
   return `M ${CX - rx} ${CY} a ${rx} ${ry} 0 1 0 ${2 * rx} 0 a ${rx} ${ry} 0 1 0 ${-2 * rx} 0 Z`;
 }
 
+/** rx e inclinação própria. As duas últimas passam da moldura, de propósito. */
 const ORBITAS = [
-  { rx: 112, ry: 43 },
-  { rx: 168, ry: 64 },
-  { rx: 232, ry: 88 },
-  { rx: 300, ry: 114 },
-  { rx: 372, ry: 141 },
-  { rx: 446, ry: 170 },
-].map((o, i) => ({
-  ...o,
-  d: orbitaPath(o.rx, o.ry),
-  // Alternar traço cheio e pontilhado evita a leitura de "alvo" que seis
-  // anéis idênticos produzem.
-  pontilhada: i % 2 === 1,
-}));
+  { rx: 112, inclinacao: -4 },
+  { rx: 168, inclinacao: 3 },
+  { rx: 232, inclinacao: -7 },
+  { rx: 300, inclinacao: 2 },
+  { rx: 372, inclinacao: -3 },
+  { rx: 446, inclinacao: 6 },
+  { rx: 536, inclinacao: -5 },
+  { rx: 638, inclinacao: 4 },
+].map((o, i) => {
+  const ry = Math.round(o.rx * ACHATAMENTO);
+  return {
+    ...o,
+    ry,
+    d: orbitaPath(o.rx, ry),
+    // Alternar cheio e pontilhado quebra a leitura de anéis idênticos.
+    pontilhada: i % 2 === 1,
+    // As externas somem: profundidade vem de contraste decrescente.
+    opacidade: Math.max(0.08, 0.4 - i * 0.042),
+  };
+});
+
+/**
+ * Gerador determinístico. Precisa ser estável entre servidor e cliente, então
+ * é um LCG de semente fixa, avaliado uma vez no módulo — não Math.random.
+ */
+function prng(semente: number) {
+  let s = semente;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+
+interface Grao {
+  x: number;
+  y: number;
+  r: number;
+  o: number;
+  laranja: boolean;
+}
+
+/**
+ * Poeira do disco: anéis de grãos com dispersão radial, no plano das órbitas.
+ * Divididos em interna e externa para o mobile descartar a metade de fora sem
+ * perder a forma do disco.
+ */
+const [POEIRA_INTERNA, POEIRA_EXTERNA] = (() => {
+  const rnd = prng(20260911);
+  const dentro: Grao[] = [];
+  const fora: Grao[] = [];
+
+  for (let anel = 0; anel < 7; anel++) {
+    const base = 104 + anel * 66;
+    const quantos = 10 + anel * 4;
+
+    for (let i = 0; i < quantos; i++) {
+      const rx = base + (rnd() - 0.5) * 34;
+      const a = rnd() * Math.PI * 2;
+      const grao: Grao = {
+        x: CX + rx * Math.cos(a),
+        y: CY + rx * ACHATAMENTO * Math.sin(a),
+        r: 0.7 + rnd() * 1.2,
+        o: 0.16 + rnd() * 0.46,
+        // Minoria laranja: o disco é neutro e o calor vem do núcleo.
+        laranja: rnd() < 0.3,
+      };
+      (anel < 3 ? dentro : fora).push(grao);
+    }
+  }
+
+  return [dentro, fora];
+})();
 
 type Esfera = "clara" | "escura" | "laranja";
 
@@ -67,10 +137,15 @@ const CORPOS: Corpo[] = [
   { orbita: 2, r: 6, esfera: "laranja", fase: 8, duracao: 33 },
   { orbita: 2, r: 13, esfera: "clara", fase: 55, duracao: 38, reverso: true },
   { orbita: 3, r: 15, esfera: "escura", fase: 30, duracao: 47 },
+  { orbita: 3, r: 4, esfera: "laranja", fase: 78, duracao: 43, reverso: true },
   { orbita: 4, r: 8, esfera: "clara", fase: 72, duracao: 57, reverso: true },
   { orbita: 4, r: 5, esfera: "laranja", fase: 20, duracao: 51 },
   { orbita: 5, r: 17, esfera: "escura", fase: 44, duracao: 68 },
   { orbita: 5, r: 7, esfera: "clara", fase: 88, duracao: 62, reverso: true },
+  { orbita: 6, r: 11, esfera: "clara", fase: 12, duracao: 79 },
+  { orbita: 6, r: 6, esfera: "escura", fase: 66, duracao: 84, reverso: true },
+  { orbita: 7, r: 20, esfera: "escura", fase: 36, duracao: 96 },
+  { orbita: 7, r: 9, esfera: "clara", fase: 82, duracao: 90, reverso: true },
 ];
 
 interface Pacote {
@@ -85,16 +160,22 @@ interface Pacote {
 
 const PACOTES: Pacote[] = [
   { orbita: 0, r: 2.5, laranja: true, duracao: 13, atraso: 0 },
+  { orbita: 0, r: 2, laranja: false, duracao: 15, atraso: 6 },
   { orbita: 1, r: 2, laranja: false, duracao: 17, atraso: 3, reverso: true },
-  { orbita: 1, r: 2, laranja: true, duracao: 19, atraso: 9, reverso: true },
+  { orbita: 1, r: 2.5, laranja: true, duracao: 19, atraso: 9, reverso: true },
   { orbita: 2, r: 2.5, laranja: true, duracao: 21, atraso: 5 },
+  { orbita: 2, r: 2, laranja: false, duracao: 23, atraso: 14 },
   { orbita: 3, r: 2, laranja: false, duracao: 26, atraso: 1 },
   { orbita: 3, r: 2.5, laranja: true, duracao: 24, atraso: 12, reverso: true },
   { orbita: 4, r: 2, laranja: false, duracao: 31, atraso: 7 },
+  { orbita: 4, r: 2.5, laranja: true, duracao: 29, atraso: 18 },
   { orbita: 5, r: 2.5, laranja: true, duracao: 36, atraso: 15 },
+  { orbita: 5, r: 2, laranja: false, duracao: 33, atraso: 24, reverso: true },
+  { orbita: 6, r: 2.5, laranja: true, duracao: 42, atraso: 9 },
+  { orbita: 7, r: 2, laranja: false, duracao: 52, atraso: 20, reverso: true },
 ];
 
-/** Estrelas de fundo: [x, y, raio, opacidade]. Centro fica limpo. */
+/** Estrelas do espaço em volta: [x, y, raio, opacidade]. Centro fica limpo. */
 const ESTRELAS: [number, number, number, number][] = [
   [64, 98, 1.2, 0.5], [148, 212, 1, 0.35], [92, 366, 1.4, 0.42], [186, 508, 1, 0.3],
   [58, 624, 1.2, 0.38], [232, 702, 1, 0.28], [318, 88, 1, 0.32], [402, 176, 1.3, 0.45],
@@ -112,20 +193,21 @@ const ESTRELAS: [number, number, number, number][] = [
 const CINTILAM = [1, 4, 7, 12, 16, 19, 22, 25, 28, 31, 34, 37];
 
 /** Raios ambientais saindo do núcleo — as conexões da rede. */
-const RAIOS: { angulo: number; de: number; ate: number; opacidade: number }[] = [
-  { angulo: -8, de: 46, ate: 430, opacidade: 0.16 },
-  { angulo: 34, de: 46, ate: 300, opacidade: 0.12 },
-  { angulo: 96, de: 46, ate: 240, opacidade: 0.1 },
-  { angulo: 152, de: 46, ate: 380, opacidade: 0.14 },
-  { angulo: 208, de: 46, ate: 260, opacidade: 0.1 },
-  { angulo: 268, de: 46, ate: 340, opacidade: 0.12 },
+const RAIOS = [
+  { angulo: -8, ate: 430, opacidade: 0.14 },
+  { angulo: 34, ate: 300, opacidade: 0.1 },
+  { angulo: 96, ate: 240, opacidade: 0.08 },
+  { angulo: 152, ate: 380, opacidade: 0.12 },
+  { angulo: 208, ate: 260, opacidade: 0.08 },
+  { angulo: 268, ate: 340, opacidade: 0.1 },
 ];
 
-/** Arco curto e luminoso: o indicador de segmento ativo da órbita. */
-const SEGMENTOS = [
-  { orbita: 2, de: 300, ate: 344 },
-  { orbita: 4, de: 128, ate: 166 },
-];
+/** Arco curto e luminoso por órbita: o indicador de segmento ativo. */
+const SEGMENTOS: Record<number, { de: number; ate: number }> = {
+  2: { de: 300, ate: 344 },
+  4: { de: 128, ate: 166 },
+  6: { de: 214, ate: 246 },
+};
 
 function pontoElipse(rx: number, ry: number, grau: number) {
   const a = (grau * Math.PI) / 180;
@@ -140,94 +222,6 @@ function arcoElipse(rx: number, ry: number, de: number, ate: number) {
 
 /* -------------------------------------------------------------------------- */
 
-interface Conceito {
-  icon: LucideIcon;
-  linha1: string;
-  linha2: string;
-  /** Lado do círculo em relação ao texto. */
-  lado: "esquerda" | "direita";
-  /** Posição no contêiner e amplitude de parallax. */
-  estilo: CSSProperties;
-  atraso: string;
-  profundidade: string;
-}
-
-const CONCEITOS: Conceito[] = [
-  {
-    icon: Database,
-    linha1: "Dados",
-    linha2: "em tempo real",
-    lado: "direita",
-    estilo: { top: "16%", left: "7%" },
-    atraso: "0s",
-    profundidade: "10px",
-  },
-  {
-    icon: Activity,
-    linha1: "Detecção",
-    linha2: "antecipada",
-    lado: "esquerda",
-    estilo: { top: "19%", right: "1%" },
-    atraso: "1.4s",
-    profundidade: "14px",
-  },
-  {
-    icon: BarChart3,
-    linha1: "Insights",
-    linha2: "acionáveis",
-    lado: "direita",
-    estilo: { bottom: "26%", left: "9%" },
-    atraso: "2.6s",
-    profundidade: "12px",
-  },
-  {
-    icon: Shield,
-    linha1: "Operações",
-    linha2: "mais seguras",
-    lado: "esquerda",
-    estilo: { bottom: "22%", right: "0%" },
-    atraso: "3.8s",
-    profundidade: "16px",
-  },
-];
-
-/**
- * Rótulo conceitual. O texto é conteúdo de verdade — fica legível para leitor
- * de tela; só o círculo e o ícone são decorativos.
- */
-function ConceptLabel({ icon: Icon, linha1, linha2, lado, estilo, atraso, profundidade }: Conceito) {
-  const circulo = (
-    <span
-      aria-hidden="true"
-      className="grid h-12 w-12 shrink-0 place-content-center rounded-pill border border-[color:var(--border-strong)] bg-[color:var(--surface-glass)] backdrop-blur-sm"
-    >
-      <Icon className="h-[18px] w-[18px] text-foreground/80" />
-    </span>
-  );
-
-  return (
-    <div
-      className="dg-parallax absolute hidden lg:block"
-      style={{ ...estilo, ...camada(profundidade) }}
-    >
-      <div
-        className="dg-gx-float flex items-center gap-3.5"
-        style={{ animationDelay: atraso }}
-      >
-        {lado === "esquerda" && circulo}
-        <span className="t-micro leading-relaxed uppercase text-muted-foreground">
-          {linha1}
-          <br />
-          {linha2}
-        </span>
-        {lado === "direita" && circulo}
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-
 export function GalaxyScene({ className }: { className?: string }) {
   const uid = useId().replace(/:/g, "");
   const id = (nome: string) => `dg-gx-${nome}-${uid}`;
@@ -237,6 +231,17 @@ export function GalaxyScene({ className }: { className?: string }) {
     escura: id("escura"),
     laranja: id("laranja"),
   };
+
+  const grao = (g: Grao, i: number) => (
+    <circle
+      key={`g-${i}`}
+      cx={g.x.toFixed(2)}
+      cy={g.y.toFixed(2)}
+      r={g.r.toFixed(2)}
+      fill={g.laranja ? "var(--brand-orange)" : "#ffffff"}
+      opacity={g.o.toFixed(2)}
+    />
+  );
 
   return (
     <div className={cn("relative", className)}>
@@ -264,16 +269,32 @@ export function GalaxyScene({ className }: { className?: string }) {
             <stop offset="100%" stopColor="#6b1907" />
           </radialGradient>
 
+          {/* Miolo quente pequeno: o branco sai rápido para o laranja, senão o
+              centro vira um disco branco chapado e domina a metade direita. */}
           <radialGradient id={id("nucleo")}>
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="28%" stopColor="#ffc4a8" />
-            <stop offset="62%" stopColor="var(--brand-orange)" />
+            <stop offset="16%" stopColor="#ffe0cd" />
+            <stop offset="42%" stopColor="var(--brand-orange-light)" />
+            <stop offset="74%" stopColor="var(--brand-orange)" />
             <stop offset="100%" stopColor="var(--brand-orange-dark)" />
           </radialGradient>
-          <radialGradient id={id("halo")}>
-            <stop offset="0%" stopColor="var(--brand-orange)" stopOpacity="0.5" />
-            <stop offset="55%" stopColor="var(--brand-orange)" stopOpacity="0.14" />
+
+          {/* Bloom em três degraus. O brilho não vem de um halo só: vem da
+              queda contínua do branco quente até o laranja transparente. */}
+          <radialGradient id={id("bloomNear")}>
+            <stop offset="0%" stopColor="#fff0e6" stopOpacity="0.5" />
+            <stop offset="34%" stopColor="var(--brand-orange-light)" stopOpacity="0.3" />
             <stop offset="100%" stopColor="var(--brand-orange)" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id={id("halo")}>
+            <stop offset="0%" stopColor="var(--brand-orange)" stopOpacity="0.34" />
+            <stop offset="46%" stopColor="var(--brand-orange)" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="var(--brand-orange)" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id={id("bloomFar")}>
+            <stop offset="0%" stopColor="var(--brand-orange)" stopOpacity="0.15" />
+            <stop offset="58%" stopColor="#b4300f" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="#b4300f" stopOpacity="0" />
           </radialGradient>
         </defs>
 
@@ -293,105 +314,110 @@ export function GalaxyScene({ className }: { className?: string }) {
           ))}
         </g>
 
-        {/* Sistema orbital. A inclinação é aplicada uma vez no grupo, então
-            órbitas, corpos e pacotes compartilham o mesmo plano. */}
-        {/* Dois grupos, não um: .dg-parallax escreve `transform` por CSS, e em
-            SVG o CSS vence o atributo `transform`. Juntos no mesmo <g>, a
-            inclinação do plano orbital seria descartada em silêncio. */}
+        {/* Bloom distante entra ANTES do disco: é névoa atrás da matéria. */}
+        <circle cx={CX} cy={CY} r="430" fill={`url(#${id("bloomFar")})`} className="dg-gx-core" />
+
+        {/* Sistema orbital. Dois níveis de grupo, não um: .dg-parallax escreve
+            `transform` por CSS, e em SVG o CSS vence o atributo `transform`.
+            Juntos no mesmo <g>, a inclinação seria descartada em silêncio. */}
         <g className="dg-parallax" style={camada("9px")}>
-          <g transform={`rotate(-14 ${CX} ${CY})`}>
-          {RAIOS.map((raio) => {
-            const a = (raio.angulo * Math.PI) / 180;
-            return (
-              <line
-                key={raio.angulo}
-                x1={CX + raio.de * Math.cos(a)}
-                y1={CY + raio.de * Math.sin(a) * 0.38}
-                x2={CX + raio.ate * Math.cos(a)}
-                y2={CY + raio.ate * Math.sin(a) * 0.38}
-                stroke="var(--brand-orange)"
-                strokeWidth="1"
-                opacity={raio.opacidade}
-              />
-            );
-          })}
+          <g transform={`rotate(-16 ${CX} ${CY})`}>
+            {RAIOS.map((raio) => {
+              const p = pontoElipse(raio.ate, raio.ate * ACHATAMENTO, raio.angulo);
+              const o = pontoElipse(46, 46 * ACHATAMENTO, raio.angulo);
+              return (
+                <line
+                  key={raio.angulo}
+                  x1={o.x}
+                  y1={o.y}
+                  x2={p.x}
+                  y2={p.y}
+                  stroke="var(--brand-orange)"
+                  strokeWidth="1"
+                  opacity={raio.opacidade}
+                />
+              );
+            })}
 
-          {ORBITAS.map((o) => (
-            <path
-              key={o.rx}
-              d={o.d}
-              fill="none"
-              stroke="var(--border-strong)"
-              strokeWidth="1"
-              strokeDasharray={o.pontilhada ? "2 8" : undefined}
-              opacity={o.pontilhada ? 0.85 : 0.6}
-            />
-          ))}
+            {/* Poeira do disco — o que dá matéria à galáxia. Estática: são
+                muitos nós, e animar qualquer um custaria caro. */}
+            <g>{POEIRA_INTERNA.map(grao)}</g>
+            <g className="hidden sm:block">{POEIRA_EXTERNA.map(grao)}</g>
 
-          {SEGMENTOS.map((s) => {
-            const o = ORBITAS[s.orbita];
-            return (
-              <path
-                key={`${s.orbita}-${s.de}`}
-                d={arcoElipse(o.rx, o.ry, s.de, s.ate)}
-                fill="none"
-                stroke="var(--brand-orange)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.65"
-              />
-            );
-          })}
+            {/* Um grupo por órbita, com a inclinação própria dela. Órbita,
+                pacotes e corpos moram juntos, então a rotação pega nos três. */}
+            {ORBITAS.map((o, i) => {
+              const segmento = SEGMENTOS[i];
+              return (
+                <g key={o.rx} transform={`rotate(${o.inclinacao} ${CX} ${CY})`}>
+                  <path
+                    d={o.d}
+                    fill="none"
+                    stroke="var(--border-strong)"
+                    strokeWidth="1"
+                    strokeDasharray={o.pontilhada ? "1.5 9" : undefined}
+                    opacity={o.opacidade}
+                  />
 
-          {/* Pacotes de dado em trânsito. */}
-          {PACOTES.map((p, i) => (
-            <circle
-              key={`pkt-${i}`}
-              r={p.r}
-              fill={p.laranja ? "var(--brand-orange)" : "#ffffff"}
-              opacity="0.85"
-              className="dg-gx-packet"
-              style={{
-                offsetPath: `path("${ORBITAS[p.orbita].d}")`,
-                animationDuration: `${p.duracao}s`,
-                animationDelay: `${p.atraso}s`,
-                animationDirection: p.reverso ? "reverse" : "normal",
-              }}
-            />
-          ))}
+                  {segmento && (
+                    <path
+                      d={arcoElipse(o.rx, o.ry, segmento.de, segmento.ate)}
+                      fill="none"
+                      stroke="var(--brand-orange)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      opacity="0.6"
+                    />
+                  )}
 
-          {/* Corpos. O delay negativo casa a fase animada com a estática, para
-              a cena parada sob reduced-motion ser a mesma composição. */}
-          {CORPOS.map((c, i) => (
-            <circle
-              key={`corpo-${i}`}
-              r={c.r}
-              fill={`url(#${esferas[c.esfera]})`}
-              className="dg-gx-travel"
-              style={{
-                offsetPath: `path("${ORBITAS[c.orbita].d}")`,
-                offsetDistance: `${c.fase}%`,
-                animationDuration: `${c.duracao}s`,
-                animationDelay: `-${((c.fase / 100) * c.duracao).toFixed(2)}s`,
-                animationDirection: c.reverso ? "reverse" : "normal",
-              }}
-            />
-          ))}
+                  {PACOTES.filter((p) => p.orbita === i).map((p, k) => (
+                    <circle
+                      key={`pkt-${i}-${k}`}
+                      r={p.r}
+                      fill={p.laranja ? "var(--brand-orange)" : "#ffffff"}
+                      opacity="0.85"
+                      className="dg-gx-packet"
+                      style={{
+                        offsetPath: `path("${o.d}")`,
+                        animationDuration: `${p.duracao}s`,
+                        animationDelay: `${p.atraso}s`,
+                        animationDirection: p.reverso ? "reverse" : "normal",
+                      }}
+                    />
+                  ))}
+
+                  {/* O delay negativo casa a fase animada com a estática, para
+                      a cena parada sob reduced-motion ser a mesma composição. */}
+                  {CORPOS.filter((c) => c.orbita === i).map((c, k) => (
+                    <circle
+                      key={`corpo-${i}-${k}`}
+                      r={c.r}
+                      fill={`url(#${esferas[c.esfera]})`}
+                      className="dg-gx-travel"
+                      style={{
+                        offsetPath: `path("${o.d}")`,
+                        offsetDistance: `${c.fase}%`,
+                        animationDuration: `${c.duracao}s`,
+                        animationDelay: `-${((c.fase / 100) * c.duracao).toFixed(2)}s`,
+                        animationDirection: c.reverso ? "reverse" : "normal",
+                      }}
+                    />
+                  ))}
+                </g>
+              );
+            })}
           </g>
         </g>
 
-        {/* Núcleo. Halo largo, corpo e ponto de luz — só o halo e o corpo
-            respiram; o ponto central fica firme para o olho ter âncora. */}
+        {/* Núcleo, por cima de tudo. Só os blooms respiram; o miolo e o ponto
+            de luz ficam firmes, senão o centro da cena pulsa e cansa. */}
         <g className="dg-parallax" style={camada("6px")}>
-          <circle cx={CX} cy={CY} r="168" fill={`url(#${id("halo")})`} className="dg-gx-core" />
-          <circle cx={CX} cy={CY} r="34" fill={`url(#${id("nucleo")})`} className="dg-gx-core" />
-          <circle cx={CX} cy={CY} r="11" fill="#ffffff" opacity="0.95" />
+          <circle cx={CX} cy={CY} r="215" fill={`url(#${id("halo")})`} className="dg-gx-core" />
+          <circle cx={CX} cy={CY} r="92" fill={`url(#${id("bloomNear")})`} className="dg-gx-core" />
+          <circle cx={CX} cy={CY} r="26" fill={`url(#${id("nucleo")})`} />
+          <circle cx={CX} cy={CY} r="7" fill="#ffffff" opacity="0.9" />
         </g>
       </svg>
-
-      {CONCEITOS.map((c) => (
-        <ConceptLabel key={c.linha1} {...c} />
-      ))}
     </div>
   );
 }
