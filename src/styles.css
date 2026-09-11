@@ -190,7 +190,6 @@
     0 0 120px rgba(255, 74, 31, 0.04);
 
   /* Textura — quase imperceptível no claro */
-  --texture-grid: rgba(10, 10, 11, 0.018);
   --texture-glow: rgba(255, 74, 31, 0.05);
 
   /* Motion */
@@ -292,7 +291,6 @@
     0 0 20px rgba(255, 74, 31, 0.22), 0 0 60px rgba(255, 74, 31, 0.1),
     0 0 120px rgba(255, 74, 31, 0.05);
 
-  --texture-grid: rgba(255, 255, 255, 0.022);
   --texture-glow: rgba(255, 74, 31, 0.09);
 }
 
@@ -313,19 +311,18 @@
     letter-spacing: -0.005em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Sem malha de linhas. Regra do DS: o fundo é preto puro e a sofisticação
+       vem de elementos isolados, não de uma grade cobrindo a interface. Ficam
+       só o glow de topo e o noise, que dão superfície sem desenhar estrutura. */
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -10%, var(--texture-glow), transparent 60%),
-      linear-gradient(var(--texture-grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--texture-grid) 1px, transparent 1px),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
     background-size:
       100% 100%,
-      64px 64px,
-      64px 64px,
       140px 140px;
-    /* Só o glow acompanha a viewport; grid e noise rolam com o conteúdo —
-       evita o repaint de tela cheia que `fixed` custa em todo frame. */
-    background-attachment: fixed, scroll, scroll, scroll;
+    /* Só o glow acompanha a viewport; o noise rola com o conteúdo — evita o
+       repaint de tela cheia que `fixed` custa em todo frame. */
+    background-attachment: fixed, scroll;
   }
 
   /* Headings herdam o tracking negativo do DS */
@@ -575,17 +572,6 @@
     }
   }
 
-  /* Malha de fundo de seção — dá grade espacial sem desenhar objeto. A máscara
-     apaga as bordas para a grade não terminar em linha reta no meio da tela. */
-  .dg-grid-field {
-    background-image:
-      linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
-    background-size: 64px 64px;
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
-  }
-
   /* Orbe de luz ambiente. Posição e cor ficam no componente. */
   .dg-orb {
     position: absolute;
@@ -815,6 +801,49 @@
   .dg-scroll-hint {
     animation: dg-gx-hint 2.6s ease-in-out infinite;
   }
+
+  /* Circuito ambiental das bordas: node respirando e sinal percorrendo a
+     linha. Mesmo contrato do resto da cena — só transform e opacity. */
+  .dg-node-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: dg-node-pulse 3.4s ease-in-out infinite;
+  }
+
+  .dg-signal {
+    offset-rotate: 0deg;
+    animation: dg-signal 7s linear infinite;
+    will-change: transform, opacity;
+  }
+}
+
+@keyframes dg-node-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes dg-signal {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  84% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
 }
 
 /* O `from` precisa ser explícito: com só o `to`, o valor inline de
@@ -921,7 +950,9 @@
   .dg-gx-core,
   .dg-gx-twinkle,
   .dg-gx-float,
-  .dg-scroll-hint {
+  .dg-scroll-hint,
+  .dg-node-pulse,
+  .dg-signal {
     animation: none !important;
   }
 
