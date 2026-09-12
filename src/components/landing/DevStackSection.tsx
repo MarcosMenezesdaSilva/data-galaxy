@@ -144,9 +144,9 @@ function StackCard({ icon: Icon, nome, papel, itens, arte, span, arteClasse, tex
 
       {/* mt-auto prende os chips no rodapé: com descrições de alturas
           diferentes, sem isso eles flutuariam em posições distintas. */}
+      {/* .dg-chip é só a caixa; o tipo vem da escala, via t-label. */}
       <ul className="relative z-10 mt-auto flex flex-wrap gap-2.5">
         {itens.map((item) => (
-          {/* .dg-chip é só a caixa; o tipo vem da escala, via t-label. */}
           <li key={item} className="dg-chip t-label">
             {item}
           </li>
