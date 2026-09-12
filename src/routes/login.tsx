@@ -64,9 +64,14 @@ function LoginPage() {
           }}
         />
 
-        <div className="relative">
+        <button
+          type="button"
+          onClick={() => nav({ to: "/" })}
+          aria-label="Voltar para o site"
+          className="relative w-fit cursor-pointer"
+        >
           <BrandWordmark />
-        </div>
+        </button>
 
         <div className="relative max-w-xl space-y-8">
           <Eyebrow className="dg-enter">Data intelligence</Eyebrow>
@@ -107,9 +112,14 @@ function LoginPage() {
       {/* Painel direito — seleção de perfil */}
       <div className="flex flex-col p-6 md:p-10">
         <div className="flex items-center justify-between">
-          <div className="lg:hidden">
+          <button
+            type="button"
+            onClick={() => nav({ to: "/" })}
+            aria-label="Voltar para o site"
+            className="w-fit cursor-pointer lg:hidden"
+          >
             <BrandWordmark />
-          </div>
+          </button>
           <Button
             variant="ghost"
             size="icon"

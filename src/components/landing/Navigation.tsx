@@ -1,9 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sun, Moon } from "lucide-react";
 
 import { BrandWordmark } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
+import { useApp } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 /**
@@ -57,6 +58,7 @@ function useSecaoAtiva() {
 export function Navigation() {
   const navigate = useNavigate();
   const ativa = useSecaoAtiva();
+  const { theme, toggleTheme } = useApp();
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--border-subtle)] bg-background/80 backdrop-blur-xl">
@@ -100,9 +102,14 @@ export function Navigation() {
           })}
         </ul>
 
-        <Button size="sm" onClick={() => navigate({ to: "/login" })}>
-          Entrar <ArrowRight className="ml-1 h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Alternar tema">
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          <Button size="sm" onClick={() => navigate({ to: "/login" })}>
+            Entrar <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
       </nav>
     </header>
   );
