@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Activity, Brain, Code, Database, Zap } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { AmbientCircuit } from "./AmbientCircuit";
 import { SectionHeader } from "./SectionHeader";
 import {
   DataLayerArt,
@@ -134,16 +135,19 @@ function StackCard({ icon: Icon, nome, papel, itens, arte, span, arteClasse, tex
       <div className={cn("relative z-10 flex flex-col gap-4", textoClasse)}>
         <span className="inline-flex items-center gap-3">
           <Icon className="h-7 w-7 shrink-0 text-primary" strokeWidth={2} aria-hidden="true" />
-          <h3 className="text-[22px] font-semibold tracking-tight text-foreground">{nome}</h3>
+          {/* t-h3 já entrega 22–24px na escala do DS, que é a faixa que o PDR
+              pedia para título de card — sem precisar de tamanho arbitrário. */}
+          <h3 className="t-h3 text-foreground">{nome}</h3>
         </span>
-        <p className="text-pretty text-[15px] leading-relaxed text-muted-foreground">{papel}</p>
+        <p className="t-body-md text-pretty text-muted-foreground">{papel}</p>
       </div>
 
       {/* mt-auto prende os chips no rodapé: com descrições de alturas
           diferentes, sem isso eles flutuariam em posições distintas. */}
       <ul className="relative z-10 mt-auto flex flex-wrap gap-2.5">
         {itens.map((item) => (
-          <li key={item} className="dg-chip">
+          {/* .dg-chip é só a caixa; o tipo vem da escala, via t-label. */}
+          <li key={item} className="dg-chip t-label">
             {item}
           </li>
         ))}
@@ -155,10 +159,11 @@ function StackCard({ icon: Icon, nome, papel, itens, arte, span, arteClasse, tex
 export function DevStackSection() {
   return (
     <section id="dev-stack" className="relative scroll-mt-24 overflow-hidden">
-      {/* Malha técnica da seção: 160px, com node laranja a cada terceira
-          interseção. Vive aqui e não no body — a regra de fundo preto puro
-          continua valendo no resto do site. */}
-      <div aria-hidden="true" className="dg-tech-grid absolute inset-0" />
+      {/* A atmosfera vem do circuito de borda, que é o recurso que o DS já
+          sanciona: linha fina, node e ponto luminoso na periferia, com o
+          centro limpo. A malha de fundo foi descartada — reintroduzia a grade
+          que a regra do sistema proíbe. */}
+      <AmbientCircuit variante="b" />
 
       <div className="dg-shell relative flex flex-col gap-14 pb-24 pt-20 md:pb-32 md:pt-24">
         <SectionHeader

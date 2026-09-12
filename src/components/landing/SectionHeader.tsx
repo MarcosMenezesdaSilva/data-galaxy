@@ -42,11 +42,7 @@ export function SectionHeader({
     >
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
 
-      {overline && (
-        <span className="text-[11px] font-medium uppercase tracking-[0.28em] text-muted-foreground">
-          {overline}
-        </span>
-      )}
+      {overline && <span className="t-overline text-muted-foreground">{overline}</span>}
 
       <h2 className="t-display-lg text-balance text-foreground">{title}</h2>
 

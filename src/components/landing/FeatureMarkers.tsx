@@ -89,9 +89,9 @@ function FeatureMarker({
     >
       <div className="dg-gx-float flex items-center gap-4" style={{ animationDelay: atraso }}>
         {lado === "esquerda" && circulo}
-        {/* tracking maior que o t-micro do DS: na referência estes rótulos são
-            legenda de instrumento, e o espaçamento é o que dá esse caráter. */}
-        <span className="whitespace-nowrap text-[11px] font-medium uppercase leading-[1.45] tracking-[0.09em] text-muted-foreground">
+        {/* t-micro é o papel de 11px da escala. leading-normal só afrouxa as
+            duas linhas, que no 1.3 do token ficariam coladas. */}
+        <span className="t-micro whitespace-nowrap uppercase leading-normal text-muted-foreground">
           {linha1}
           <br />
           {linha2}

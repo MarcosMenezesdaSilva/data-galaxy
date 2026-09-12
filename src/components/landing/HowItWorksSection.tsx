@@ -76,7 +76,7 @@ function VisualFluxo() {
         <span
           key={p.rotulo}
           className={cn(
-            "absolute rounded-pill border border-[color:var(--border-default)] bg-[color:var(--surface-02)] px-2.5 py-1 text-[11px] text-muted-foreground",
+            "absolute rounded-pill border border-[color:var(--border-default)] bg-[color:var(--surface-02)] px-2.5 py-1 t-micro text-muted-foreground",
             p.classe,
           )}
         >
@@ -103,10 +103,10 @@ function VisualPrevisao() {
   return (
     <div className="w-full" aria-hidden="true">
       <div className="mb-3 flex items-center gap-4">
-        <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 t-micro text-muted-foreground">
           <span className="h-2 w-2 rounded-xs bg-[color:var(--muted-foreground)]" /> Real
         </span>
-        <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 t-micro text-muted-foreground">
           <span className="h-2 w-2 rounded-xs bg-primary" /> Previsto
         </span>
       </div>
@@ -215,13 +215,13 @@ function VisualRisco() {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="mb-2 text-[11px] text-muted-foreground">Principais fatores</div>
+        <div className="mb-2 t-micro text-muted-foreground">Principais fatores</div>
         <ul className="flex flex-col gap-2">
           {FATORES.map((f) => (
             <li key={f.nome} className="flex flex-col gap-1">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="truncate text-[11px] text-foreground/80">{f.nome}</span>
-                <span className="dg-mono text-[11px] text-muted-foreground">{f.peso}%</span>
+                <span className="truncate t-micro text-foreground/80">{f.nome}</span>
+                <span className="dg-mono t-micro text-muted-foreground">{f.peso}%</span>
               </div>
               <div className="h-1 overflow-hidden rounded-pill bg-[color:var(--surface-hover)]">
                 <div
@@ -253,10 +253,10 @@ function VisualImpacto() {
           "Depois" quando o card estreitava. */}
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 t-micro text-muted-foreground">
             <span className="h-2 w-2 rounded-xs bg-[color:var(--muted-foreground)]" /> Previsto
           </span>
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 t-micro text-muted-foreground">
             <span className="h-2 w-2 rounded-xs bg-primary" /> Realizado
           </span>
         </div>
@@ -303,7 +303,7 @@ function VisualImpacto() {
                 </div>
               ))}
             </div>
-            <span className="text-[11px] text-muted-foreground">{g.rotulo}</span>
+            <span className="t-micro text-muted-foreground">{g.rotulo}</span>
           </div>
         ))}
       </div>
