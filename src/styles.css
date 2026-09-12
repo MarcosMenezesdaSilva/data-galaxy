@@ -190,6 +190,17 @@
   /* Textura — quase imperceptível no claro */
   --texture-glow: rgba(255, 74, 31, 0.05);
 
+  /* Chip de tecnologia. Único lugar do sistema com viés frio: o PDR do Dev
+     Stack especifica azul-preto, e é o que separa o chip da superfície sem
+     precisar de borda mais clara. Fica contido aqui de propósito — as
+     superfícies gerais seguem neutras, como o DS definiu. */
+  --chip-bg: #eef0f5;
+  --chip-border: #ccd2e0;
+  --chip-text: #3a3f4d;
+
+  /* Malha técnica de seção — 160px, muito mais esparsa que a antiga de 64px */
+  --grid-line: rgba(10, 10, 11, 0.035);
+
   /* Motion */
   --motion-fast: 180ms;
   --motion-default: 240ms;
@@ -284,6 +295,13 @@
     0 0 120px rgba(255, 74, 31, 0.05);
 
   --texture-glow: rgba(255, 74, 31, 0.09);
+
+  /* Chip de tecnologia — valores do PDR do Dev Stack. */
+  --chip-bg: #131824;
+  --chip-border: #293144;
+  --chip-text: #c6c8cf;
+
+  --grid-line: rgba(255, 255, 255, 0.028);
 }
 
 @layer base {
@@ -545,8 +563,44 @@
 
   /* Card do bento: vidro + resposta de elevação. O glow entra junto da sombra
      e da borda, nunca sozinho — hover precisa ser legível sem enxergar cor. */
+  /* Chip de tecnologia. Contraste propositalmente baixo: ele rotula, não
+     disputa leitura com o título do card. */
+  .dg-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding-inline: 16px;
+    border: 1px solid var(--chip-border);
+    border-radius: 999px;
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  /* Malha técnica de seção: 160px, com um node laranja a cada terceira
+     interseção. O tile dos nodes é 480px (3 × 160) e o ponto cai em
+     160px/160px, então ele pousa exatamente sobre um cruzamento.
+
+     Reintroduz o grid que havia saído do body, mas em outra escala: 160px a
+     2,8% é esparso e quase subliminar, contra os 64px a 4% que se somavam a
+     uma segunda malha e ficavam nítidos. */
+  .dg-tech-grid {
+    background-image:
+      radial-gradient(circle at 160px 160px, var(--brand-orange) 1.5px, transparent 2.5px),
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:
+      480px 480px,
+      160px 160px,
+      160px 160px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  }
+
   .dg-bento {
-    border-radius: 16px;
+    /* 14px é o raio de card do PDR. */
+    border-radius: 14px;
     box-shadow: var(--shadow-card);
     transition:
       transform var(--motion-default) var(--ease-out-expo),
