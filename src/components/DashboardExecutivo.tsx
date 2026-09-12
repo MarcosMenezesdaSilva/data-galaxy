@@ -7,6 +7,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Line,
+  LineChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -21,6 +23,7 @@ import {
 import {
   axisProps,
   brushProps,
+  chartCategorical,
   chartColors,
   gridProps,
   labelListProps,
@@ -44,7 +47,8 @@ export interface DashboardExecutivoProps {
   totalRiscos: number;
   variacaoSemanal: { semanaAtual: number; semanaAnterior: number; pct: number };
   serieMensal: { mes: string; total: number }[];
-  gruposRisco: { grupo: string; total: number }[];
+  /** Risco acumulado (cumulativo) por grupo, mês a mês — top 5 grupos. */
+  gruposRiscoSerie: { grupos: string[]; dados: Record<string, number | string>[] };
   porPrio: { name: string; value: number }[];
   serieVolumeSeasonalNaive: { data: string; real: number; previsto: number }[];
 }
@@ -59,7 +63,7 @@ export function DashboardExecutivo({
   totalRiscos,
   variacaoSemanal,
   serieMensal,
-  gruposRisco,
+  gruposRiscoSerie,
   porPrio,
   serieVolumeSeasonalNaive,
 }: DashboardExecutivoProps) {
@@ -226,28 +230,38 @@ export function DashboardExecutivo({
           barras / linha) já usado na visão operacional. */}
       <VolumeRealVsPrevistoCard serie={serieVolumeSeasonalNaive} />
 
-      {/* Grupos com maior risco acumulado */}
+      {/* Grupos com maior risco acumulado — crescimento mês a mês */}
       <Card lit className="p-6">
         <div className="t-h4 mb-1.5">Grupos com maior risco acumulado</div>
         <div className="mb-6 text-xs text-muted-foreground">
-          Soma da probabilidade de violação (%) dos riscos ativos de cada grupo
+          Soma cumulativa da probabilidade de violação (%) dos riscos ativos de cada grupo, por mês
+          de abertura do incidente
         </div>
-        {gruposRisco.length === 0 ? (
+        {gruposRiscoSerie.dados.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             Nenhum risco ativo no momento.
           </div>
         ) : (
           <div className="h-80">
             <ResponsiveContainer>
-              <BarChart data={gruposRisco} layout="vertical" margin={{ left: 20, right: 48 }}>
-                <CartesianGrid {...gridProps} horizontal={false} />
-                <XAxis type="number" {...axisProps} />
-                <YAxis type="category" dataKey="grupo" {...axisProps} width={130} />
+              <LineChart data={gruposRiscoSerie.dados} margin={{ top: 8, right: 24 }}>
+                <CartesianGrid {...gridProps} vertical={false} />
+                <XAxis dataKey="mes" {...axisProps} />
+                <YAxis {...axisProps} />
                 <Tooltip {...tooltipProps} />
-                <Bar dataKey="total" fill={chartColors.destaque} radius={[0, 6, 6, 0]}>
-                  <LabelList dataKey="total" position="right" {...labelListProps} />
-                </Bar>
-              </BarChart>
+                <Legend {...legendProps} />
+                {gruposRiscoSerie.grupos.map((grupo, i) => (
+                  <Line
+                    key={grupo}
+                    type="monotone"
+                    dataKey={grupo}
+                    name={grupo}
+                    stroke={chartCategorical[i % chartCategorical.length]}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                ))}
+              </LineChart>
             </ResponsiveContainer>
           </div>
         )}

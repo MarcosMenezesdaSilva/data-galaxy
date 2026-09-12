@@ -191,6 +191,55 @@ function DashboardPage() {
       .slice(0, 8);
   }, [riscos]);
 
+  // Crescimento do risco acumulado por grupo, mês a mês — para os 5 grupos
+  // do topo de `gruposRisco`. A data de cálculo do risco em si não varia nos
+  // dados demo (é sempre "agora"), então usamos a data de abertura do
+  // incidente ligado a cada risco como o momento em que aquele risco surgiu.
+  // Soma cumulativa: o total de um grupo só sobe mês a mês (reflete riscos
+  // ativos se acumulando), nunca "recua" sozinho — só cai de verdade quando o
+  // risco correspondente vira Mitigado e some da base de riscos Ativos.
+  //
+  // Fallback: em bases importadas, é comum um risco referenciar um incidente
+  // fora do lote atualmente carregado (import parcial) — sem correspondência
+  // em incidentesPorNumero. Nesse caso usamos data_calculo do próprio risco
+  // em vez de descartar o registro, pra não subestimar o total do grupo.
+  const gruposRiscoSerie = useMemo(() => {
+    const gruposTop = gruposRisco.slice(0, 5).map((g) => g.grupo);
+    if (gruposTop.length === 0)
+      return { grupos: gruposTop, dados: [] as Record<string, number | string>[] };
+
+    const porGrupoMes = new Map<string, Map<string, number>>();
+    const mesesSet = new Set<string>();
+
+    riscos
+      .filter((r) => r.status === "Ativo" && gruposTop.includes(r.grupo))
+      .forEach((r) => {
+        const inc = incidentesPorNumero.get(r.numero_incidente);
+        const dataRef = inc?.data_abertura ?? r.data_calculo;
+        const d = new Date(dataRef);
+        const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        mesesSet.add(mes);
+        if (!porGrupoMes.has(r.grupo)) porGrupoMes.set(r.grupo, new Map());
+        const mapaGrupo = porGrupoMes.get(r.grupo)!;
+        mapaGrupo.set(mes, (mapaGrupo.get(mes) ?? 0) + r.probabilidade_violacao);
+      });
+
+    const meses = Array.from(mesesSet).sort();
+    const acumulado = new Map<string, number>(gruposTop.map((g) => [g, 0]));
+    const dados = meses.map((mes) => {
+      const linha: Record<string, number | string> = { mes };
+      gruposTop.forEach((g) => {
+        const incremento = porGrupoMes.get(g)?.get(mes) ?? 0;
+        const novoTotal = (acumulado.get(g) ?? 0) + incremento;
+        acumulado.set(g, novoTotal);
+        linha[g] = Math.round(novoTotal);
+      });
+      return linha;
+    });
+
+    return { grupos: gruposTop, dados };
+  }, [riscos, incidentesPorNumero, gruposRisco]);
+
   // Fila de ação do técnico: riscos já vêm ordenados por probabilidade de
   // violação (query Dexie), aqui só limitamos a um tamanho de lista razoável.
   const topRiscos = useMemo(() => riscos.slice(0, 15), [riscos]);
@@ -283,7 +332,7 @@ function DashboardPage() {
           totalRiscos={riscos.length}
           variacaoSemanal={variacaoSemanal}
           serieMensal={serieMensalCompleta}
-          gruposRisco={gruposRisco}
+          gruposRiscoSerie={gruposRiscoSerie}
           porPrio={porPrio}
           serieVolumeSeasonalNaive={serieVolumeSeasonalNaive}
         />
