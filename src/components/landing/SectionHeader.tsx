@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
  */
 export function SectionHeader({
   eyebrow,
+  overline,
   title,
   description,
   align = "center",
@@ -20,6 +21,10 @@ export function SectionHeader({
   /** Opcional: o título já contextualiza a seção, e a pill acrescentava um
       degrau de hierarquia sem informação. */
   eyebrow?: string;
+  /** Texto corrido em caixa alta com tracking largo, sem pill. É o token
+      Overline do DS — outro papel que o eyebrow: contextualiza sem virar
+      componente. */
+  overline?: string;
   title: string;
   description?: ReactNode;
   align?: "center" | "start";
@@ -36,6 +41,8 @@ export function SectionHeader({
       )}
     >
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+
+      {overline && <span className="t-overline text-muted-foreground">{overline}</span>}
 
       <h2 className="t-display-lg text-balance text-foreground">{title}</h2>
 

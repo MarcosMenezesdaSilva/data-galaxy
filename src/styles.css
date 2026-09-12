@@ -452,6 +452,16 @@
     letter-spacing: 0.025em;
     font-weight: 500;
   }
+  /* Overline: mesmo corpo do micro, mas com tracking de rótulo de instrumento.
+     Entra na escala como papel próprio em vez de virar tracking arbitrário
+     solto num componente. */
+  .t-overline {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    letter-spacing: 0.28em;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
 
   /* Eyebrow / pill — "● DATA INTELLIGENCE" */
   .dg-pill {
@@ -553,7 +563,23 @@
 
   /* Card do bento: vidro + resposta de elevação. O glow entra junto da sombra
      e da borda, nunca sozinho — hover precisa ser legível sem enxergar cor. */
+  /* Chip de tecnologia: só a caixa. O tipo vem de .t-label, para o chip não
+     criar um tamanho fora da escala. Superfície e borda saem dos tokens
+     neutros do DS — o azul-preto que o PDR do Dev Stack pedia reintroduziria
+     na interface exatamente o viés frio que o sistema tirou. */
+  .dg-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding-inline: 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    background: var(--surface-02);
+    color: var(--muted-foreground);
+  }
+
   .dg-bento {
+    /* --radius-lg: o raio de card do sistema. */
     border-radius: 16px;
     box-shadow: var(--shadow-card);
     transition:

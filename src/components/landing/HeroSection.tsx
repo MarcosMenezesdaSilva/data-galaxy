@@ -67,7 +67,7 @@ function ScrollHint() {
       className="absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 rounded-md px-3 py-2 text-muted-foreground/70 transition-colors duration-[var(--motion-default)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand-orange)] lg:flex"
     >
       <ArrowDown className="dg-scroll-hint h-4 w-4" aria-hidden="true" />
-      <span className="text-[11px] uppercase tracking-[0.18em]">Scroll para explorar</span>
+      <span className="t-overline">Scroll para explorar</span>
     </a>
   );
 }
@@ -145,7 +145,7 @@ export function HeroSection() {
               possibilidades <span className="text-primary">ilimitadas.</span>
             </h1>
 
-            <p className="max-w-[580px] text-pretty text-[19px] leading-[1.6] text-foreground/65">
+            <p className="t-body-lg max-w-[580px] text-pretty text-foreground/65">
               Conecte, analise e coloque seus dados em ação com inteligência, em grande escala, em
               todo o seu ecossistema
             </p>
@@ -161,7 +161,7 @@ export function HeroSection() {
               <ArrowRight className="ml-3 h-[18px] w-[18px] transition-transform duration-[var(--motion-default)] ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
             </Button>
 
-            <p className="text-[15px] text-muted-foreground">
+            <p className="t-body-sm text-muted-foreground">
               Sem cadastro? Sem problemas, teste pelo perfil de demonstração
             </p>
           </div>

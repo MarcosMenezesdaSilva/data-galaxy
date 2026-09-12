@@ -78,7 +78,14 @@ const rotulo = {
   fontWeight: 500,
 } as const;
 
-export function AmbientCircuit() {
+/**
+ * `variante` só desloca os dois SVGs na vertical. Com duas seções usando o
+ * circuito na mesma página, offsets iguais leriam como imagem repetida.
+ */
+export function AmbientCircuit({ variante = "a" }: { variante?: "a" | "b" }) {
+  const alto = variante === "a" ? "11%" : "26%";
+  const baixo = variante === "a" ? "5%" : "34%";
+
   return (
     <div
       aria-hidden="true"
@@ -90,8 +97,8 @@ export function AmbientCircuit() {
         width="300"
         height="620"
         viewBox="0 0 300 620"
-        className="absolute left-0 top-[11%]"
-        style={{ opacity: 0.55 }}
+        className="absolute left-0"
+        style={{ opacity: 0.55, top: alto }}
       >
         <path d={TRILHA_ESQ} fill="none" stroke={TRACO} strokeWidth="1" opacity="0.32" />
         <path d="M 0 392 H 58 V 486" fill="none" stroke={TRACO} strokeWidth="1" opacity="0.2" />
@@ -115,8 +122,8 @@ export function AmbientCircuit() {
         width="340"
         height="700"
         viewBox="0 0 340 700"
-        className="absolute right-0 top-[5%]"
-        style={{ opacity: 0.55 }}
+        className="absolute right-0"
+        style={{ opacity: 0.55, top: baixo }}
       >
         <path d={TRILHA_DIR} fill="none" stroke={TRACO} strokeWidth="1" opacity="0.32" />
         <path

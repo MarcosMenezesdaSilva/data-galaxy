@@ -79,7 +79,7 @@ export function Navigation() {
                   href={`#${s.id}`}
                   aria-current={atual ? "true" : undefined}
                   className={cn(
-                    "relative flex h-[70px] items-center px-1 text-[15px] transition-colors duration-[var(--motion-fast)]",
+                    "t-body-sm relative flex h-[70px] items-center px-1 transition-colors duration-[var(--motion-fast)]",
                     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand-orange)]",
                     atual ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
