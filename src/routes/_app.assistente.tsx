@@ -424,20 +424,75 @@ function AssistenteConversa({ perfil }: { perfil: string | null }) {
           </PainelInfo>
         </div>
       ) : (
-        <div className="space-y-4">
-          {msgs.map((m, i) =>
-            m.role === "user" ? (
-              <div key={i} className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-                  {m.text}
+        <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
+          <div className="min-w-0 space-y-4">
+            {msgs.map((m, i) =>
+              m.role === "user" ? (
+                <div key={i} className="flex justify-end">
+                  <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+                    {m.text}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <RespostaCard key={i} r={m.resposta!} isStreaming={m.isStreaming} />
-            ),
-          )}
-          {isThinking && <ThinkingBubble />}
-          <div ref={endRef} />
+              ) : (
+                <RespostaCard key={i} r={m.resposta!} isStreaming={m.isStreaming} />
+              ),
+            )}
+            {isThinking && <ThinkingBubble />}
+            <div ref={endRef} />
+          </div>
+
+          {/* Coluna compacta — as ações/exemplos/contexto continuam a um
+              clique de distância durante a conversa, só que reduzidos a
+              ícone + rótulo (sem a descrição longa dos cards grandes). */}
+          <aside className="space-y-3 lg:sticky lg:top-6 lg:h-fit">
+            <PainelCompacto titulo="Ações rápidas">
+              {ACOES_DESTAQUE.map((a) => (
+                <button
+                  key={a.label}
+                  onClick={() => enviar(a.prompt)}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground/90 hover:bg-muted"
+                >
+                  <div
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] ${a.accent}`}
+                  >
+                    <a.icon className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="truncate">{a.label}</span>
+                </button>
+              ))}
+            </PainelCompacto>
+
+            <PainelCompacto titulo="Exemplos">
+              {quickQs.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => enviar(q)}
+                  className="w-full rounded-lg px-2 py-1.5 text-left text-xs text-foreground/90 hover:bg-muted"
+                >
+                  {q}
+                </button>
+              ))}
+            </PainelCompacto>
+
+            {navContexto.length > 0 && (
+              <PainelCompacto titulo="Navegue">
+                {navContexto.map((item) => (
+                  <button
+                    key={item.to}
+                    onClick={() => navigate({ to: item.to })}
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-muted"
+                  >
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] ${item.accent}`}
+                    >
+                      <item.icon className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="truncate text-foreground/90">{item.label}</span>
+                  </button>
+                ))}
+              </PainelCompacto>
+            )}
+          </aside>
         </div>
       )}
     </div>
@@ -459,6 +514,19 @@ function PainelInfo({
         <Icon className="h-4 w-4 text-primary" /> {titulo}
       </div>
       {children}
+    </Card>
+  );
+}
+
+// Versão reduzida do PainelInfo pra coluna lateral durante a conversa — sem
+// descrição longa, só ícone + rótulo, pra caber num espaço bem mais estreito.
+function PainelCompacto({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <Card className="p-3">
+      <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {titulo}
+      </div>
+      <div className="space-y-0.5">{children}</div>
     </Card>
   );
 }
