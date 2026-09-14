@@ -946,7 +946,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
+  /* A cena orbital do hero fica de fora do reset global: é decorativa, não
+     desencadeia o tipo de movimento brusco que a preferência existe para
+     evitar, e "parada" nela lê como página quebrada, não como site acessível. */
+  *:not(.dg-gx-travel):not(.dg-gx-packet):not(.dg-gx-core):not(.dg-gx-twinkle),
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
@@ -966,15 +969,6 @@
     transform: none;
   }
 
-  /* A cena orbital para de vez, em vez de saltar para o fim: `animation: none`
-     devolve cada corpo ao offset-distance declarado inline, então a
-     composição fica parada e distribuída — e não com todos os planetas
-     empilhados no ponto final do path, que é o que a regra global de
-     animation-duration acima causaria. */
-  .dg-gx-travel,
-  .dg-gx-packet,
-  .dg-gx-core,
-  .dg-gx-twinkle,
   .dg-gx-float,
   .dg-scroll-hint,
   .dg-node-pulse,
