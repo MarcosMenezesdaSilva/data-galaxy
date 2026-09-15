@@ -115,7 +115,16 @@ const CAMADAS: Camada[] = [
   },
 ];
 
-function StackCard({ icon: Icon, nome, papel, itens, arte, span, arteClasse, textoClasse }: Camada) {
+function StackCard({
+  icon: Icon,
+  nome,
+  papel,
+  itens,
+  arte,
+  span,
+  arteClasse,
+  textoClasse,
+}: Camada) {
   return (
     <article
       className={cn(
@@ -158,14 +167,14 @@ function StackCard({ icon: Icon, nome, papel, itens, arte, span, arteClasse, tex
 
 export function DevStackSection() {
   return (
-    <section id="dev-stack" className="relative scroll-mt-24 overflow-hidden">
+    <section id="dev-stack" className="relative scroll-mt-20 overflow-hidden">
       {/* A atmosfera vem do circuito de borda, que é o recurso que o DS já
           sanciona: linha fina, node e ponto luminoso na periferia, com o
           centro limpo. A malha de fundo foi descartada — reintroduzia a grade
           que a regra do sistema proíbe. */}
       <AmbientCircuit variante="b" />
 
-      <div className="dg-shell relative flex flex-col gap-14 pb-24 pt-20 md:pb-32 md:pt-24">
+      <div className="dg-shell relative flex flex-col gap-10 pb-20 pt-16 md:pb-24 md:pt-20">
         <SectionHeader
           overline="Build fast • Deploy smart"
           title="Dev Stack"

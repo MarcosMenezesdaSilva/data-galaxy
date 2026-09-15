@@ -54,7 +54,7 @@ function FeaturePillarCard({ icon: Icon, title, description }: (typeof PILARES)[
 
 export function IntroductionSection() {
   return (
-    <section id="what-is" className="relative scroll-mt-24 overflow-hidden">
+    <section id="what-is" className="relative scroll-mt-20 overflow-hidden">
       <AmbientCircuit />
 
       {/* Padding de topo curto de propósito: antes eram 96px/128px e a seção

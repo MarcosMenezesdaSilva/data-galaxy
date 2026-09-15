@@ -323,9 +323,9 @@ export function CapabilitiesSection() {
   return (
     <section
       id="what-we-provide"
-      className="scroll-mt-24 border-t border-[color:var(--border-subtle)]"
+      className="scroll-mt-20 border-t border-[color:var(--border-subtle)]"
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-14 px-6 py-24 md:px-10 md:py-32">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-20 md:px-10 md:py-24">
         <SectionHeader
           title="O que oferecemos"
           description="Cinco capacidades que cobrem o ciclo da operação, da antecipação do volume até a prova de que a correção funcionou."
