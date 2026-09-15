@@ -39,16 +39,6 @@ function Footer() {
             Challenge Locaweb 2026 · FIAP · Grupo NexusOps
           </span>
         </div>
-
-        {/* Ressalva acadêmica: permanece na página, em peso menor. Apresentar
-            base sintética como operação real seria overclaim. A discrição vem
-            do tamanho e da cor — baixar a opacidade levaria o texto a 2,8:1 no
-            tema claro, reprovando AA. */}
-        <p className="t-body-sm max-w-3xl text-pretty text-muted-foreground">
-          MVP acadêmico executado 100% no navegador, sem backend de aplicação. Inicia em modo
-          demonstração com dados sintéticos e permite importar a base real tratada de incidentes. Os
-          números exibidos no produto não representam SLAs contratuais.
-        </p>
       </div>
     </footer>
   );

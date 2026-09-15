@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -236,15 +236,18 @@ function UsuarioDialog({
   const [salvando, setSalvando] = useState(false);
 
   // Reabre o form limpo (ou pré-preenchido, se for edição) toda vez que o
-  // diálogo é aberto — evita carregar estado da última vez que foi usado.
-  function onOpenChangeInterno(v: boolean) {
-    if (v) {
+  // diálogo é aberto. Precisa ser um efeito reagindo a `open`/`usuario` — não
+  // dá pra depender do onOpenChange do Dialog, porque quem abre o diálogo
+  // (criar ou editar) muda o `open` de fora, e o Radix só chama onOpenChange
+  // quando é ELE que pede a mudança (Esc, clique fora), nunca em resposta a
+  // uma prop `open` setada externamente.
+  useEffect(() => {
+    if (open) {
       setNome(usuario?.nome ?? "");
       setCargo(usuario?.cargo ?? "");
       setRotas(new Set(usuario?.rotas ?? []));
     }
-    onOpenChange(v);
-  }
+  }, [open, usuario]);
 
   function alternarRota(to: string, marcado: boolean) {
     setRotas((atual) => {
@@ -256,7 +259,7 @@ function UsuarioDialog({
   }
 
   async function salvar() {
-    if (!nome.trim() || !cargo.trim()) {
+    if (!editando && (!nome.trim() || !cargo.trim())) {
       toast.error("Preencha nome e cargo.");
       return;
     }
@@ -282,7 +285,7 @@ function UsuarioDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChangeInterno}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
