@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/Brand";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ import { db } from "@/lib/db";
 import { useApp } from "@/lib/store";
 import { fmtDate, fmtNumber, pct } from "@/lib/format";
 import { PRODUTOS, GRUPOS } from "@/lib/demo-data";
-import type { AcaoCorretiva } from "@/lib/types";
+import type { AcaoCorretiva, ClassificacaoAcao } from "@/lib/types";
 import {
   Plus,
   Wrench,
@@ -327,6 +327,41 @@ function ValidacaoTab({ acoes }: { acoes: AcaoCorretiva[] }) {
   const [sel, setSel] = useState<AcaoCorretiva | null>(null);
   const atual = sel ?? acoes[0] ?? null;
 
+  // Quem atuou na correção é quem sabe se ela funcionou — não tem regra
+  // automática rodando sobre volume/reincidência hoje, então a classificação
+  // fica manual: a pessoa registra o veredito dela mesma pra cada ação.
+  const [classifForm, setClassifForm] = useState<{
+    classificacao: ClassificacaoAcao;
+    nota: string;
+  }>({ classificacao: "Pendente", nota: "" });
+  const [salvandoClassif, setSalvandoClassif] = useState(false);
+
+  useEffect(() => {
+    setClassifForm({
+      classificacao: atual?.classificacao ?? "Pendente",
+      nota: atual?.conclusao ?? "",
+    });
+    // Só reage à troca de caso selecionado — reagir a classificacao/conclusao
+    // também sobrescreveria o que a pessoa está digitando a cada salvamento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atual?.id_acao]);
+
+  async function salvarClassificacao() {
+    if (!atual?.id) return;
+    setSalvandoClassif(true);
+    try {
+      await db.acoes.update(atual.id, {
+        classificacao: classifForm.classificacao,
+        conclusao: classifForm.nota.trim() || undefined,
+      });
+      toast.success(
+        `Correção de ${atual.numero_incidente} classificada como ${classifForm.classificacao}.`,
+      );
+    } finally {
+      setSalvandoClassif(false);
+    }
+  }
+
   const stats = useMemo(
     () => ({
       validacao: acoes.filter((a) => a.status === "Em validação").length,
@@ -501,14 +536,50 @@ function ValidacaoTab({ acoes }: { acoes: AcaoCorretiva[] }) {
                 </div>
               </div>
             )}
-            {atual.conclusao && (
-              <div className="rounded-md bg-muted p-3">
-                <div className="flex items-start gap-2 text-xs">
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
-                  <p>{atual.conclusao}</p>
-                </div>
+            <div className="space-y-3 rounded-md border border-border p-3">
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-primary" />
+                Sem regra automática rodando sobre os números acima — quem atuou na correção
+                registra o veredito.
               </div>
-            )}
+
+              <FormField label="Classificação">
+                <Select
+                  value={classifForm.classificacao}
+                  onValueChange={(v) =>
+                    setClassifForm((f) => ({ ...f, classificacao: v as ClassificacaoAcao }))
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                    <SelectItem value="Efetiva">Efetiva</SelectItem>
+                    <SelectItem value="Paliativa">Paliativa</SelectItem>
+                    <SelectItem value="Inconclusiva">Inconclusiva</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Observação (opcional)">
+                <Textarea
+                  rows={3}
+                  placeholder="O que fez chegar a essa classificação?"
+                  value={classifForm.nota}
+                  onChange={(e) => setClassifForm((f) => ({ ...f, nota: e.target.value }))}
+                />
+              </FormField>
+
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={salvarClassificacao}
+                disabled={salvandoClassif}
+              >
+                Salvar classificação
+              </Button>
+            </div>
           </Card>
         )}
       </div>
