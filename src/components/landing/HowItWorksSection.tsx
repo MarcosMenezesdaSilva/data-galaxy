@@ -184,14 +184,7 @@ function VisualRisco() {
     <div className="flex items-center gap-4" aria-hidden="true">
       <div className="relative h-[104px] w-[104px] shrink-0">
         <svg viewBox="0 0 104 104" className="h-full w-full">
-          <circle
-            cx="52"
-            cy="52"
-            r={R}
-            fill="none"
-            stroke="var(--surface-hover)"
-            strokeWidth="9"
-          />
+          <circle cx="52" cy="52" r={R} fill="none" stroke="var(--surface-hover)" strokeWidth="9" />
           {/* rotate(-90) põe o início do arco no topo. */}
           <circle
             cx="52"
@@ -375,7 +368,7 @@ function StepCard({ icon: Icon, title, description, visual }: Etapa) {
 
 export function HowItWorksSection() {
   return (
-    <div className="dg-shell relative flex flex-col gap-12 pb-24 md:gap-14 md:pb-32">
+    <div className="dg-shell relative flex flex-col gap-8 pb-24 md:gap-10 md:pb-32">
       <SectionHeader
         title="Como funciona"
         description="Dos sinais operacionais à comprovação do resultado, o Data Galaxy fecha o ciclo inteiro da operação."

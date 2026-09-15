@@ -58,8 +58,11 @@ export function IntroductionSection() {
       <AmbientCircuit />
 
       {/* Padding de topo curto de propósito: antes eram 96px/128px e a seção
-          abria com uma faixa vazia que fazia a página parecer incompleta. */}
-      <div className="dg-shell relative flex flex-col gap-12 pb-20 pt-16 md:gap-14 md:pb-24 md:pt-20">
+          abria com uma faixa vazia que fazia a página parecer incompleta.
+          Reduzido de novo (gap/pb) — "O que é" carrega "Como funciona" logo
+          abaixo na mesma âncora, então é a seção com mais conteúdo pra caber
+          numa tela ao navegar pelo menu. */}
+      <div className="dg-shell relative flex flex-col gap-8 pb-12 pt-12 md:gap-10 md:pb-16 md:pt-16">
         <SectionHeader
           title="O que é o Data Galaxy?"
           description="Uma plataforma de AIOps que conecta dados operacionais para antecipar incidentes, explicar riscos e comprovar se cada ação realmente resolveu o problema."

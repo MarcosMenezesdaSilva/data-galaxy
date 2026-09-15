@@ -128,7 +128,7 @@ function StackCard({
   return (
     <article
       className={cn(
-        "dg-glass dg-bento relative flex min-h-[300px] flex-col gap-7 overflow-hidden p-8",
+        "dg-glass dg-bento relative flex min-h-[270px] flex-col gap-7 overflow-hidden p-8",
         span,
       )}
     >
