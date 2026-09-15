@@ -6,6 +6,7 @@ import { Navigation } from "@/components/landing/Navigation";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { IntroductionSection } from "@/components/landing/IntroductionSection";
 import { CapabilitiesSection } from "@/components/landing/CapabilitiesSection";
+import { ImpactSection } from "@/components/landing/ImpactSection";
 import { DevStackSection } from "@/components/landing/DevStackSection";
 
 const TITULO = "Data Galaxy: AIOps preditivo para incidentes e OLA";
@@ -59,6 +60,7 @@ function Index() {
         <HeroSection />
         <IntroductionSection />
         <CapabilitiesSection />
+        <ImpactSection />
         <DevStackSection />
       </main>
 

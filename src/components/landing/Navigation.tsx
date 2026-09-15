@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 const SECOES = [
   { id: "what-is", label: "O que é" },
   { id: "what-we-provide", label: "O que oferecemos" },
+  { id: "impacto", label: "O que muda" },
   { id: "dev-stack", label: "Dev Stack" },
 ];
 
