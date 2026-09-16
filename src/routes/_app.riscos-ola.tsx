@@ -62,6 +62,7 @@ import type { RiscoOla } from "@/lib/types";
 import { toast } from "sonner";
 import {
   enviarNotificacao,
+  separarDestinos,
   statusCanaisNotificacao,
   linkOptInWhatsapp,
   type Canal,
@@ -254,9 +255,17 @@ function RiscosPage() {
   }
 
   async function confirmarNotificacao(r: RiscoOla) {
-    if (canalEscolhido !== "teams" && destino.trim().length < 8) {
-      toast.error("Digite um número de destino válido (DDD + número, ex: 11999999999).");
-      return;
+    const destinos = separarDestinos(destino);
+    if (canalEscolhido !== "teams") {
+      if (destinos.length === 0) {
+        toast.error("Digite ao menos um número de destino válido (DDD + número, ex: 11999999999).");
+        return;
+      }
+      const invalido = destinos.find((d) => d.replace(/\D/g, "").length < 10);
+      if (invalido) {
+        toast.error(`"${invalido}" não parece um número válido (DDD + número, ex: 11999999999).`);
+        return;
+      }
     }
 
     setEnviando(true);
@@ -275,11 +284,21 @@ function RiscosPage() {
     setNotificados((s) => new Set(s).add(r.id_risco));
 
     if (resultado.ok) {
-      toast.success(
-        canalEscolhido === "teams"
-          ? `Equipe ${r.grupo} notificada via Teams.`
-          : `Mensagem enviada por ${NOME_CANAL[canalEscolhido]} para ${destino.trim()}.`,
-      );
+      const algumaFalha = (resultado.falhas?.length ?? 0) > 0;
+      if (canalEscolhido === "teams") {
+        toast.success(`Equipe ${r.grupo} notificada via Teams.`);
+      } else if (destinos.length === 1) {
+        toast.success(`Mensagem enviada por ${NOME_CANAL[canalEscolhido]} para ${destinos[0]}.`);
+      } else if (algumaFalha) {
+        toast.warning(
+          `Mensagem enviada por ${NOME_CANAL[canalEscolhido]} para ${resultado.enviados} de ${resultado.total} números.`,
+          { description: resultado.falhas!.map((f) => f.destino).join(", ") + " não recebeu." },
+        );
+      } else {
+        toast.success(
+          `Mensagem enviada por ${NOME_CANAL[canalEscolhido]} para os ${resultado.total} números.`,
+        );
+      }
       setDialogNotificarAberto(false);
     } else if (resultado.motivo === "nao_configurado") {
       toast.warning(
@@ -625,8 +644,9 @@ function RiscosPage() {
             <DialogHeader>
               <DialogTitle>Notificar grupo {atual.grupo}</DialogTitle>
               <DialogDescription>
-                Escolha o canal. Para WhatsApp ou SMS, digite o DDD + número de destino — útil para
-                demonstrar o envio ao vivo.
+                Escolha o canal. Para WhatsApp ou SMS, digite o DDD + número de destino — pode
+                separar vários números por vírgula ou ponto e vírgula para notificar mais de uma
+                pessoa de uma vez.
               </DialogDescription>
             </DialogHeader>
 
@@ -664,16 +684,18 @@ function RiscosPage() {
 
               {canalEscolhido !== "teams" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="destino-notificacao">Número de destino</Label>
+                  <Label htmlFor="destino-notificacao">Número(s) de destino</Label>
                   <Input
                     id="destino-notificacao"
-                    placeholder="11999999999"
+                    placeholder="11999999999, 11988888888"
                     value={destino}
                     onChange={(e) => setDestino(e.target.value)}
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Só DDD + número — o +55 é adicionado automaticamente. Em conta Twilio trial, o
-                    número precisa estar verificado (SMS) ou ter entrado no sandbox (WhatsApp).
+                    Só DDD + número — o +55 é adicionado automaticamente. Separe vários números por
+                    vírgula ou ponto e vírgula para notificar mais de uma pessoa. Em conta Twilio
+                    trial, cada número precisa estar verificado (SMS) ou ter entrado no sandbox
+                    (WhatsApp).
                   </p>
                 </div>
               )}

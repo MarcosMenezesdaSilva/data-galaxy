@@ -17,6 +17,12 @@ export interface NotificarResultado {
   ok: boolean;
   motivo?: string;
   detalhe?: string;
+  // Presentes quando `destinatario` tem mais de um número (separados por ","
+  // ou ";"): quantos dos destinos realmente receberam a mensagem e quais
+  // falharam. `ok` só vem `false` quando NENHUM destino recebeu.
+  enviados?: number;
+  total?: number;
+  falhas?: { destino: string; detalhe: string }[];
 }
 
 export interface StatusCanais {
@@ -38,6 +44,15 @@ export function linkOptInWhatsapp(status: StatusCanais): string | null {
   const numero = status.whatsappNumero.replace(/[^\d]/g, "");
   const texto = status.whatsappJoinCode || "Olá! Quero receber notificações do Data Galaxy.";
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
+// Mesma regra de separação usada no servidor (ver netlify/functions/notify.ts)
+// — replicada aqui só para validar no cliente antes de disparar a requisição.
+export function separarDestinos(bruto: string): string[] {
+  return bruto
+    .split(/[,;]+/)
+    .map((d) => d.trim())
+    .filter((d) => d.length > 0);
 }
 
 export async function enviarNotificacao(input: NotificarInput): Promise<NotificarResultado> {

@@ -158,7 +158,14 @@ function ConfigPage() {
     });
     setEnviandoTeste(null);
     if (resultado.ok) {
-      toast.success("Notificação de teste enviada com sucesso.");
+      const algumaFalha = (resultado.falhas?.length ?? 0) > 0;
+      if (!algumaFalha || !resultado.total || resultado.total <= 1) {
+        toast.success("Notificação de teste enviada com sucesso.");
+      } else {
+        toast.warning(`Teste enviado para ${resultado.enviados} de ${resultado.total} números.`, {
+          description: resultado.falhas!.map((f) => f.destino).join(", ") + " não recebeu.",
+        });
+      }
     } else if (resultado.motivo === "nao_configurado") {
       toast.warning("Esse canal ainda não está configurado (variáveis de ambiente ausentes).");
     } else {
@@ -309,6 +316,10 @@ function ConfigPage() {
           <MessageSquare className="h-4 w-4 text-primary" />
           <div className="text-sm font-semibold">Canais de Notificação</div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Em WhatsApp e SMS, separe vários números por vírgula ou ponto e vírgula para testar mais
+          de um destino de uma vez.
+        </p>
 
         <div className="space-y-3">
           {/* WhatsApp */}
@@ -332,10 +343,10 @@ function ConfigPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Input
-                placeholder="11999999999"
+                placeholder="11999999999, 11988888888"
                 value={destinoWhatsapp}
                 onChange={(e) => setDestinoWhatsapp(e.target.value)}
-                className="h-8 w-44"
+                className="h-8 w-56"
                 disabled={!statusCanais?.whatsapp}
               />
               <Button
@@ -403,10 +414,10 @@ function ConfigPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Input
-                placeholder="11999999999"
+                placeholder="11999999999, 11988888888"
                 value={destinoSms}
                 onChange={(e) => setDestinoSms(e.target.value)}
-                className="h-8 w-44"
+                className="h-8 w-56"
                 disabled={!statusCanais?.sms}
               />
               <Button

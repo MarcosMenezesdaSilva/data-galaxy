@@ -14,7 +14,20 @@ interface NotifyBody {
   mensagem: string;
 }
 
-type EnvioResultado = { ok: true } | { ok: false; motivo: "falha_envio"; detalhe: string };
+type EnvioUnicoResultado = { ok: true } | { ok: false; motivo: "falha_envio"; detalhe: string };
+
+// Resultado agregado de um envio que pode ter ido para vários destinos: só
+// falha (`ok: false`) quando NENHUM destino recebeu a mensagem — se pelo
+// menos um funcionou, é sucesso parcial (`ok: true` com `falhas` preenchido),
+// porque a pessoa que recebeu já foi de fato notificada.
+type EnvioResultado =
+  | {
+      ok: true;
+      enviados?: number;
+      total?: number;
+      falhas?: { destino: string; detalhe: string }[];
+    }
+  | { ok: false; motivo: "falha_envio"; detalhe: string };
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -72,13 +85,24 @@ function normalizarNumero(numero: string): string {
   return `+55${digitos}`;
 }
 
+// Separa múltiplos destinos digitados no mesmo campo, por vírgula ou
+// ponto e vírgula — pensado para notificar mais de uma pessoa de uma vez
+// sem precisar repetir o envio manualmente. Vazio entre separadores (ex.:
+// "11999,,11888" ou vírgula sobrando no fim) é ignorado, não vira erro.
+function separarDestinos(bruto: string): string[] {
+  return bruto
+    .split(/[,;]+/)
+    .map((d) => d.trim())
+    .filter((d) => d.length > 0);
+}
+
 async function enviarTwilio(params: {
   accountSid: string;
   authToken: string;
   from: string;
   to: string;
   corpo: string;
-}): Promise<EnvioResultado> {
+}): Promise<EnvioUnicoResultado> {
   const url = `https://api.twilio.com/2010-04-01/Accounts/${params.accountSid}/Messages.json`;
   const form = new URLSearchParams();
   form.set("To", params.to);
@@ -131,7 +155,7 @@ async function enviarTeams(
   webhookUrl: string,
   titulo: string,
   mensagem: string,
-): Promise<EnvioResultado> {
+): Promise<EnvioUnicoResultado> {
   try {
     const resp = await fetch(webhookUrl, {
       method: "POST",
@@ -207,15 +231,12 @@ export default async (req: Request): Promise<Response> => {
     return jsonResponse({ ok: false, motivo: "nao_configurado" });
   }
 
-  const destinoNormalizado = destinoBruto.startsWith("whatsapp:")
-    ? destinoBruto
-    : normalizarNumero(destinoBruto);
-  const to =
-    canal === "whatsapp"
-      ? destinoNormalizado.startsWith("whatsapp:")
-        ? destinoNormalizado
-        : `whatsapp:${destinoNormalizado}`
-      : destinoNormalizado;
+  // Um ou vários números no mesmo campo, separados por "," ou ";" — cada um
+  // vira um envio independente pro Twilio, disparados em paralelo.
+  const destinos = separarDestinos(destinoBruto);
+  if (destinos.length === 0) {
+    return jsonResponse({ ok: false, motivo: "nao_configurado" });
+  }
 
   // WhatsApp interpreta *texto* como negrito — deixa o título em destaque.
   // SMS é texto puro; asteriscos apareceriam literalmente, então não usamos.
@@ -223,15 +244,46 @@ export default async (req: Request): Promise<Response> => {
   const corpoBruto = `${prefixo}\n\n${mensagem}`;
   const corpo = canal === "sms" ? removerAcentos(corpoBruto) : corpoBruto;
 
-  console.log(`[notify] Pedido recebido: canal=${canal} destino=***${to.slice(-4)} from=${from}`);
+  const envios = await Promise.all(
+    destinos.map(async (destinoBrutoUnico) => {
+      const destinoNormalizado = destinoBrutoUnico.startsWith("whatsapp:")
+        ? destinoBrutoUnico
+        : normalizarNumero(destinoBrutoUnico);
+      const to =
+        canal === "whatsapp"
+          ? destinoNormalizado.startsWith("whatsapp:")
+            ? destinoNormalizado
+            : `whatsapp:${destinoNormalizado}`
+          : destinoNormalizado;
 
-  const resultado = await enviarTwilio({
-    accountSid,
-    authToken,
-    from,
-    to,
-    corpo,
+      console.log(
+        `[notify] Pedido recebido: canal=${canal} destino=***${to.slice(-4)} from=${from}`,
+      );
+
+      const resultado = await enviarTwilio({ accountSid, authToken, from, to, corpo });
+      return { destino: destinoNormalizado, resultado };
+    }),
+  );
+
+  const falhas: { destino: string; detalhe: string }[] = [];
+  for (const e of envios) {
+    if (e.resultado.ok) continue;
+    falhas.push({ destino: e.destino, detalhe: e.resultado.detalhe });
+  }
+  const enviados = envios.length - falhas.length;
+
+  if (enviados === 0) {
+    return jsonResponse({
+      ok: false,
+      motivo: "falha_envio",
+      detalhe: falhas[0]?.detalhe || "Nenhum destino recebeu a mensagem.",
+    });
+  }
+
+  return jsonResponse({
+    ok: true,
+    enviados,
+    total: envios.length,
+    falhas: falhas.length > 0 ? falhas : undefined,
   });
-
-  return jsonResponse(resultado);
 };
