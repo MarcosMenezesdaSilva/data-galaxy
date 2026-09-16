@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Sun, Moon } from "lucide-react";
+import { ArrowRight, Presentation, Sun, Moon } from "lucide-react";
 
 import { BrandWordmark } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
@@ -104,6 +104,14 @@ export function Navigation() {
         </ul>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate({ to: "/apresentacao" })}
+            className="hidden sm:inline-flex"
+          >
+            <Presentation className="mr-1.5 h-4 w-4" /> Apresentação
+          </Button>
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Alternar tema">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
